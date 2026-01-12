@@ -1,3 +1,3 @@
-// Permanent backend URL (LocalTunnel for remote access)
-window.API_URL = 'https://moody-readers-thank.loca.lt/api/v1';
-window.API_BASE_URL = 'https://moody-readers-thank.loca.lt/api/v1';
+// Permanent backend URL (Render.com)
+window.API_URL = 'https://arenajiujitsuhub-2.onrender.com/api/v1';
+window.API_BASE_URL = 'https://arenajiujitsuhub-2.onrender.com/api/v1';
