@@ -1,10 +1,14 @@
 // Arena Matrix - Frontend com Backend Integrado
 // Versão com formulário funcional para adicionar unidades
 
-// ===== CONFIGURATION =====
-// ===== CONFIGURATION =====
-// Force connection to local backend
-var API_BASE_URL = window.API_URL || 'http://localhost:5000/api/v1';
+// ===== CONFIGURATION - FORCE RENDER URL FALLBACK for mobile cache issues
+const RENDER_API_URL = 'https://arenajiujitsuhub-2.onrender.com/api/v1';
+var API_BASE_URL = window.API_URL;
+
+// If window.API_URL is missing or incorrectly set to localhost in mobile cache
+if (!API_BASE_URL || API_BASE_URL.includes('localhost')) {
+    API_BASE_URL = RENDER_API_URL;
+}
 
 const USE_BACKEND = true; // Mudar para false para usar dados mock
 

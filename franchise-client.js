@@ -1,5 +1,12 @@
-// Configuration
-var API_URL = window.API_URL || 'http://localhost:5000/api/v1'; // Correct port verified via logs
+// Configuration - FORCE RENDER URL FALLBACK for mobile cache issues
+const RENDER_API_URL = 'https://arenajiujitsuhub-2.onrender.com/api/v1';
+var API_URL = window.API_URL;
+
+// If window.API_URL is missing or incorrectly set to localhost in mobile cache
+if (!API_URL || API_URL.includes('localhost')) {
+    API_URL = RENDER_API_URL;
+}
+
 let currentFranchiseId = null;
 let currentFranchise = null;
 var myStudents = [];
