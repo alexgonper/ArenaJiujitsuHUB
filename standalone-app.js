@@ -5,10 +5,15 @@
 const RENDER_API_URL = 'https://arenajiujitsuhub-2.onrender.com/api/v1';
 var API_BASE_URL = window.API_URL;
 
-// If window.API_URL is missing or incorrectly set to localhost in mobile cache
-if (!API_BASE_URL || API_BASE_URL.includes('localhost')) {
-    API_BASE_URL = RENDER_API_URL;
+// If window.API_URL is missing, use a sensible default based on current environment
+if (!API_BASE_URL) {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        API_BASE_URL = 'http://localhost:5000/api/v1';
+    } else {
+        API_BASE_URL = RENDER_API_URL;
+    }
 }
+// Note: We removed the force-overwrite for 'localhost' to allow local development
 
 const USE_BACKEND = true; // Mudar para false para usar dados mock
 
@@ -266,6 +271,40 @@ window.closeModal = () => {
     const modal = document.getElementById('ui-modal');
     modal.classList.add('hidden');
     modal.style.display = 'none';
+};
+
+window.confirmAction = (message) => {
+    return new Promise((resolve) => {
+        const html = `
+            <div class="text-center p-6">
+                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-black text-slate-800 mb-2">Confirmação</h3>
+                <p class="text-slate-500 mb-6 font-medium">${message}</p>
+                <div class="flex gap-3 justify-center w-full">
+                    <button id="btn-cancel-confirm" class="flex-1 px-5 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        Cancelar
+                    </button>
+                    <button id="btn-confirm-action" class="flex-1 px-5 py-3 rounded-xl font-bold text-white orange-gradient hover:scale-[1.02] shadow-lg shadow-orange-200 transition-all">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        openModal(html);
+
+        document.getElementById('btn-cancel-confirm').onclick = () => {
+            closeModal();
+            resolve(false);
+        };
+
+        document.getElementById('btn-confirm-action').onclick = () => {
+            closeModal();
+            resolve(true);
+        };
+    });
 };
 
 window.toggleSensei = () => {
@@ -576,9 +615,7 @@ window.deleteFranchise = async (id) => {
     if (!franchise) return;
 
     // Confirmation dialog
-    const confirmed = confirm(`Tem certeza que deseja excluir "${franchise.name}"?\n\nEsta ação não pode ser desfeita.`);
-
-    if (!confirmed) return;
+    if (!await confirmAction(`Tem certeza que deseja excluir "${franchise.name}"? Esta ação não pode ser desfeita.`)) return;
 
     try {
         await apiRequest(`/franchises/${id}`, 'DELETE');
@@ -615,7 +652,40 @@ function showNotification(message, type = 'success') {
 }
 
 // ===== STATS AND DASHBOARD =====
+function refreshFranchiseStats() {
+    if (!franchises || !students) return;
+
+    franchises.forEach(f => {
+        // Recalculate students count
+        const unitStudents = students.filter(s => {
+            const sFid = (s.franchiseId && s.franchiseId._id) ? s.franchiseId._id : s.franchiseId;
+            return String(sFid) === String(f.id || f._id);
+        });
+        f.students = unitStudents.length;
+
+        // Recalculate revenue
+        f.revenue = unitStudents.reduce((sum, s) => {
+            let val = 0;
+            if (Array.isArray(s.amount)) val = s.amount[s.amount.length - 1];
+            else val = parseFloat(s.amount) || 0;
+            return sum + val;
+        }, 0);
+
+        // Recalculate teachers
+        if (teachers) {
+            const unitTeachers = teachers.filter(t => {
+                const tFid = (t.franchiseId && t.franchiseId._id) ? t.franchiseId._id : t.franchiseId;
+                return String(tFid) === String(f.id || f._id);
+            });
+            f.teachers = unitTeachers.length;
+        }
+    });
+}
+
+
 function updateStats() {
+    refreshFranchiseStats(); // 🔄 Recalculate everything from source of truth
+
     const totalStudents = franchises.reduce((sum, f) => sum + (f.students || 0), 0);
     const totalRevenue = franchises.reduce((sum, f) => sum + (f.revenue || 0), 0);
     const totalUnits = franchises.length;
@@ -624,14 +694,14 @@ function updateStats() {
         !f.address.toLowerCase().includes('- pr')
     ).length;
 
-    // Calculate total royalties based on individual franchise percentages
+    // Calculate total royalties
     const totalRoyalties = franchises.reduce((sum, f) => {
         const rev = f.revenue || 0;
-        const pct = f.royaltyPercent || 5; // Default to 5% if not set
+        const pct = f.royaltyPercent || 5;
         return sum + (rev * (pct / 100));
     }, 0);
 
-    // Update old dashboard elements (if they exist)
+    // Update old dashboard elements (legacy/static)
     const oldStudents = document.getElementById('stat-total-students');
     const oldRevenue = document.getElementById('stat-total-revenue');
     const oldUnits = document.getElementById('stat-unit-count');
@@ -642,25 +712,10 @@ function updateStats() {
     if (oldUnits) oldUnits.textContent = totalUnits;
     if (oldIntl) oldIntl.textContent = `${intlUnits}`;
 
-    // Update specific Matrix widgets handled in widgets-matrix.js usually, but sometimes here for non-widget elements
-    // Note: widgets-matrix.js has its own update() loop but this function might update global headers/stats outside widgets
-    // However, specifically for the Matrix Dashboard widget, we need to update widgets-matrix.js logic too.
-    // This function seems to update some specific IDs. Let's make sure it updates the new variable `totalRoyalties`.
-    // The previous code didn't calculate Royalties in this function, only in widgets-matrix.js.
-    // I will add the update for non-widget elements if they exist (legacy), but the main fix is in widgets-matrix.js
-
-    // Update widget elements (if they exist)
-    const widgetStudents = document.getElementById('widget-stat-total-students');
-    const widgetTeachers = document.getElementById('widget-stat-total-teachers');
-    const widgetRevenue = document.getElementById('widget-stat-total-revenue');
-    const widgetUnits = document.getElementById('widget-stat-unit-count');
-    const widgetIntl = document.getElementById('widget-stat-intl-count');
-
-    if (widgetStudents) widgetStudents.textContent = totalStudents.toLocaleString();
-    if (widgetTeachers) widgetTeachers.textContent = teachers.length.toLocaleString();
-    if (widgetRevenue) widgetRevenue.textContent = formatCurrency(totalRevenue);
-    if (widgetUnits) widgetUnits.textContent = totalUnits;
-    if (widgetIntl) widgetIntl.textContent = `${intlUnits}`;
+    // Force update ALL registered widgets to reflect the new state
+    if (typeof window.forceUpdateAllWidgets === 'function') {
+        window.forceUpdateAllWidgets();
+    }
 }
 
 function renderTopUnits() {
@@ -908,10 +963,22 @@ function renderNetwork() {
                     <i class="fa-solid fa-phone text-orange-500 flex-shrink-0"></i>
                     <p class="text-slate-500 font-medium">${f.phone || 'N/A'}</p>
                 </div>
-                <div class="flex gap-3 mt-4 pt-4 border-t border-slate-50">
-                    <div class="bg-blue-50/50 border border-blue-100 p-3 rounded-2xl flex-1 text-center group-hover:bg-blue-50 transition-colors">
-                        <div class="text-[9px] uppercase font-bold text-blue-400 mb-1">Alunos</div>
-                        <div class="text-sm font-black text-slate-700">${f.students}</div>
+                <div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-50">
+                    <div class="bg-blue-50/50 border border-blue-100 p-2 rounded-2xl text-center group-hover:bg-blue-50 transition-colors">
+                        <div class="text-[8px] uppercase font-bold text-blue-400 mb-1">Alunos</div>
+                        <div class="text-xs font-black text-slate-700">
+                             ${(typeof students !== 'undefined' && Array.isArray(students))
+                ? students.filter(s => (s.franchiseId && s.franchiseId._id ? s.franchiseId._id : s.franchiseId) === f.id).length
+                : (f.students || 0)}
+                        </div>
+                    </div>
+                    <div class="bg-orange-50/50 border border-orange-100 p-2 rounded-2xl text-center group-hover:bg-orange-50 transition-colors">
+                        <div class="text-[8px] uppercase font-bold text-orange-400 mb-1">Professores</div>
+                        <div class="text-xs font-black text-slate-700">
+                             ${(typeof teachers !== 'undefined' && Array.isArray(teachers))
+                ? teachers.filter(t => (t.franchiseId && t.franchiseId._id ? t.franchiseId._id : t.franchiseId) === f.id).length
+                : (f.teachers || 0)}
+                        </div>
                     </div>
                     ${(() => {
                 let bgClass, textClass, label, valueClass;
@@ -934,9 +1001,9 @@ function renderNetwork() {
                 }
 
                 return `
-                        <div class="${bgClass} border p-3 rounded-2xl flex-1 text-center transition-colors">
-                            <div class="text-[9px] uppercase font-bold ${textClass} mb-1">Financeiro</div>
-                            <div class="text-sm font-black ${valueClass}">${label}</div>
+                        <div class="${bgClass} border p-2 rounded-2xl text-center transition-colors">
+                            <div class="text-[8px] uppercase font-bold ${textClass} mb-1">Financeiro</div>
+                            <div class="text-xs font-black ${valueClass}">${label}</div>
                         </div>
                         `;
             })()}
@@ -1253,7 +1320,9 @@ window.renderStudents = () => {
         'Azul': { bg: '#3B82F6', text: '#FFFFFF', border: '#3B82F6' },
         'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
         'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
-        'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' }
+        'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
+        'Coral': { bg: 'none', text: 'transparent', border: '#EE1111', extra: 'background-image: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%), linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%); background-clip: text, padding-box; -webkit-background-clip: text, padding-box; font-weight: 900; position: relative;' },
+        'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
     };
 
     // Render Rows
@@ -1278,7 +1347,7 @@ window.renderStudents = () => {
                     <div class="flex flex-col items-start gap-1">
                         <span class="font-bold text-slate-800">${s.name}</span>
                         <span class="inline-block px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase border whitespace-nowrap" 
-                              style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border};">
+                              style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border}; ${style.extra || ''}">
                             ${belt}${degree}
                         </span>
                     </div>
@@ -1450,8 +1519,8 @@ window.renderTeachers = () => {
         'Roxa': 'bg-purple-600 text-white',
         'Marrom': 'bg-amber-800 text-white',
         'Preta': 'bg-slate-900 text-white',
-        'Coral': 'bg-red-500 text-amber-200',
-        'Vermelha': 'bg-red-700 text-white'
+        'Coral': 'belt-coral',
+        'Vermelha': 'belt-vermelha'
     };
 
     listBody.innerHTML = filtered.map(t => {
@@ -1461,7 +1530,7 @@ window.renderTeachers = () => {
             <tr class="hover:bg-slate-50 transition group">
                 <td class="py-4 px-2">
                     <div class="flex flex-col items-start gap-1">
-                         <span class="font-bold text-slate-800">${t.name}</span>
+                         <span class="font-bold text-slate-800">${(t.name || '').replace(/\s*\((Coral|Vermelha|Vermelho)\)/gi, '')}</span>
                          <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase border border-white/20 whitespace-nowrap ${beltStyle}">
                             ${t.belt} ${t.degree ? '• ' + t.degree : ''}
                         </span>
@@ -1513,7 +1582,7 @@ window.openTeacherForm = (teacherId = null) => {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">Nome Completo *</label>
-                        <input type="text" name="name" required value="${teacher ? teacher.name : ''}"
+                        <input type="text" name="name" required value="${teacher ? (teacher.name || '').replace(/\s*\((Coral|Vermelha|Vermelho)\)/gi, '') : ''}"
                             class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all">
                     </div>
                     
@@ -1572,6 +1641,9 @@ window.openTeacherForm = (teacherId = null) => {
                             <option value="5º Grau" ${teacher?.degree === '5º Grau' ? 'selected' : ''}>5º Grau</option>
                             <option value="6º Grau" ${teacher?.degree === '6º Grau' ? 'selected' : ''}>6º Grau</option>
                             <option value="7º Grau" ${teacher?.degree === '7º Grau' ? 'selected' : ''}>7º Grau</option>
+                            <option value="8º Grau" ${teacher?.degree === '8º Grau' ? 'selected' : ''}>8º Grau</option>
+                            <option value="9º Grau" ${teacher?.degree === '9º Grau' ? 'selected' : ''}>9º Grau</option>
+                            <option value="10º Grau" ${teacher?.degree === '10º Grau' ? 'selected' : ''}>10º Grau</option>
                         </select>
                     </div>
                 </div>
@@ -1606,8 +1678,26 @@ window.saveTeacher = async (data) => {
 
         // Refresh data
         await loadTeachersFromBackend();
+        window.teachers = teachers; // Explicitly sync global
+
+        updateStats(); // 🔄 Recalculate totals and Unit counts
+
         renderTeachers();
-        updateStats(); // Update counters
+
+        // Update franchise teacher count locally
+        if (method === 'POST') {
+            const franchise = franchises.find(f => f.id === selectedFranchiseId || f._id === selectedFranchiseId);
+            if (franchise) {
+                renderNetwork(); // Refresh list view
+                renderTopUnits(); // Refresh top units if needed
+            }
+        }
+
+        // Refresh Unit Stats Widget if open
+        if (window.widgetSystem && window.widgetSystem.widgets['matrix-unit-stats']) {
+            window.widgetSystem.widgets['matrix-unit-stats'].update();
+        }
+
         closeModal();
         showNotification(data.id ? 'Professor atualizado!' : 'Professor cadastrado!', 'success');
     } catch (e) {
@@ -1617,15 +1707,31 @@ window.saveTeacher = async (data) => {
 };
 
 window.deleteTeacher = async (id) => {
-    if (!confirm('Tem certeza que deseja excluir este professor? Essa ação é permanente.')) return;
+    if (!await confirmAction('Tem certeza que deseja excluir este professor? Essa ação é permanente.')) return;
 
     try {
         await apiRequest(`/teachers/${id}`, 'DELETE');
 
         // Refresh data
         await loadTeachersFromBackend();
+        window.teachers = teachers; // Explicitly sync global
+
+        updateStats(); // 🔄 Recalculate totals and Unit counts
+
         renderTeachers();
-        updateStats(); // Update counters
+
+        // Update franchise teacher count locally
+        const franchise = franchises.find(f => f.id === selectedFranchiseId || f._id === selectedFranchiseId);
+        if (franchise && franchise.teachers > 0) {
+            renderNetwork(); // Refresh list view
+            renderTopUnits();
+        }
+
+        // Refresh Unit Stats Widget if open
+        if (window.widgetSystem && window.widgetSystem.widgets['matrix-unit-stats']) {
+            window.widgetSystem.widgets['matrix-unit-stats'].update();
+        }
+
         showNotification('Professor removido!', 'success');
     } catch (e) {
         console.error('Error deleting teacher:', e);
@@ -1689,7 +1795,7 @@ window.openStudentForm = (studentId = null) => {
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Faixa</label>
                         <select name="belt" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none text-sm">
-                            ${['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'].map(belt =>
+                            ${['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'].map(belt =>
         `<option ${student && student.belt === belt ? 'selected' : ''}>${belt}</option>`
     ).join('')}
                         </select>
@@ -1698,7 +1804,7 @@ window.openStudentForm = (studentId = null) => {
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Grau</label>
                         <select name="degree" class="w-full px-4 py-2 border border-slate-200 rounded-xl outline-none text-sm">
-                            ${['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau'].map(degree =>
+                            ${['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau', '7º Grau', '8º Grau', '9º Grau', '10º Grau'].map(degree =>
         `<option ${student && student.degree === degree ? 'selected' : ''}>${degree}</option>`
     ).join('')}
                         </select>
@@ -1772,6 +1878,8 @@ async function handleUpdateStudent(e) {
         }
 
         renderStudents();
+
+        updateStats(); // Force refresh of all widgets
         closeModal();
         showNotification('✅ Dados do aluno atualizados!', 'success');
     } catch (error) {
@@ -1781,6 +1889,7 @@ async function handleUpdateStudent(e) {
     }
 }
 
+// 1. handleCreateStudent
 async function handleCreateStudent(e) {
     e.preventDefault();
 
@@ -1801,15 +1910,26 @@ async function handleCreateStudent(e) {
     try {
         const response = await apiRequest('/students', 'POST', data);
         students.push(response.data);
+        window.students = students;
 
-        // Atualizar contador da academia
-        const franchise = franchises.find(f => f.id === selectedFranchiseId);
-        if (franchise) {
-            franchise.students = (franchise.students || 0) + 1;
-            document.getElementById('detail-students').textContent = franchise.students;
+        updateStats(); // 🔄 Syncs f.students/f.revenue with new data
+
+        // Atualizar contador da academia (Visual)
+        const currentCount = students.filter(s => (s.franchiseId && s.franchiseId._id ? s.franchiseId._id : s.franchiseId) === selectedFranchiseId).length;
+        if (document.getElementById('detail-students')) {
+            document.getElementById('detail-students').textContent = currentCount;
+        }
+
+        renderNetwork(); // Now uses updated f.students
+        renderTopUnits(); // Now uses updated f.students
+
+        // Refresh Unit Stats Widget if open
+        if (window.widgetSystem && window.widgetSystem.widgets['matrix-unit-stats']) {
+            window.widgetSystem.widgets['matrix-unit-stats'].update();
         }
 
         renderStudents();
+
         closeModal();
         showNotification('✅ Aluno matriculado com sucesso!', 'success');
     } catch (error) {
@@ -1819,21 +1939,32 @@ async function handleCreateStudent(e) {
     }
 }
 
+// 2. deleteStudent
 window.deleteStudent = async (id) => {
-    if (!confirm('Remover este aluno?')) return;
+    if (!await confirmAction('Remover este aluno?')) return;
 
     try {
         await apiRequest(`/students/${id}`, 'DELETE');
         students = students.filter(s => s._id !== id);
+        window.students = students;
 
-        // Atualizar contador da academia
-        const franchise = franchises.find(f => f.id === selectedFranchiseId);
-        if (franchise && franchise.students > 0) {
-            franchise.students--;
-            document.getElementById('detail-students').textContent = franchise.students;
+        updateStats(); // 🔄 Syncs f.students/f.revenue with new data
+
+        const currentCount = students.filter(s => (s.franchiseId && s.franchiseId._id ? s.franchiseId._id : s.franchiseId) === selectedFranchiseId).length;
+        if (document.getElementById('detail-students')) {
+            document.getElementById('detail-students').textContent = currentCount;
+        }
+
+        renderNetwork(); // Now uses updated f.students
+        renderTopUnits(); // Now uses updated f.students
+
+        // Refresh Unit Stats Widget if open
+        if (window.widgetSystem && window.widgetSystem.widgets['matrix-unit-stats']) {
+            window.widgetSystem.widgets['matrix-unit-stats'].update();
         }
 
         renderStudents();
+
         showNotification('✅ Aluno removido com sucesso!', 'success');
     } catch (error) {
         showNotification('❌ Erro ao remover: ' + error.message, 'error');
@@ -1853,7 +1984,7 @@ function loadMockData() {
     ];
 
     students = [];
-    const belts = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+    const belts = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'];
 
     // Generate mock students
     franchises.forEach(f => {

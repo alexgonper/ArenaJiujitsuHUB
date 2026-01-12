@@ -438,6 +438,10 @@ function renderNetwork() {
                         <span class="text-slate-700 font-bold">${f.students}</span>
                     </div>
                     <div class="flex items-center gap-1">
+                        <i class="fa-solid fa-graduation-cap text-orange-500 text-xs"></i>
+                        <span class="text-slate-700 font-bold">${f.teachers || 0}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
                         <i class="fa-solid fa-dollar-sign text-green-500 text-xs"></i>
                         <span class="text-slate-700 font-bold">${(f.revenue / 1000).toFixed(0)}k</span>
                     </div>

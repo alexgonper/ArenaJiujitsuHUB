@@ -78,6 +78,11 @@ exports.createTeacher = async (req, res, next) => {
 
         const teacher = await Teacher.create(req.body);
 
+        // Update franchise teacher count
+        await Franchise.findByIdAndUpdate(req.body.franchiseId, {
+            $inc: { teachers: 1 }
+        });
+
         res.status(201).json({
             success: true,
             data: teacher
@@ -135,6 +140,11 @@ exports.deleteTeacher = async (req, res, next) => {
         }
 
         await teacher.deleteOne();
+
+        // Update franchise teacher count
+        await Franchise.findByIdAndUpdate(teacher.franchiseId, {
+            $inc: { teachers: -1 }
+        });
 
         res.status(200).json({
             success: true,

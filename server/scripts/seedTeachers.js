@@ -8,8 +8,8 @@ const { connectDB, closeDB } = require('../config/database');
 const firstNames = ['Carlos', 'Marcelo', 'André', 'Ricardo', 'Fábio', 'Luiz', 'Fernanda', 'Beatriz', 'Juliana', 'Ana', 'Pedro', 'Lucas', 'Marcos', 'Daniel', 'Rodrigo', 'Bruno'];
 const lastNames = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Almeida', 'Pereira', 'Lima', 'Gomes', 'Costa', 'Martins', 'Barbosa', 'Ribeiro'];
 
-const belts = ['Roxa', 'Marrom', 'Preta']; // Teachers usually higher belts
-const degrees = ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau'];
+const belts = ['Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'];
+const degrees = ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau'];
 
 function getRandomElement(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
@@ -19,21 +19,33 @@ function getRandomDate(start, end) {
     return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 }
 
-function generateRandomTeacher(franchiseId) {
+function generateRandomTeacher(franchiseId, forceBelt = null) {
     const firstName = getRandomElement(firstNames);
     const lastName = getRandomElement(lastNames);
 
-    // Age between 22 and 55
-    const birthDate = getRandomDate(new Date(1969, 0, 1), new Date(2002, 0, 1));
+    // Age between 22 and 65 (higher for high belts)
+    const birthDate = getRandomDate(new Date(1959, 0, 1), new Date(2002, 0, 1));
 
     // Hire date between 2018 and now
     const hireDate = getRandomDate(new Date(2018, 0, 1), new Date());
 
+    const belt = forceBelt || getRandomElement(belts);
+
+    // Higher belts should have higher degrees
+    let degree;
+    if (belt === 'Coral' || belt === 'Vermelha') {
+        degree = getRandomElement(['5º Grau', '6º Grau']);
+    } else if (belt === 'Preta') {
+        degree = getRandomElement(['1º Grau', '2º Grau', '3º Grau', '4º Grau']);
+    } else {
+        degree = getRandomElement(['Nenhum', '1º Grau', '2º Grau']);
+    }
+
     return {
         name: `${firstName} ${lastName}`,
         birthDate: birthDate,
-        belt: getRandomElement(belts),
-        degree: getRandomElement(degrees),
+        belt: belt,
+        degree: degree,
         hireDate: hireDate,
         franchiseId: franchiseId
     };
@@ -61,9 +73,11 @@ async function seedTeachers() {
 
         for (const franchise of franchises) {
             console.log(`   Generating 3 teachers for: ${franchise.name}`);
-            for (let i = 0; i < 3; i++) {
-                allTeachers.push(generateRandomTeacher(franchise._id));
-            }
+
+            // Force some specific belts to ensure they appear
+            allTeachers.push(generateRandomTeacher(franchise._id, 'Coral'));
+            allTeachers.push(generateRandomTeacher(franchise._id, 'Vermelha'));
+            allTeachers.push(generateRandomTeacher(franchise._id, 'Preta'));
         }
 
         console.log(`💾 Saving ${allTeachers.length} teachers...`);

@@ -65,10 +65,51 @@ registerWidget({
     },
 
     update: function () {
+        console.log('🔄 Matrix Stats Update (Window Scoped)');
+        const franchises = window.franchises || [];
+        const students = window.students || [];
+        const teachers = window.teachers || [];
         // Update widget-specific elements with current data
         if (typeof franchises !== 'undefined' && typeof formatCurrency === 'function') {
-            const totalStudents = franchises.reduce((sum, f) => sum + (f.students || 0), 0);
-            const totalRevenue = franchises.reduce((sum, f) => sum + (f.revenue || 0), 0);
+            const totalStudents = (typeof students !== 'undefined') ? students.length : 0;
+
+            // Calculate dynamic revenue from students
+            let totalRevenue = 0;
+            let totalRoyalties = 0;
+
+            if (typeof students !== 'undefined') {
+                // Group revenue by franchise to calculate royalties correctly per franchise settings
+                const franchiseRevenue = {};
+
+                students.forEach(s => {
+                    let val = 0;
+                    if (Array.isArray(s.amount)) val = s.amount[s.amount.length - 1];
+                    else val = parseFloat(s.amount) || 0;
+
+                    const fid = (s.franchiseId && s.franchiseId._id) ? s.franchiseId._id : s.franchiseId;
+                    if (fid) {
+                        franchiseRevenue[fid] = (franchiseRevenue[fid] || 0) + val;
+                    }
+                });
+
+                // Sum up totals and royalties
+                Object.keys(franchiseRevenue).forEach(fid => {
+                    const rev = franchiseRevenue[fid];
+                    totalRevenue += rev;
+
+                    const franchise = franchises.find(f => f.id === fid || f._id === fid);
+                    const pct = (franchise && franchise.royaltyPercent) ? franchise.royaltyPercent : 5;
+                    totalRoyalties += rev * (pct / 100);
+                });
+            } else {
+                // Fallback if students not loaded yet
+                totalRevenue = franchises.reduce((sum, f) => sum + (f.revenue || 0), 0);
+                totalRoyalties = franchises.reduce((sum, f) => {
+                    const pct = f.royaltyPercent || 5;
+                    return sum + ((f.revenue || 0) * (pct / 100));
+                }, 0);
+            }
+
             const totalTeachers = (typeof teachers !== 'undefined') ? teachers.length : 0;
             const unitCount = franchises.length;
             const domesticIndicators = ['brasil', ' - sc', ' - pr', ' - sp', ' - rj', ' - mg', ' - rs', ' - df', ' - ba', '/pr', '/sc', '/sp', '/rj', '/mg'];
@@ -77,10 +118,6 @@ registerWidget({
                 const addr = f.address.toLowerCase();
                 return !domesticIndicators.some(ind => addr.includes(ind));
             }).length;
-            const totalRoyalties = franchises.reduce((sum, f) => {
-                const pct = f.royaltyPercent || 5; // Default to 5% if not defined
-                return sum + ((f.revenue || 0) * (pct / 100));
-            }, 0);
 
             const el1 = document.getElementById('widget-stat-total-students');
             const el1b = document.getElementById('widget-stat-total-teachers');
@@ -437,8 +474,14 @@ registerWidget({
     },
 
     update: function () {
-        if (typeof selectedFranchiseId !== 'undefined' && typeof franchises !== 'undefined' && typeof students !== 'undefined') {
-            const franchise = franchises.find(f => f._id === selectedFranchiseId);
+        console.log('🔄 Unit Stats Update (Window Scoped)');
+        const franchises = window.franchises || [];
+        const students = window.students || [];
+        const teachers = window.teachers || [];
+        const selectedFranchiseId = window.selectedFranchiseId;
+
+        if (typeof selectedFranchiseId !== 'undefined' && franchises.length > 0) {
+            const franchise = franchises.find(f => f._id === selectedFranchiseId || f.id === selectedFranchiseId);
             if (!franchise) return;
 
             // Calculate metrics logic
@@ -702,6 +745,8 @@ registerWidget({
                                 <option value="Roxa">Roxa</option>
                                 <option value="Marrom">Marrom</option>
                                 <option value="Preta">Preta</option>
+                                <option value="Coral">Coral</option>
+                                <option value="Vermelha">Vermelha</option>
                             </select>
                             <select id="filter-degree" onchange="if(typeof resetMatrixStudentPage === 'function') resetMatrixStudentPage(); if(typeof renderStudents === 'function') renderStudents()" 
                                 class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-2 focus:ring-orange-500">
@@ -711,6 +756,12 @@ registerWidget({
                                 <option value="2º Grau">2º Grau</option>
                                 <option value="3º Grau">3º Grau</option>
                                 <option value="4º Grau">4º Grau</option>
+                                <option value="5º Grau">5º Grau</option>
+                                <option value="6º Grau">6º Grau</option>
+                                <option value="7º Grau">7º Grau</option>
+                                <option value="8º Grau">8º Grau</option>
+                                <option value="9º Grau">9º Grau</option>
+                                <option value="10º Grau">10º Grau</option>
                             </select>
                             <select id="filter-payment" onchange="if(typeof resetMatrixStudentPage === 'function') resetMatrixStudentPage(); if(typeof renderStudents === 'function') renderStudents()" 
                                 class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-2 focus:ring-orange-500">
@@ -805,6 +856,9 @@ registerWidget({
                                 <option value="5º Grau">5º Grau</option>
                                 <option value="6º Grau">6º Grau</option>
                                 <option value="7º Grau">7º Grau</option>
+                                <option value="8º Grau">8º Grau</option>
+                                <option value="9º Grau">9º Grau</option>
+                                <option value="10º Grau">10º Grau</option>
                             </select>
                         </div>
                     </div>

@@ -451,3 +451,22 @@ body.edit-mode .widget-drag-handle:active {
         grid-column: span 6;
     }
 }
+
+/* ===== BELT STYLES ===== */
+.belt-coral {
+    background-image:
+        linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%),
+        linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%) !important;
+    background-clip: text, padding-box !important;
+    -webkit-background-clip: text, padding-box !important;
+    color: transparent !important;
+    border-color: #EE1111 !important;
+    font-weight: 900 !important;
+    position: relative !important;
+}
+
+.belt-vermelha {
+    background-color: #EE1111 !important;
+    color: white !important;
+    border-color: #EE1111 !important;
+}

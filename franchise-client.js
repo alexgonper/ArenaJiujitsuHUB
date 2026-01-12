@@ -2,10 +2,15 @@
 const RENDER_API_URL = 'https://arenajiujitsuhub-2.onrender.com/api/v1';
 var API_URL = window.API_URL;
 
-// If window.API_URL is missing or incorrectly set to localhost in mobile cache
-if (!API_URL || API_URL.includes('localhost')) {
-    API_URL = RENDER_API_URL;
+// If window.API_URL is missing, use a sensible default based on current environment
+if (!API_URL) {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        API_URL = 'http://localhost:5000/api/v1';
+    } else {
+        API_URL = RENDER_API_URL;
+    }
 }
+// Note: We removed the force-overwrite for 'localhost' to allow local development
 
 let currentFranchiseId = null;
 let currentFranchise = null;
@@ -32,8 +37,8 @@ const beltColors = {
     'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
     'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
     'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
-    'Coral': { bg: 'linear-gradient(to right, #ef4444, #000000)', text: '#FFFFFF', border: '#000000' },
-    'Vermelha': { bg: '#ef4444', text: '#FFFFFF', border: '#991b1b' }
+    'Coral': { bg: 'none', text: 'transparent', border: '#EE1111', extra: 'background-image: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%), linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%); background-clip: text, padding-box; -webkit-background-clip: text, padding-box; font-weight: 900; position: relative;' },
+    'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
 };
 
 // --- INITIALIZATION ---
@@ -607,7 +612,7 @@ window.renderStudents = () => {
                     <div class="flex flex-col items-start gap-1">
                         <span class="font-bold text-slate-800">${s.name}</span>
                         <span class="inline-block px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase border whitespace-nowrap" 
-                              style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border};">
+                              style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border}; ${style.extra || ''}">
                             ${belt}${degree}
                         </span>
                     </div>
@@ -764,9 +769,9 @@ window.renderTeachers = () => {
             <tr class="table-row border-b border-slate-50 transition-colors group hover:bg-slate-50/50">
                 <td class="py-4 px-2">
                     <div class="flex flex-col items-start gap-1">
-                        <span class="font-bold text-slate-800">${t.name}</span>
+                        <span class="font-bold text-slate-800">${(t.name || '').replace(/\s*\((Coral|Vermelha|Vermelho)\)/gi, '')}</span>
                         <span class="inline-block px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase border whitespace-nowrap" 
-                              style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border};">
+                              style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border}; ${style.extra || ''}">
                             ${belt}${degreeText}
                         </span>
                     </div>
@@ -876,6 +881,12 @@ window.openStudentModal = (id = null) => {
                             <option value="2º Grau" ${degree === '2º Grau' ? 'selected' : ''}>2º Grau</option>
                             <option value="3º Grau" ${degree === '3º Grau' ? 'selected' : ''}>3º Grau</option>
                             <option value="4º Grau" ${degree === '4º Grau' ? 'selected' : ''}>4º Grau</option>
+                            <option value="5º Grau" ${degree === '5º Grau' ? 'selected' : ''}>5º Grau</option>
+                            <option value="6º Grau" ${degree === '6º Grau' ? 'selected' : ''}>6º Grau</option>
+                            <option value="7º Grau" ${degree === '7º Grau' ? 'selected' : ''}>7º Grau</option>
+                            <option value="8º Grau" ${degree === '8º Grau' ? 'selected' : ''}>8º Grau</option>
+                            <option value="9º Grau" ${degree === '9º Grau' ? 'selected' : ''}>9º Grau</option>
+                            <option value="10º Grau" ${degree === '10º Grau' ? 'selected' : ''}>10º Grau</option>
                         </select>
                     </div>
 
@@ -995,7 +1006,7 @@ window.openTeacherModal = (id = null) => {
     let name = '', belt = 'Preta', degree = 'Nenhum', birthDate = '', hireDate = new Date().toISOString().split('T')[0];
     let gender = 'Masculino', phone = '', address = '';
     if (teacher) {
-        name = teacher.name;
+        name = (teacher.name || '').replace(/\s*\((Coral|Vermelha|Vermelho)\)/gi, '');
         belt = teacher.belt || 'Preta';
         degree = teacher.degree || 'Nenhum';
         birthDate = teacher.birthDate ? new Date(teacher.birthDate).toISOString().split('T')[0] : '';
@@ -1056,6 +1067,10 @@ window.openTeacherModal = (id = null) => {
                             <option value="4º Grau" ${degree === '4º Grau' ? 'selected' : ''}>4º Grau</option>
                             <option value="5º Grau" ${degree === '5º Grau' ? 'selected' : ''}>5º Grau</option>
                             <option value="6º Grau" ${degree === '6º Grau' ? 'selected' : ''}>6º Grau</option>
+                            <option value="7º Grau" ${degree === '7º Grau' ? 'selected' : ''}>7º Grau</option>
+                            <option value="8º Grau" ${degree === '8º Grau' ? 'selected' : ''}>8º Grau</option>
+                            <option value="9º Grau" ${degree === '9º Grau' ? 'selected' : ''}>9º Grau</option>
+                            <option value="10º Grau" ${degree === '10º Grau' ? 'selected' : ''}>10º Grau</option>
                         </select>
                     </div>
                     <div>
@@ -1152,51 +1167,43 @@ window.saveTeacher = async () => {
 };
 
 window.deleteTeacher = async (id) => {
-    window.showConfirmModal(
-        'Remover Professor',
-        'Tem certeza que deseja remover este professor? Esta ação é irreversível.',
-        async () => {
-            try {
-                const res = await fetch(`${API_URL}/teachers/${id}`, { method: 'DELETE' });
-                const json = await res.json();
+    const confirmed = await window.confirmAction('Tem certeza que deseja remover este professor? Esta ação é irreversível.');
+    if (!confirmed) return;
 
-                if (json.success) {
-                    showToast('Professor removido.');
-                    window.closeConfirmModal();
-                    await loadTeachers();
-                } else {
-                    throw new Error('Erro ao deletar');
-                }
-            } catch (e) {
-                showToast('Erro ao remover professor', 'error');
-            }
+    try {
+        const res = await fetch(`${API_URL}/teachers/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+
+        if (json.success) {
+            showToast('Professor removido.');
+            await loadTeachers();
+        } else {
+            throw new Error('Erro ao deletar');
         }
-    );
+    } catch (e) {
+        showToast('Erro ao remover professor', 'error');
+    }
 };
 
-// 3. DELETE (Modified to use Custom Modal)
+// 3. DELETE (Standardized)
 window.deleteStudent = async (id) => {
-    window.showConfirmModal(
-        'Remover Guerreiro',
-        'Tem certeza que deseja remover este aluno? Esta ação é irreversível e o removerá das estatísticas.',
-        async () => {
-            try {
-                const res = await fetch(`${API_URL}/students/${id}`, { method: 'DELETE' });
-                const json = await res.json();
+    const confirmed = await window.confirmAction('Tem certeza que deseja remover este aluno? Esta ação é irreversível e o removerá das estatísticas.');
+    if (!confirmed) return;
 
-                if (json.success) {
-                    showToast('Aluno removido do sistema.');
-                    window.closeConfirmModal();
-                    await loadStudents();
-                    updateStats();
-                } else {
-                    throw new Error('Erro ao deletar');
-                }
-            } catch (e) {
-                showToast('Erro ao remover aluno', 'error');
-            }
+    try {
+        const res = await fetch(`${API_URL}/students/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+
+        if (json.success) {
+            showToast('Aluno removido do sistema.');
+            await loadStudents();
+            updateStats();
+        } else {
+            throw new Error('Erro ao deletar');
         }
-    );
+    } catch (e) {
+        showToast('Erro ao remover aluno', 'error');
+    }
 };
 
 // --- HELPER: CUSTOM CONFIRM MODAL ---
@@ -1271,6 +1278,42 @@ window.openModal = (html) => {
     }, 10);
 };
 
+window.confirmAction = (message) => {
+    return new Promise((resolve) => {
+        const html = `
+            <div class="text-center p-6">
+                 <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-black text-slate-800 mb-2">Confirmação</h3>
+                <p class="text-slate-500 mb-6 font-medium">${message}</p>
+                <div class="flex gap-3 justify-center w-full">
+                    <button id="btn-cancel-confirm" class="flex-1 px-5 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        Cancelar
+                    </button>
+                    <button id="btn-confirm-action" class="flex-1 px-5 py-3 rounded-xl font-bold text-white orange-gradient hover:scale-[1.02] shadow-lg shadow-orange-200 transition-all">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        openModal(html);
+
+        // Wait for modal to render
+        setTimeout(() => {
+            document.getElementById('btn-cancel-confirm').onclick = () => {
+                closeModal();
+                resolve(false);
+            };
+
+            document.getElementById('btn-confirm-action').onclick = () => {
+                closeModal();
+                resolve(true);
+            };
+        }, 50);
+    });
+};
 window.showNotification = (msg, type = 'success') => window.showToast(msg, type);
 
 window.showToast = (msg, type = 'success') => {

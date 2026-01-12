@@ -32,6 +32,21 @@ function registerWidget(config) {
     };
 }
 
+// Global helper to force update all active widgets
+window.forceUpdateAllWidgets = function () {
+    console.log('🔄 Force updating all widgets...');
+    // We iterate the registry. The widgets themselves must handle checking if they are active/visible
+    Object.values(WIDGET_REGISTRY).forEach(widget => {
+        if (typeof widget.update === 'function') {
+            try {
+                widget.update();
+            } catch (e) {
+                console.error(`Error updating widget ${widget.id}:`, e);
+            }
+        }
+    });
+};
+
 // ===== WIDGET SYSTEM INITIALIZATION =====
 function initWidgetSystem(containerId, appType) {
     console.log(`🎨 Initializing Widget System for ${appType}`);

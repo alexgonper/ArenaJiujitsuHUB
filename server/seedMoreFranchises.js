@@ -7,8 +7,8 @@ const Student = require('./models/Student');
 const maleNames = ['Lucas', 'Matheus', 'Gabriel', 'Pedro', 'Bernardo', 'Rafael', 'Felipe', 'Thiago', 'Bruno', 'Leonardo', 'Daniel', 'Rodrigo', 'Gustavo', 'Caio', 'Vinicius'];
 const femaleNames = ['Julia', 'Alice', 'Sophia', 'Laura', 'Manuela', 'Isabella', 'Beatriz', 'Luiza', 'Mariana', 'Gabriela', 'Larissa', 'Fernanda', 'Camila', 'Amanda', 'Leticia'];
 const lastNames = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Gomes', 'Costa', 'Ribeiro', 'Martins', 'Carvalho', 'Almeida'];
-const belts = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'];
-const degrees = ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau'];
+const belts = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'];
+const degrees = ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau', '7º Grau', '8º Grau', '9º Grau', '10º Grau'];
 
 // 10 Novas Academias com coordenadas exatas
 const targets = [
@@ -64,6 +64,7 @@ const seed = async () => {
                 phone: `+55 ${Math.floor(Math.random() * 90 + 10)} 3333-${Math.floor(Math.random() * 9999)}`,
                 email: `contato@${target.name.toLowerCase().replace(/\s/g, '')}.com`,
                 students: 20,
+                teachers: 3 + Math.floor(Math.random() * 6),
                 revenue: 20 * 150, // Estimativa
                 expenses: 1500 + Math.floor(Math.random() * 2000),
                 location: {

@@ -36,7 +36,7 @@ const teacherSchema = new mongoose.Schema({
     },
     degree: {
         type: String,
-        enum: ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau'],
+        enum: ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau', '7º Grau', '8º Grau', '9º Grau', '10º Grau'],
         default: 'Nenhum',
         required: [true, 'Grau é obrigatório']
     },

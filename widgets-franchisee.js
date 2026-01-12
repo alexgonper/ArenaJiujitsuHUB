@@ -272,6 +272,8 @@ registerWidget({
                         <option value="Roxa">Roxa</option>
                         <option value="Marrom">Marrom</option>
                         <option value="Preta">Preta</option>
+                        <option value="Coral">Coral</option>
+                        <option value="Vermelha">Vermelha</option>
                     </select>
                     <select id="filter-degree" onchange="if(typeof resetStudentPage === 'function') resetStudentPage(); renderStudents()"
                         class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-2 focus:ring-orange-500">
@@ -281,6 +283,12 @@ registerWidget({
                         <option>2º Grau</option>
                         <option>3º Grau</option>
                         <option>4º Grau</option>
+                        <option>5º Grau</option>
+                        <option>6º Grau</option>
+                        <option>7º Grau</option>
+                        <option>8º Grau</option>
+                        <option>9º Grau</option>
+                        <option>10º Grau</option>
                     </select>
                     <select id="filter-fee" onchange="if(typeof resetStudentPage === 'function') resetStudentPage(); renderStudents()"
                         class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-2 focus:ring-orange-500">
@@ -373,6 +381,10 @@ registerWidget({
                         <option>4º Grau</option>
                         <option>5º Grau</option>
                         <option>6º Grau</option>
+                        <option>7º Grau</option>
+                        <option>8º Grau</option>
+                        <option>9º Grau</option>
+                        <option>10º Grau</option>
                     </select>
                 </div>
             </div>

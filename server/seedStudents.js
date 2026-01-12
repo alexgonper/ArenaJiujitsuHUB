@@ -24,8 +24,8 @@ const femaleNames = [
 ];
 
 // Faixas e graus
-const belts = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'];
-const degrees = ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau'];
+const belts = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'];
+const degrees = ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau', '7º Grau', '8º Grau', '9º Grau', '10º Grau'];
 const paymentStatuses = ['Paga', 'Atrasada'];
 const genders = ['Masculino', 'Feminino'];
 

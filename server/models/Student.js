@@ -33,12 +33,12 @@ const studentSchema = new mongoose.Schema({
     },
     belt: {
         type: String,
-        enum: ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'],
+        enum: ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'],
         default: 'Branca'
     },
     degree: {
         type: String,
-        enum: ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau'],
+        enum: ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau', '7º Grau', '8º Grau', '9º Grau', '10º Grau'],
         default: 'Nenhum'
     },
     amount: {

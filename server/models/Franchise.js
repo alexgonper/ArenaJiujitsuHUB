@@ -51,6 +51,11 @@ const franchiseSchema = new mongoose.Schema({
         default: 0,
         min: [0, 'Students count cannot be negative']
     },
+    teachers: {
+        type: Number,
+        default: 0,
+        min: [0, 'Teachers count cannot be negative']
+    },
     revenue: {
         type: Number,
         default: 0,
@@ -131,6 +136,7 @@ franchiseSchema.methods.getSummary = function () {
         name: this.name,
         owner: this.owner,
         students: this.students,
+        teachers: this.teachers,
         revenue: this.revenue,
         profit: this.profit,
         status: this.status

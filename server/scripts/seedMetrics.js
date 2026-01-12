@@ -34,7 +34,7 @@ const generateMonthlyMetrics = async () => {
 
         const studentNames = ["Gabriel", "Lucas", "Mateus", "Vitor", "Pedro", "João", "Enzo", "Guilherme", "Rafael", "Felipe", "Bruno", "Daniel", "Gustavo", "Thiago", "Rodrigo", "André", "Leonardo", "Marcelo", "Arthur", "Mário", "Ana", "Beatriz", "Carla", "Daniela", "Eduarda", "Fernanda", "Gabriela", "Helena", "Isabela", "Júlia", "Kátia", "Larissa", "Mariana", "Natália", "Olívia", "Patrícia", "Renata", "Sofia", "Tatiana", "Vanessa"];
         const lastNames = ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Carvalho", "Martins", "Araújo", "Pinto", "Barbosa", "Ribeiro", "Melo", "Cardoso", "Teixeira"];
-        const belts = ['Branca', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+        const belts = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'];
 
         for (const franchise of franchises) {
             console.log(`Generating data for: ${franchise.name}`);
@@ -111,8 +111,8 @@ const generateMonthlyMetrics = async () => {
                             name,
                             gender: Math.random() > 0.5 ? 'Masculino' : 'Feminino',
                             franchiseId: franchise._id,
-                            belt: 'Preta',
-                            degree: '1º Grau',
+                            belt: ['Roxa', 'Marrom', 'Preta', 'Preta', 'Preta', 'Coral', 'Vermelha'][Math.floor(Math.random() * 7)],
+                            degree: ['1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau', '7º Grau'][Math.floor(Math.random() * 7)],
                             birthDate: new Date(Date.now() - (30 + Math.random() * 20) * 365 * 24 * 60 * 60 * 1000), // 30-50 years old
                             hireDate: new Date(Date.now() - (1 + Math.random() * 5) * 365 * 24 * 60 * 60 * 1000), // hired 1-5 years ago
                             phone: '+55 11 9' + Math.floor(Math.random() * 100000000),
