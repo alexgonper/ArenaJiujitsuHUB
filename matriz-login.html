@@ -9,6 +9,7 @@
 
     <!-- External Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind.config.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <!-- Eurostile Font -->
@@ -202,7 +203,7 @@
 
     <!-- Back Button -->
     <a href="index.html"
-        class="absolute top-6 left-6 text-slate-400 hover:text-orange-500 transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+        class="absolute top-6 left-6 text-slate-400 hover:text-brand-500 transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
         <i class="fa-solid fa-arrow-left"></i> Voltar
     </a>
 
@@ -212,8 +213,8 @@
             <!-- Logo Section -->
             <div class="logo-container mb-8 text-center animate-fade-in-up delay-1">
                 <span class="brand-typography text-2xl md:text-3xl block mb-2">
-                    <span style="color: #FF6B00;">ARENA JIU-JITSU</span>
-                    <span style="color: #000000;">HUB MATRIZ</span>
+                    <span class="text-brand-500">ARENA JIU-JITSU</span>
+                    <span class="text-black">HUB MATRIZ</span>
                 </span>
                 <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-3">
                     Portal de Gestão Premium
@@ -243,7 +244,7 @@
                         <input type="password" id="login-password" class="input-field pr-12" placeholder="••••••••"
                             required>
                         <button type="button" onclick="togglePassword()"
-                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors">
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 transition-colors">
                             <i id="password-icon" class="fa-solid fa-eye text-sm"></i>
                         </button>
                     </div>
@@ -280,7 +281,7 @@
     <!-- Toast Notification -->
     <div id="toast"
         class="fixed top-6 right-6 bg-slate-900 text-white px-6 py-4 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-3 transform translate-x-full opacity-0 transition-all duration-500 z-[3000]">
-        <div id="toast-icon" class="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white">
+        <div id="toast-icon" class="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white">
             <i class="fa-solid fa-check"></i>
         </div>
         <span id="toast-msg">Mensagem</span>
@@ -320,7 +321,7 @@
                 toastIcon.className = 'w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white';
                 icon.className = 'fa-solid fa-xmark';
             } else if (type === 'warning') {
-                toastIcon.className = 'w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white';
+                toastIcon.className = 'w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white';
                 icon.className = 'fa-solid fa-exclamation';
             }
 

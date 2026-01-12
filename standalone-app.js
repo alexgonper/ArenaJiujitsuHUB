@@ -2216,7 +2216,7 @@ window.runAiAnalysis = async (manual = false, targetId = 'ai-insight-content') =
         container.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full py-12 text-slate-400 italic text-center">
                 <i class="fa-solid fa-bolt animate-pulse mb-3 text-orange-500 text-2xl"></i>
-                <span class="animate-pulse font-medium block">Consultando Gemini 2.0 Flash...</span>
+                <span class="animate-pulse font-medium block">Consultando Gemini 1.5 Flash...</span>
                 <span class="text-[10px] mt-2 block opacity-70">Enviando telemetria ${isNetworkContext ? 'da REDE' : 'da UNIDADE'} para análise neural.</span>
             </div>
         `;
@@ -2471,7 +2471,7 @@ window.runAiAnalysis = async (manual = false, targetId = 'ai-insight-content') =
             </div>
             
             <div class="flex justify-between items-center text-[9px] text-slate-400 mt-4 border-t border-slate-100 pt-2 opacity-60">
-                <span>Análise via Gemini 2.0 Flash</span>
+                <span>Análise via Gemini 1.5 Flash</span>
                 <span>${new Date().toLocaleTimeString()}</span>
             </div>
         </div>

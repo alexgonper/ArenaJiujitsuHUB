@@ -128,7 +128,7 @@ const appConfig = {
 
 const geminiConfig = {
     apiKey: "YOUR_API_KEY", // Required for AI features
-    modelName: "gemini-2.0-flash-exp"
+    modelName: "gemini-1.5-flash"
 };
 ```
 

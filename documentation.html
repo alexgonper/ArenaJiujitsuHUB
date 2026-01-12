@@ -7,6 +7,7 @@
     <title>Arena Jiu-Jitsu Hub | Documentação Oficial</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind.config.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -192,10 +193,10 @@
     <!-- Mobile Header -->
     <header class="md:hidden bg-white border-b border-slate-100 p-4 flex justify-between items-center z-20">
         <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
-            <span class="text-orange-500"><i class="fa-solid fa-book-open"></i></span>
+            <span class="text-brand-500"><i class="fa-solid fa-book-open"></i></span>
             Arena Docs
         </div>
-        <button onclick="toggleSidebar()" class="text-slate-500 hover:text-orange-500">
+        <button onclick="toggleSidebar()" class="text-slate-500 hover:text-brand-500">
             <i class="fa-solid fa-bars text-xl"></i>
         </button>
     </header>
@@ -205,10 +206,10 @@
         class="glass-sidebar w-full md:w-72 border-r border-slate-200 hidden md:flex flex-col h-full absolute md:relative z-10 transition-transform duration-300">
         <!-- Logo Area -->
         <div class="p-6 border-b border-slate-100">
-            <div class="flex items-center gap-3 mb-1 text-orange-600">
+            <div class="flex items-center gap-3 mb-1 text-brand-500">
                 <i class="fa-solid fa-layer-group text-2xl"></i>
                 <span class="font-extrabold text-xl tracking-tight text-slate-800">ARENA JIU-JITSU <span
-                        class="text-orange-500">HUB</span></span>
+                        class="text-brand-500">HUB</span></span>
             </div>
             <p class="text-xs text-slate-400 font-medium pl-9">CENTRAL DE DOCUMENTAÇÃO</p>
         </div>
@@ -218,7 +219,7 @@
             <div class="relative">
                 <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                 <input type="text" id="doc-search" placeholder="Filtrar arquivos..."
-                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-all">
             </div>
         </div>
 
@@ -230,7 +231,7 @@
         <!-- Footer -->
         <div class="p-4 border-t border-slate-100 bg-slate-50">
             <a href="index.html"
-                class="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-orange-600 transition-colors">
+                class="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand-500 transition-colors">
                 <i class="fa-solid fa-arrow-left"></i> Voltar ao Dashboard
             </a>
         </div>
@@ -240,7 +241,7 @@
     <main class="flex-1 h-full overflow-hidden flex flex-col relative bg-white">
         <!-- Loading Indicator -->
         <div id="loading" class="absolute inset-0 bg-white/80 z-50 flex items-center justify-center hidden">
-            <div class="animate-spin text-orange-500 text-4xl"><i class="fa-solid fa-circle-notch"></i></div>
+            <div class="animate-spin text-brand-500 text-4xl"><i class="fa-solid fa-circle-notch"></i></div>
         </div>
 
         <!-- Toolbar -->
@@ -249,11 +250,11 @@
             <h2 id="current-doc-title" class="font-bold text-slate-800 truncate">Selecionar um arquivo</h2>
             <div class="flex gap-2">
                 <button onclick="copyCurrentUrl()" title="Copiar Link"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-orange-500 transition-colors">
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-brand-500 transition-colors">
                     <i class="fa-solid fa-link"></i>
                 </button>
                 <a id="download-btn" href="#" download title="Baixar Markdown"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-orange-500 transition-colors">
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-brand-500 transition-colors">
                     <i class="fa-solid fa-download"></i>
                 </a>
             </div>
@@ -366,7 +367,7 @@
 
             // Update UI Selection
             const allBtns = fileListEl.querySelectorAll('button');
-            allBtns.forEach(btn => btn.classList.remove('active-doc', 'bg-orange-50', 'text-orange-600', 'border-r-2', 'border-orange-500'));
+            allBtns.forEach(btn => btn.classList.remove('active-doc', 'bg-orange-50', 'text-brand-500', 'border-r-2', 'border-brand-500'));
 
             // Find button by text content is tricky, let's just re-render or find by iteration if needed. 
             // Re-rendering sidebar to simplicity to apply active class
