@@ -1438,7 +1438,7 @@ window.generateTrainingPlan = async (studentId) => {
         modalContent.innerHTML = `
             <div class="text-left">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-                    <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                    <div class="w-12 h-12 orange-gradient rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
                         <i class="fa-solid fa-dumbbell text-xl"></i>
                     </div>
                     <div>
@@ -1452,7 +1452,7 @@ window.generateTrainingPlan = async (studentId) => {
                 </div>
 
                 <div class="mt-6 flex justify-end">
-                    <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">
+                    <button onclick="closeModal()" class="px-6 py-2 orange-gradient text-white rounded-xl font-bold text-sm transition-all shadow-md hover:scale-105">
                         Entendido
                     </button>
                 </div>

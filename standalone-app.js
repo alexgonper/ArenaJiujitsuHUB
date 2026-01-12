@@ -2614,7 +2614,7 @@ window.runQuickAction = async (type) => {
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button onclick="closeModal()" class="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <button onclick="closeModal()" class="px-6 py-2.5 orange-gradient text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                             Fechar Análise
                         </button>
                     </div>
@@ -2688,7 +2688,7 @@ window.editDirective = async function (directiveId) {
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Assunto</label>
                     <input type="text" id="edit-directive-subject" required
-                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition"
                         placeholder="Ex: Atualização de Graduação 2026"
                         value="${subject}">
                 </div>
@@ -2696,14 +2696,14 @@ window.editDirective = async function (directiveId) {
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Mensagem</label>
                     <textarea id="edit-directive-body" required rows="6"
-                        class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"
+                        class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition resize-none"
                         placeholder="Digite as instruções oficiais para os franqueados...">${body}</textarea>
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prioridade</label>
                     <select id="edit-directive-priority"
-                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition">
                         <option value="low" ${directive.priority === 'low' ? 'selected' : ''}>Baixa</option>
                         <option value="medium" ${directive.priority === 'medium' ? 'selected' : ''}>Normal</option>
                         <option value="high" ${directive.priority === 'high' ? 'selected' : ''}>Alta</option>
@@ -2717,7 +2717,7 @@ window.editDirective = async function (directiveId) {
                         Cancelar
                     </button>
                     <button type="submit" 
-                        class="flex-1 px-6 py-3 bg-blue-500 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-blue-600 transition">
+                        class="flex-1 px-6 py-3 orange-gradient text-white rounded-xl font-bold text-sm shadow-lg transition">
                         <i class="fa-solid fa-floppy-disk mr-2"></i> Salvar Alterações
                     </button>
                 </div>
