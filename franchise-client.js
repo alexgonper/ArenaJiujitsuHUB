@@ -1,5 +1,5 @@
 // Configuration
-const API_URL = 'http://localhost:5000/api/v1'; // Correct port verified via logs
+var API_URL = window.API_URL || 'http://localhost:5000/api/v1'; // Correct port verified via logs
 let currentFranchiseId = null;
 let currentFranchise = null;
 var myStudents = [];
@@ -67,7 +67,9 @@ async function loadLoginOptions() {
     const btn = document.getElementById('btn-login-action');
 
     try {
-        const res = await fetch(`${API_URL}/franchises`);
+        const res = await fetch(`${API_URL}/franchises`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         if (!res.ok) throw new Error('Falha ao conectar servidor');
         const data = await res.json();
         const franchises = data.data || [];
@@ -80,16 +82,19 @@ async function loadLoginOptions() {
         btn.innerHTML = 'Aceder ao Painel';
     } catch (e) {
         console.error(e);
-        select.innerHTML = '<option>Erro de conexão com API Local</option>';
-        btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Servidor Offline';
-        btn.className = 'w-full bg-red-100 text-red-500 font-bold py-4 rounded-xl';
+        const apiUrl = window.API_URL || 'undefined';
+        select.innerHTML = `<option>Erro: ${e.message}</option>`;
+        btn.innerHTML = `<div class="flex flex-col"><span class="text-xs">Falha na Conexão</span><span class="text-[9px] opacity-75">${apiUrl}</span></div>`;
+        btn.className = 'w-full bg-red-100 text-red-600 font-bold py-3 rounded-xl leading-tight';
     }
 }
 
 // Load franchise data and initialize app (for returning users)
 async function loadFranchiseAndInit(franchiseId) {
     try {
-        const res = await fetch(`${API_URL}/franchises/${franchiseId}`);
+        const res = await fetch(`${API_URL}/franchises/${franchiseId}`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         const json = await res.json();
 
         if (json.success) {
@@ -127,7 +132,9 @@ window.handleLogin = async () => {
 
     try {
         // Fetch specific franchise details
-        const res = await fetch(`${API_URL}/franchises/${selectedId}`);
+        const res = await fetch(`${API_URL}/franchises/${selectedId}`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         const json = await res.json();
 
         if (json.success) {
@@ -306,7 +313,9 @@ async function loadStudents() {
     try {
         // Fetch all students and filter client-side for now (simplest integration)
         // ideally: GET /api/v1/students?franchiseId=...
-        const res = await fetch(`${API_URL}/students`);
+        const res = await fetch(`${API_URL}/students`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         const json = await res.json();
 
         if (json.success) {
@@ -327,7 +336,9 @@ async function loadStudents() {
 
 async function loadTeachers() {
     try {
-        const res = await fetch(`${API_URL}/teachers?franchiseId=${currentFranchiseId}`);
+        const res = await fetch(`${API_URL}/teachers?franchiseId=${currentFranchiseId}`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         const json = await res.json();
 
         if (json.success) {
@@ -345,7 +356,9 @@ async function loadTeachers() {
 
 async function loadMetrics() {
     try {
-        const res = await fetch(`${API_URL}/metrics/${currentFranchiseId}?months=12`);
+        const res = await fetch(`${API_URL}/metrics/${currentFranchiseId}?months=12`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         const json = await res.json();
 
         if (json.success) {
@@ -467,7 +480,10 @@ window.updateGymSettings = async function () {
     try {
         const response = await fetch(`${API_URL}/franchises/${currentFranchiseId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
             body: JSON.stringify(updatedData)
         });
 
@@ -1269,7 +1285,10 @@ async function callGemini(prompt) {
     try {
         const response = await fetch(`${API_URL}/ai/generate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
             body: JSON.stringify({ prompt: prompt })
         });
 

@@ -3,7 +3,7 @@
 
 const API_CONFIG = {
     // Backend API URL
-    baseURL: 'http://localhost:5000/api/v1',
+    baseURL: window.API_URL || 'http://localhost:5000/api/v1',
 
     // API Endpoints
     endpoints: {
@@ -34,7 +34,8 @@ const API = {
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Bypass-Tunnel-Reminder': 'true'
                 }
             });
 
@@ -58,7 +59,8 @@ const API = {
             const response = await fetch(`${API_CONFIG.baseURL}${endpoint}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Bypass-Tunnel-Reminder': 'true'
                 },
                 body: JSON.stringify(body)
             });
@@ -83,7 +85,8 @@ const API = {
             const response = await fetch(`${API_CONFIG.baseURL}${endpoint}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Bypass-Tunnel-Reminder': 'true'
                 },
                 body: JSON.stringify(body)
             });
@@ -108,7 +111,8 @@ const API = {
             const response = await fetch(`${API_CONFIG.baseURL}${endpoint}`, {
                 method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Bypass-Tunnel-Reminder': 'true'
                 }
             });
 
@@ -129,7 +133,9 @@ const API = {
      */
     async checkHealth() {
         try {
-            const response = await fetch(`${API_CONFIG.baseURL.replace('/api/v1', '')}/health`);
+            const response = await fetch(`${API_CONFIG.baseURL.replace('/api/v1', '')}/health`, {
+                headers: { 'Bypass-Tunnel-Reminder': 'true' }
+            });
             return response.ok;
         } catch (error) {
             return false;

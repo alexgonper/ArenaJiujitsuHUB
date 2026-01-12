@@ -9,7 +9,7 @@ registerWidget({
 
     render: function (container) {
         container.innerHTML = `
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100">
                     <div class="w-8 h-8 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mb-3">
                         <i class="fa-solid fa-users text-sm"></i>
@@ -140,8 +140,18 @@ registerWidget({
                     window.widgetChartInstance.destroy();
                 }
 
-                // If no metrics loaded yet, show empty state or return
-                if (historicalMetrics.length === 0) return;
+                // If no metrics loaded yet, try to use valid empty data or return safely
+                if (!historicalMetrics || historicalMetrics.length === 0) {
+                    console.warn('Matrix Performance Chart: No historical metrics available.');
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = '12px Inter, sans-serif';
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('Aguardando dados...', canvas.width / 2, canvas.height / 2);
+                    return;
+                }
 
                 const ctx = canvas.getContext('2d');
 

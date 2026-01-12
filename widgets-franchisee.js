@@ -9,7 +9,7 @@ registerWidget({
 
     render: function (container) {
         container.innerHTML = `
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div class="bg-white border border-slate-100 rounded-2xl p-4 hover:shadow-md transition">
                     <div class="flex justify-between items-start mb-2">
                         <p class="text-slate-400 text-[9px] font-bold uppercase tracking-wider">Meus Alunos</p>
@@ -589,7 +589,9 @@ async function loadAndRenderDirectives() {
 
         // Fetch directives from backend
         const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
-        const response = await fetch(`${apiUrl}/directives?limit=10&status=published`);
+        const response = await fetch(`${apiUrl}/directives?limit=10&status=published`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         const data = await response.json();
 
         if (!data.success || !data.data || data.data.length === 0) {

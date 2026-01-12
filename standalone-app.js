@@ -4,7 +4,7 @@
 // ===== CONFIGURATION =====
 // ===== CONFIGURATION =====
 // Force connection to local backend
-var API_BASE_URL = 'http://localhost:5000/api/v1';
+var API_BASE_URL = window.API_URL || 'http://localhost:5000/api/v1';
 
 const USE_BACKEND = true; // Mudar para false para usar dados mock
 
@@ -112,7 +112,6 @@ var directives = [];
 var students = [];
 var teachers = [];
 var metrics = []; // Ensure metrics global exists for widgets
-var teachers = [];
 var historicalMetrics = [];
 var selectedFranchiseId = null;
 var map = null;
@@ -127,7 +126,8 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         const options = {
             method,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
             }
         };
 
@@ -1110,16 +1110,28 @@ async function loadTeachersFromBackend() {
     }
 }
 
-async function loadNetworkHistoricalMetrics() {
-    try {
-        const response = await apiRequest('/metrics/network/summary?months=12');
-        historicalMetrics = response.data || [];
-        console.log('✅ Loaded historical metrics:', historicalMetrics.length);
-        return true;
-    } catch (error) {
-        console.error('❌ Failed to load historical metrics:', error);
-        return false;
+async function loadNetworkHistoricalMetrics(retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            console.log(`⏳ Loading historical metrics (Attempt ${i + 1}/${retries})...`);
+            const response = await apiRequest('/metrics/network/summary?months=12');
+
+            if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+                historicalMetrics = response.data;
+                console.log('✅ Loaded historical metrics:', historicalMetrics.length);
+                return true;
+            } else {
+                console.warn('⚠️ Historical metrics empty, retrying...');
+            }
+        } catch (error) {
+            console.error(`❌ Failed to load historical metrics (Attempt ${i + 1}):`, error);
+        }
+        // Wait before retrying (exponential backoff: 500ms, 1000ms, 2000ms)
+        if (i < retries - 1) await new Promise(r => setTimeout(r, 500 * Math.pow(2, i)));
     }
+
+    console.error('❌ Failed to load historical metrics after all attempts.');
+    return false;
 }
 
 async function loadUnitHistoricalMetrics(franchiseId) {
@@ -2099,7 +2111,10 @@ async function callGemini(prompt) {
         console.log(`📡 Calling AI Service: ${API_BASE_URL}/ai/generate`);
         const response = await fetch(`${API_BASE_URL}/ai/generate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
             body: JSON.stringify({ prompt: prompt })
         });
 
@@ -2292,18 +2307,17 @@ window.runAiAnalysis = async (manual = false, targetId = 'ai-insight-content') =
     const resultText = await callGemini(prompt);
 
     // Handle Error Responses
+    let aiResponse = { cfo: "Análise indisponível no momento.", coo: "Análise indisponível no momento.", cmo: "Análise indisponível no momento." };
+
+    // Handle Error Responses
     if (resultText && resultText.startsWith('ERROR:')) {
         console.error("AI Analysis Failed:", resultText);
-        return {
+        aiResponse = {
             cfo: "Erro na conexão com IA.",
             coo: "Verifique se o servidor backend está rodando.",
             cmo: resultText.replace('ERROR:', '')
         };
-    }
-
-    let aiResponse = { cfo: "Análise indisponível no momento.", coo: "Análise indisponível no momento.", cmo: "Análise indisponível no momento." };
-
-    if (resultText) {
+    } else if (resultText) {
         try {
             // 1. Extração robusta: localiza o primeiro { e o último }
             const startIdx = resultText.indexOf('{');

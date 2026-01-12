@@ -30,12 +30,9 @@
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="mobile-styles.css">
     <link rel="stylesheet" href="widget-drag-enhancements.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 
-    <!-- Mobile Detection (Load First) -->
-    <script src="mobile-detector.js"></script>
 </head>
 
 <body class="overflow-hidden">
@@ -474,12 +471,14 @@
     <!-- SortableJS Library (Drag & Drop) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
+    <!-- Global Config -->
+    <script src="api-config.js?v=3"></script>
     <!-- Widget System Core -->
     <script src="widget-system.js"></script>
-    <script src="widgets-matrix.js"></script>
+    <script src="widgets-matrix.js?v=2"></script>
 
     <!-- Standalone App Script (No ES6 modules for local file compatibility) -->
-    <script src="standalone-app.js?v=5"></script>
+    <script src="standalone-app.js?v=6"></script>
 
 
 
