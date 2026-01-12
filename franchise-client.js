@@ -1444,9 +1444,17 @@ window.runAiAnalysis = async (manual = false) => {
         INSTRUÇÕES PARA SAÍDA:
         Gere uma análise rica em formatação HTML simples (use <b> para destaques, listas <ul><li> para pontos chave).
         Não seja vago. Dê sugestões numéricas e táticas.
-        IMPORTANTE: A resposta deve ser EXCLUSIVAMENTE um objeto JSON válido e NADA MAIS.
-        Não use markdown block quotes (\`\`\`json). Não inclua texto introdutório ou conclusivo. Comece com { e termine com }.
-        Para quebras de linha dentro dos textos, use o caractere de escape \n (barra invertida n), nunca use quebras de linha REAIS no meio de uma string JSON.
+        
+        ⚠️ IMPORTANTE - FORMATAÇÃO JSON ESTRITA:
+        1. A resposta deve ser EXCLUSIVAMENTE um objeto JSON válido (RFC 8259) e NADA MAIS
+        2. NÃO use markdown code blocks (não escreva \`\`\`json ou \`\`\`)
+        3. NÃO inclua texto introdutório ou conclusivo
+        4. Comece imediatamente com { e termine com }
+        5. Para quebras de linha nos textos, use SEMPRE \\n (barra invertida + n), NUNCA use quebras de linha literais
+        6. Para aspas dentro dos textos, use \\" (barra invertida + aspas duplas)
+        7. Evite usar caracteres de controle (tab, form feed, backspace) - use apenas espaços e \\n
+        8. Certifique-se de que TODAS as strings estejam entre aspas duplas
+        9. Não termine nenhuma linha com vírgula antes de fechar objetos/arrays
 
         SAÍDA ESPERADA (APENAS JSON VÁLIDO):
     {
@@ -1470,18 +1478,57 @@ window.runAiAnalysis = async (manual = false) => {
             if (startIdx !== -1 && endIdx !== -1) {
                 let cleanJson = resultText.substring(startIdx, endIdx + 1);
 
-                // 2. Limpeza de caracteres de controle (0-31) que quebram o JSON.parse
-                // Substituímos por espaço para garantir que o parse funcione, pois em JSON strings
-                // caracteres de controle devem ser escapados (ex: \n). Gemini às vezes manda raw.
-                // Substituir por espaço é seguro e não quebra a estrutura externa ao redor dos campos.
-                const sanitizedJson = cleanJson.replace(/[\x00-\x1F\x7F]/g, " ");
+                // 2. Múltiplas estratégias de sanitização para caracteres de controle
+                // Estratégia 1: Tentar parsing direto primeiro
+                try {
+                    aiResponse = JSON.parse(cleanJson);
+                } catch (firstError) {
+                    console.warn("First parse attempt failed, trying sanitization...");
 
-                aiResponse = JSON.parse(sanitizedJson);
+                    // Estratégia 2: Escapar caracteres problemáticos dentro de strings JSON
+                    // Preserva quebras de linha mas as escapa corretamente
+                    let sanitizedJson = cleanJson
+                        .replace(/\n/g, '\\n')        // Escapar quebras de linha
+                        .replace(/\r/g, '\\r')        // Escapar retorno de carro
+                        .replace(/\t/g, '\\t')        // Escapar tabs
+                        .replace(/\f/g, '\\f')        // Escapar form feed
+                        .replace(/\b/g, '\\b');       // Escapar backspace
+
+                    try {
+                        aiResponse = JSON.parse(sanitizedJson);
+                    } catch (secondError) {
+                        console.warn("Second parse attempt failed, trying aggressive cleanup...");
+
+                        // Estratégia 3: Limpeza agressiva - remove todos os caracteres de controle
+                        // (exceto espaços normais)
+                        sanitizedJson = cleanJson.replace(/[\x00-\x1F\x7F]/g, " ");
+
+                        try {
+                            aiResponse = JSON.parse(sanitizedJson);
+                        } catch (thirdError) {
+                            console.warn("Third parse attempt failed, trying character-by-character sanitization...");
+
+                            // Estratégia 4: Sanitização caractere por caractere
+                            // Remove apenas caracteres verdadeiramente problemáticos
+                            sanitizedJson = cleanJson.split('').map(char => {
+                                const code = char.charCodeAt(0);
+                                // Remove caracteres de controle perigosos, mas preserva espaços
+                                if (code >= 32 || code === 9 || code === 10 || code === 13) {
+                                    return char;
+                                }
+                                return ' ';
+                            }).join('');
+
+                            aiResponse = JSON.parse(sanitizedJson);
+                        }
+                    }
+                }
             } else {
                 throw new Error("Formato JSON não identificado na resposta.");
             }
         } catch (e) {
-            console.error("Failed to parse AI JSON", e, resultText);
+            console.error("Failed to parse AI JSON after all attempts. Raw text:", resultText);
+            console.error("Parse error:", e.message);
             aiResponse.cfo = "Erro na interpretação neural da resposta. Tente novamente.";
             aiResponse.coo = "Resposta recebida mas inválida.";
             aiResponse.cmo = "Detalhes: " + e.message;
