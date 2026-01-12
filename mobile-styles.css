@@ -1,0 +1,561 @@
+/* ===== MOBILE-SPECIFIC STYLES ===== */
+
+/* Mobile Device Styles */
+body.is-mobile {
+    font-size: 14px;
+}
+
+body.is-mobile .widget {
+    grid-column: span 12 !important;
+    margin-bottom: 1rem;
+}
+
+body.is-mobile .widget-container {
+    gap: 1rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+body.is-mobile #widget-container {
+    /* Main dashboard container */
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Mobile Navigation */
+/* Mobile Navigation Force Override */
+body.is-mobile #mobile-sidebar {
+    width: 280px !important;
+    max-width: 85vw !important;
+    position: fixed !important;
+    transform: translateX(-100%) !important;
+    z-index: 50 !important;
+    border-right: 1px solid #e2e8f0;
+}
+
+body.is-mobile #mobile-sidebar.sidebar-open {
+    transform: translateX(0) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Show Hamburger Button */
+body.is-mobile header button.lg\\:hidden {
+    display: flex !important;
+}
+
+/* Hide "Logout" text on mobile */
+body.is-mobile header span.hidden.md\\:inline {
+    display: none !important;
+}
+
+/* Show Backdrop when not hidden */
+body.is-mobile #sidebar-backdrop:not(.hidden) {
+    display: block;
+}
+
+body.is-mobile .nav-btn {
+    padding: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Mobile Header */
+body.is-mobile header {
+    padding: 0.75rem 1rem;
+    height: auto;
+    min-height: 60px;
+}
+
+body.is-mobile #section-title {
+    font-size: 0.875rem;
+}
+
+/* Mobile Cards */
+body.is-mobile .card-shadow {
+    border-radius: 1rem;
+    padding: 1rem;
+}
+
+/* Mobile Buttons */
+body.is-mobile button {
+    min-height: 44px;
+    /* iOS touch target */
+    padding: 0.75rem 1rem;
+}
+
+body.is-mobile .btn-primary {
+    width: 100%;
+    padding: 1rem;
+}
+
+/* Mobile Forms */
+body.is-mobile input,
+body.is-mobile textarea,
+body.is-mobile select {
+    font-size: 16px;
+    /* Prevent iOS zoom */
+    padding: 0.875rem 1rem;
+}
+
+/* Mobile Modal */
+body.is-mobile #ui-modal .bg-white {
+    max-width: 95vw;
+    margin: 1rem;
+    padding: 1.5rem;
+}
+
+/* Mobile Sensei Chat */
+body.is-mobile #sensei-window {
+    width: calc(100vw - 2rem);
+    max-width: none;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+}
+
+body.is-mobile #chat-messages {
+    height: 50vh;
+    max-height: 400px;
+}
+
+/* Mobile Tables */
+body.is-mobile table {
+    font-size: 0.75rem;
+}
+
+body.is-mobile th,
+body.is-mobile td {
+    padding: 0.5rem;
+}
+
+/* Mobile Charts */
+body.is-mobile canvas {
+    max-height: 250px !important;
+}
+
+/* Mobile Map */
+body.is-mobile #map-container {
+    height: 300px !important;
+}
+
+/* Mobile Grid Adjustments */
+body.is-mobile .grid {
+    grid-template-columns: 1fr !important;
+}
+
+body.is-mobile .md\\:grid-cols-2,
+body.is-mobile .lg\\:grid-cols-3,
+body.is-mobile .lg\\:grid-cols-4 {
+    grid-template-columns: 1fr !important;
+}
+
+/* Mobile Spacing */
+body.is-mobile .space-y-8>*+* {
+    margin-top: 1.5rem;
+}
+
+body.is-mobile .gap-6 {
+    gap: 1rem;
+}
+
+/* Mobile Typography */
+body.is-mobile h1 {
+    font-size: 1.5rem;
+}
+
+body.is-mobile h2 {
+    font-size: 1.25rem;
+}
+
+body.is-mobile h3 {
+    font-size: 1.125rem;
+}
+
+/* Mobile Floating Button */
+body.is-mobile .fixed.bottom-6.right-6 {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 56px;
+    height: 56px;
+}
+
+/* ===== TABLET-SPECIFIC STYLES ===== */
+
+body.is-tablet .widget.lg\\:col-span-3,
+body.is-tablet .widget.lg\\:col-span-4 {
+    grid-column: span 6;
+}
+
+body.is-tablet .widget.lg\\:col-span-6,
+body.is-tablet .widget.lg\\:col-span-8,
+body.is-tablet .widget.lg\\:col-span-12 {
+    grid-column: span 12;
+}
+
+/* ===== LANDSCAPE ORIENTATION ===== */
+
+body.is-mobile.orientation-landscape #sensei-window {
+    width: 400px;
+    right: 1rem;
+    left: auto;
+}
+
+body.is-mobile.orientation-landscape .grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+
+/* ===== TOUCH OPTIMIZATIONS ===== */
+
+@media (hover: none) and (pointer: coarse) {
+    /* Touch device optimizations */
+
+    button,
+    a,
+    .clickable {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Larger tap targets */
+    .nav-btn {
+        padding: 1rem;
+    }
+
+    /* Remove hover effects on touch devices */
+    .hover\\:bg-slate-50:hover,
+    .hover\\:bg-orange-50:hover {
+        background-color: inherit;
+    }
+
+    /* Add active states instead */
+    button:active {
+        transform: scale(0.97);
+        opacity: 0.8;
+    }
+}
+
+/* ===== MOBILE WIDGET SELECTOR ===== */
+
+body.is-mobile .widget-selector-grid {
+    grid-template-columns: 1fr !important;
+}
+
+body.is-mobile .widget-selector-item {
+    padding: 1rem;
+}
+
+/* ===== MOBILE NETWORK VIEW ===== */
+
+body.is-mobile #units-list-view {
+    grid-template-columns: 1fr !important;
+}
+
+body.is-mobile .unit-card {
+    padding: 1rem;
+}
+
+/* ===== MOBILE COMMUNICATION ===== */
+
+body.is-mobile #section-communication .grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+}
+
+body.is-mobile #matrix-messages {
+    height: 400px;
+}
+
+/* ===== MOBILE STATS CARDS ===== */
+
+body.is-mobile .stat-card {
+    padding: 1rem;
+}
+
+body.is-mobile .stat-value {
+    font-size: 1.5rem;
+}
+
+/* ===== MOBILE FILTERS ===== */
+
+body.is-mobile .filter-container {
+    flex-direction: column;
+}
+
+body.is-mobile select,
+body.is-mobile .search-input {
+    width: 100% !important;
+}
+
+/* ===== SAFE AREA INSETS (iOS) ===== */
+
+@supports (padding: max(0px)) {
+    body.is-mobile {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+    }
+
+    body.is-mobile header {
+        padding-top: max(0.75rem, env(safe-area-inset-top));
+    }
+
+    body.is-mobile main {
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* ===== MOBILE SCROLLING ===== */
+
+body.is-mobile {
+    -webkit-overflow-scrolling: touch;
+}
+
+body.is-mobile main {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ===== MOBILE PERFORMANCE ===== */
+
+@media (max-width: 768px) {
+    /* Disable animations on low-end devices */
+    @media (prefers-reduced-motion: reduce) {
+
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+/* ===== MOBILE LOADING STATES ===== */
+
+body.is-mobile .loading-spinner {
+    width: 32px;
+    height: 32px;
+}
+
+/* ===== MOBILE TOAST NOTIFICATIONS ===== */
+
+body.is-mobile #toast {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+}
+
+/* ===== MOBILE LOGOUT MODAL ===== */
+
+body.is-mobile #logout-confirm-modal .sm\\:max-w-md {
+    max-width: 90vw;
+}
+
+/* ===== MOBILE WIDGET DRAG HANDLES ===== */
+
+body.is-mobile .widget-drag-handle {
+    font-size: 1.25rem;
+    padding: 0.75rem;
+}
+
+/* ===== MOBILE SEARCH ===== */
+
+body.is-mobile .search-container {
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* ===== MOBILE BRAND TYPOGRAPHY ===== */
+
+body.is-mobile .brand-typography {
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+}
+
+/* ===== MOBILE AI BADGE ===== */
+
+body.is-mobile .ai-badge {
+    font-size: 8px;
+    padding: 2px 6px;
+}
+
+/* ===== MOBILE STUDENT LIST ===== */
+
+body.is-mobile .student-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+body.is-mobile .belt-tag {
+    font-size: 9px;
+}
+
+/* ===== MOBILE METRICS ===== */
+
+body.is-mobile .metric-grid {
+    grid-template-columns: 1fr !important;
+}
+
+/* ===== MOBILE RESPONSIVE IMAGES ===== */
+
+body.is-mobile img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ===== MOBILE OVERFLOW HANDLING ===== */
+
+body.is-mobile .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== MOBILE BACKDROP ===== */
+
+body.is-mobile #sidebar-backdrop {
+    backdrop-filter: blur(4px);
+}
+
+/* ===== MOBILE WIDGET REMOVE BUTTON ===== */
+
+body.is-mobile .widget-remove-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+}
+
+/* ===== MOBILE CHART LEGENDS ===== */
+
+body.is-mobile .chart-legend {
+    font-size: 0.625rem;
+}
+
+/* ===== MOBILE TABS ===== */
+
+body.is-mobile .tab-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+}
+
+/* ===== MOBILE DROPDOWN ===== */
+
+body.is-mobile select {
+    background-size: 16px;
+    padding-right: 2.5rem;
+}
+
+/* ===== MOBILE PAGINATION ===== */
+
+body.is-mobile .pagination-button {
+    width: 40px;
+    height: 40px;
+    font-size: 0.875rem;
+}
+
+/* ===== MOBILE BADGE SIZES ===== */
+
+body.is-mobile .badge {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* ===== MOBILE ICON SIZES ===== */
+
+body.is-mobile .fa-solid,
+body.is-mobile .fa-regular {
+    font-size: 1rem;
+}
+
+body.is-mobile .text-xl .fa-solid {
+    font-size: 1.25rem;
+}
+
+/* ===== MOBILE WIDGET HEADER ===== */
+
+body.is-mobile .widget-header {
+    padding: 0.75rem 1rem;
+}
+
+body.is-mobile .widget-title {
+    font-size: 0.875rem;
+}
+
+/* ===== MOBILE STAT CARDS ===== */
+
+body.is-mobile .stat-label {
+    font-size: 0.625rem;
+}
+
+/* ===== MOBILE FORM GROUPS ===== */
+
+body.is-mobile .form-group {
+    margin-bottom: 1rem;
+}
+
+body.is-mobile label {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ===== MOBILE ALERT BOXES ===== */
+
+body.is-mobile .alert {
+    padding: 1rem;
+    font-size: 0.875rem;
+}
+
+/* ===== MOBILE PROGRESS BARS ===== */
+
+body.is-mobile .progress-bar {
+    height: 8px;
+}
+
+/* ===== MOBILE AVATAR ===== */
+
+body.is-mobile .avatar {
+    width: 32px;
+    height: 32px;
+}
+
+/* ===== MOBILE DIVIDERS ===== */
+
+body.is-mobile .divider {
+    margin: 1rem 0;
+}
+
+/* ===== MOBILE CARD HEADERS ===== */
+
+body.is-mobile .card-header {
+    padding: 1rem;
+    font-size: 0.875rem;
+}
+
+/* ===== MOBILE LIST ITEMS ===== */
+
+body.is-mobile .list-item {
+    padding: 0.75rem 1rem;
+}
+
+/* ===== MOBILE SKELETON LOADERS ===== */
+
+body.is-mobile .skeleton {
+    height: 120px;
+}
+
+/* ===== MOBILE EMPTY STATES ===== */
+
+body.is-mobile .empty-state {
+    padding: 2rem 1rem;
+}
+
+body.is-mobile .empty-state-icon {
+    font-size: 2rem;
+}
+
+/* ===== MOBILE QUICK ACTIONS ===== */
+
+body.is-mobile .quick-action-btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}

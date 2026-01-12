@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Jiu-Jitsu Hub - Bem-vindo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Eurostile Font -->
+    <link href="https://fonts.cdnfonts.com/css/eurostile" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-4xl w-full">
+
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="mb-6">
+                <h1 class="text-4xl md:text-5xl font-black tracking-tight"
+                    style="font-family: 'Eurostile', sans-serif; font-weight: 900;">
+                    <span style="color: #FF6B00;">ARENA JIU-JITSU</span> <span style="color: #000000;">HUB</span>
+                </h1>
+            </div>
+            <p class="text-lg md:text-xl text-slate-600 mb-12">Central de Comando Global</p>
+            <p class="text-slate-400 text-sm mt-2">Escolha a versão que melhor se adequa às suas necessidades</p>
+        </div>
+
+        <!-- Version Cards -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+
+            <!-- Standalone Version -->
+            <div
+                class="bg-white rounded-3xl p-8 border-2 border-orange-500 shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all">
+                <div class="absolute top-4 right-4">
+                    <span class="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">RECOMENDADO</span>
+                </div>
+
+                <div class="mb-6">
+                    <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-rocket text-orange-600 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Versão Standalone</h2>
+                    <p class="text-slate-600 text-sm">Perfeita para usar localmente sem servidor</p>
+                </div>
+
+                <div class="space-y-3 mb-8">
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-sm text-slate-700">Funciona diretamente do navegador</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-sm text-slate-700">Sem necessidade de servidor</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-sm text-slate-700">Configuração zero</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-sm text-slate-700">Ideal para testes</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-info-circle text-blue-500 mt-1"></i>
+                        <span class="text-sm text-slate-600">AI opcional (adicione API key)</span>
+                    </div>
+                </div>
+
+                <a href="index-standalone.html"
+                    class="block w-full py-4 orange-gradient text-white text-center rounded-2xl font-bold uppercase tracking-wider hover:scale-105 transition-all shadow-lg">
+                    Abrir Versão Standalone
+                </a>
+            </div>
+
+            <!-- Full Version -->
+            <div
+                class="bg-white rounded-3xl p-8 border-2 border-slate-200 shadow-lg hover:shadow-xl hover:border-orange-300 transition-all group">
+
+                <div class="mb-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-cloud text-blue-600 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Versão Completa</h2>
+                    <p class="text-slate-600 text-sm">Com Firebase e todos os recursos</p>
+                </div>
+
+                <div class="space-y-3 mb-8">
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-sm text-slate-700">Sincronização em tempo real</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-sm text-slate-700">Persistência de dados</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-sm text-slate-700">Recursos AI completos</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                        <span class="text-sm text-slate-700">Matrix Hub ativo</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-exclamation-circle text-orange-500 mt-1"></i>
+                        <span class="text-sm text-slate-600">Requer servidor web local</span>
+                    </div>
+                </div>
+
+                <a href="index.html"
+                    class="block w-full py-4 bg-slate-900 text-white text-center rounded-2xl font-bold uppercase tracking-wider hover:bg-orange-600 transition-all shadow-lg">
+                    Abrir Versão Completa
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Quick Links -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg">
+            <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-book text-orange-500"></i>
+                Documentação & Recursos
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="QUICK_START.md" target="_blank"
+                    class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-orange-50 transition-all group">
+                    <i class="fa-solid fa-play-circle text-2xl text-slate-400 group-hover:text-orange-500"></i>
+                    <div>
+                        <p class="font-bold text-sm">Quick Start</p>
+                        <p class="text-xs text-slate-500">Guia rápido</p>
+                    </div>
+                </a>
+                <a href="README.md" target="_blank"
+                    class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-orange-50 transition-all group">
+                    <i class="fa-solid fa-file-lines text-2xl text-slate-400 group-hover:text-orange-500"></i>
+                    <div>
+                        <p class="font-bold text-sm">README</p>
+                        <p class="text-xs text-slate-500">Documentação completa</p>
+                    </div>
+                </a>
+                <a href="config.js" target="_blank"
+                    class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl hover:bg-orange-50 transition-all group">
+                    <i class="fa-solid fa-gear text-2xl text-slate-400 group-hover:text-orange-500"></i>
+                    <div>
+                        <p class="font-bold text-sm">Configuração</p>
+                        <p class="text-xs text-slate-500">Editar settings</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="mt-8 bg-gradient-to-r from-orange-50 to-blue-50 rounded-2xl p-6 border border-orange-200">
+            <div class="flex items-start gap-4">
+                <i class="fa-solid fa-lightbulb text-3xl text-orange-500 flex-shrink-0"></i>
+                <div>
+                    <h4 class="font-bold mb-2">💡 Dica Profissional</h4>
+                    <p class="text-sm text-slate-700 mb-3">
+                        Comece com a <strong>Versão Standalone</strong> para testar o sistema. Quando estiver pronto
+                        para produção, configure Firebase e use a <strong>Versão Completa</strong>.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs bg-white px-3 py-1 rounded-full font-medium">🔥 Sem instalação</span>
+                        <span class="text-xs bg-white px-3 py-1 rounded-full font-medium">⚡ Ultra rápido</span>
+                        <span class="text-xs bg-white px-3 py-1 rounded-full font-medium">🎨 Totalmente
+                            customizável</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-sm text-slate-400">
+            <p>Arena Matrix v4.0 | Sistema de Gestão Integrada</p>
+            <p class="mt-1">Desenvolvido com ❤️ para Arena Jiu-Jitsu</p>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

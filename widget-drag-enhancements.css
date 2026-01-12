@@ -1,0 +1,29 @@
+/* Make entire header draggable in edit mode */
+body.edit-mode .widget-header {
+    cursor: move !important;
+}
+
+/* Pulse animation for drag handles */
+@keyframes pulse-handle {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+body.edit-mode .widget-drag-handle {
+    animation: pulse-handle 2s ease-in-out infinite;
+}
+
+body.edit-mode .widget-drag-handle:hover {
+    transform: scale(1.2);
+}
+
+body.edit-mode .widget:hover {
+    transform: translateY(-2px);
+}

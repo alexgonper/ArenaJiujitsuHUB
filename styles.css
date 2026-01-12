@@ -1,0 +1,448 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ===== GLOBAL STYLES ===== */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+/* ===== GRADIENTS ===== */
+.orange-gradient {
+    background: linear-gradient(135deg, #FF6B00 0%, #FF8A00 100%);
+}
+
+/* ===== SHADOWS ===== */
+.card-shadow {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== SIDEBAR STYLES ===== */
+.sidebar-item-active {
+    background: #fff7ed;
+    color: #FF6B00;
+    border-right: 4px solid #FF6B00;
+}
+
+/* ===== SCROLLBAR STYLES ===== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #FF8A00;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #FF6B00;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes pulse-soft {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.animate-pulse-soft {
+    animation: pulse-soft 2s infinite ease-in-out;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-in {
+    animation: fade-in 0.5s ease-out;
+}
+
+@keyframes slide-in-from-bottom {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-in-from-right {
+    from {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ===== AI RESPONSE FORMATTING (Previous) ===== */
+.ai-response-content {
+    line-height: 1.6;
+    color: #475569;
+    font-size: 11px;
+}
+
+.ai-response-content .section-title {
+    color: #FF6B00;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+/* ===== MAP STYLES ===== */
+#map-container {
+    height: 400px;
+    width: 100%;
+    border-radius: 1.5rem;
+    z-index: 10;
+}
+
+@media (min-width: 768px) {
+    #map-container {
+        height: 500px;
+    }
+}
+
+.leaflet-container {
+    font-family: 'Inter', sans-serif;
+    border-radius: 1.5rem;
+}
+
+.custom-marker {
+    background-color: #FF6B00;
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+}
+
+/* ===== MOBILE SIDEBAR STYLES ===== */
+#mobile-sidebar {
+    transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-open {
+    transform: translateX(0) !important;
+}
+
+/* ===== MARKETING TAB STYLES ===== */
+.marketing-tab-active {
+    border-bottom: 2px solid #FF6B00;
+    color: #FF6B00 !important;
+    font-weight: 700;
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+@media (max-width: 640px) {
+    .card-shadow {
+        box-shadow: 0 2px 10px -1px rgba(0, 0, 0, 0.05);
+    }
+}
+
+/* ===== LOADING STATES ===== */
+.loading-spinner {
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid #FF6B00;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===== HOVER EFFECTS ===== */
+.hover-lift {
+    transition: transform 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+}
+
+/* ===== BADGE STYLES ===== */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+}
+
+.badge-success {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.badge-warning {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.badge-info {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+/* ===== FORM INPUTS ===== */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #FF6B00;
+    ring: 2px;
+    ring-color: rgba(255, 107, 0, 0.2);
+}
+
+/* ===== TRANSITIONS ===== */
+* {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button {
+    transition: all 0.2s ease;
+}
+
+/* ===== GLASSMORPHISM EFFECTS ===== */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ===== SKELETON LOADING ===== */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ===== NOTIFICATION ANIMATIONS ===== */
+@keyframes slide-in-from-top {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-in {
+    animation-fill-mode: both;
+}
+
+.slide-in-from-top {
+    animation-name: slide-in-from-top;
+}
+
+.duration-300 {
+    animation-duration: 300ms;
+}
+
+/* ===== BUTTON DISABLED STATE ===== */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===== MOBILE MENU ===== */
+@media (max-width: 1024px) {
+    .sidebar-open {
+        transform: translateX(0) !important;
+    }
+}
+
+/* ===== NEW AI STYLES (From Franchisee Premium) ===== */
+.ai-badge {
+    background: rgba(255, 107, 0, 0.1);
+    color: #FF6B00;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#ai-insight-content {
+    line-height: 1.6;
+    font-size: 0.825rem;
+}
+
+#ai-insight-content strong {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+#ai-insight-content ul {
+    padding-left: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+#ai-insight-content li {
+    margin-bottom: 0.5rem;
+}
+
+.insight-section {
+    border-left: 3px solid #FF6B00;
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* ===== WIDGET SYSTEM STYLES ===== */
+.widget {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+/* Ghost placeholder - shows where widget will land */
+.widget-ghost {
+    opacity: 0.5 !important;
+    background: linear-gradient(135deg, #FFF5F0 0%, #FFE5D9 100%) !important;
+    border: 3px dashed #FF6B00 !important;
+    box-shadow: inset 0 0 20px rgba(255, 107, 0, 0.1) !important;
+}
+
+.widget-ghost * {
+    opacity: 0.3 !important;
+}
+
+/* Widget being dragged */
+.widget-dragging {
+    cursor: grabbing !important;
+    transform: rotate(-3deg) scale(1.08) !important;
+    box-shadow: 0 25px 60px rgba(255, 107, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    z-index: 9999 !important;
+    opacity: 0.95 !important;
+    border: 2px solid #FF6B00 !important;
+}
+
+.widget-fallback {
+    display: none;
+}
+
+/* Hide drag handles and remove buttons by default */
+.widget-drag-handle,
+.widget-remove-btn {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* Show in edit mode */
+body.edit-mode .widget-drag-handle,
+body.edit-mode .widget-remove-btn {
+    opacity: 1;
+}
+
+/* Hover states for edit mode */
+body.edit-mode .widget:hover {
+    border-color: #FED7AA;
+    box-shadow: 0 8px 30px rgba(255, 107, 0, 0.15);
+}
+
+body.edit-mode .widget-drag-handle:hover {
+    color: #FF6B00;
+    cursor: grab;
+}
+
+body.edit-mode .widget-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Widget size variations */
+.widget.lg\:col-span-3 {
+    grid-column: span 3;
+}
+
+.widget.lg\:col-span-4 {
+    grid-column: span 4;
+}
+
+.widget.lg\:col-span-6 {
+    grid-column: span 6;
+}
+
+.widget.lg\:col-span-8 {
+    grid-column: span 8;
+}
+
+.widget.lg\:col-span-12 {
+    grid-column: span 12;
+}
+
+/* Responsive widget sizing */
+@media (max-width: 1024px) {
+    .widget {
+        grid-column: span 12 !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+
+    .widget.lg\:col-span-3,
+    .widget.lg\:col-span-4,
+    .widget.lg\:col-span-6 {
+        grid-column: span 6;
+    }
+}

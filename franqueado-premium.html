@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>Arena Jiu-Jitsu Hub | Painel Premium</title>
+
+    <!-- Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Arena JJ Hub">
+    <meta name="theme-color" content="#FF6B00">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Mobile Detection (Load First) -->
+    <script src="mobile-detector.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        @font-face {
+            font-family: 'Eurostile Bold Extended';
+            src: local('Eurostile Bold Extended'), local('Eurostile-BoldExtended'), local('Arial Black');
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .orange-gradient {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8A00 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .brand-typography {
+            font-family: 'Eurostile Bold Extended', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .input-field {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #FF6B00;
+            ring: 2px;
+            ring-color: rgba(255, 107, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: #FF6B00;
+            color: white;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+        }
+
+        #login-screen {
+            background-image: radial-gradient(circle at 20% 30%, #fff7ed 0%, transparent 100%);
+        }
+
+        .ai-badge {
+            background: rgba(255, 107, 0, 0.1);
+            color: #FF6B00;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        #ai-insight-content {
+            line-height: 1.6;
+            font-size: 0.825rem;
+        }
+
+        #ai-insight-content strong {
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        #ai-insight-content ul {
+            padding-left: 1.25rem;
+            margin-top: 0.5rem;
+        }
+
+        #ai-insight-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-section {
+            border-left: 3px solid #FF6B00;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #sensei-window {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .table-row:hover {
+            background-color: #f1f5f9;
+        }
+
+        .belt-tag {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        th.sortable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        th.sortable:hover {
+            color: #FF6B00;
+        }
+
+        .sort-icon {
+            font-size: 0.6rem;
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+
+        th.active-sort .sort-icon {
+            opacity: 1;
+            color: #FF6B00;
+        }
+
+        .required-label::after {
+            content: " *";
+            color: #ef4444;
+        }
+
+        /* Resize Protection: Force widgets to full width on smaller screens */
+        @media (max-width: 1024px) {
+            .widget {
+                grid-column: span 12 !important;
+            }
+        }
+    </style>
+
+    <!-- Mobile Styles -->
+    <link rel="stylesheet" href="mobile-styles.css">
+</head>
+
+<body class="min-h-screen overflow-x-hidden">
+
+
+    <!-- MAIN APP -->
+    <div id="app-content" class="hidden">
+        <nav
+            class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-6 md:px-12 sticky top-0 z-40 backdrop-blur-md bg-white/90 transition-all">
+            <div class="flex items-center gap-4">
+                <span class="brand-typography text-xs md:text-lg">
+                    <span class="text-[#FF6B00]">ARENA JIU-JITSU</span> <span class="text-black">HUB FRANQUEADO</span>
+                </span>
+                <div class="h-6 w-px bg-slate-200 hidden md:block"></div>
+                <div>
+                    <h2 id="gym-name-header" class="font-bold text-sm text-slate-700 leading-tight">Carregando...</h2>
+                    <p id="gym-owner-header"
+                        class="text-[9px] text-orange-500 font-bold uppercase tracking-tighter mt-0.5">Painel de Gestão
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="px-3 py-1 bg-green-50 border border-green-100 rounded-full flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-green-600 uppercase">Sistema Online</span>
+                </div>
+                <button onclick="handleLogout()" class="text-slate-400 hover:text-red-500 transition-colors"
+                    title="Sair">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </nav>
+
+        <main class="p-4 md:p-8 max-w-7xl mx-auto space-y-8 pb-24">
+
+            <!-- Dashboard Control Panel -->
+            <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-100">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Meu Painel de Controle</h2>
+                    <p class="text-xs text-slate-500 mt-1">Personalize seu dashboard arrastando e organizando os widgets
+                    </p>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="openWidgetSelector()"
+                        class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-bold uppercase hover:bg-orange-50 hover:border-orange-200 transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Adicionar Widget
+                    </button>
+                    <button onclick="toggleEditMode()" id="btn-edit-mode"
+                        class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-bold uppercase hover:bg-slate-200 transition flex items-center gap-2">
+                        <i class="fa-solid fa-pen"></i> Personalizar
+                    </button>
+                    <button onclick="resetDashboard()"
+                        class="px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl text-[10px] font-bold uppercase transition flex items-center gap-2"
+                        title="Restaurar Layout Padrão">
+                        <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline">Restaurar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Widget Container (Drag-Drop Enabled) -->
+            <div id="widget-container" class="grid grid-cols-12 gap-6 auto-rows-min">
+                <!-- Widgets are dynamically rendered here by widget-system.js -->
+            </div>
+
+
+            <!-- SENSEI VIRTUAL (Chat) -->
+            <div id="sensei-window"
+                class="fixed bottom-6 right-6 w-[calc(100%-3rem)] md:w-96 bg-white rounded-3xl shadow-2xl z-[1000] border border-slate-100 hidden flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right">
+                <div class="orange-gradient p-5 text-white flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                            <i class="fa-solid fa-brain text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-sm block leading-none">Sensei Virtual</span>
+                            <span class="text-[9px] opacity-80 uppercase font-bold tracking-widest">IA Assistente</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleSensei()" class="opacity-80 hover:opacity-100 transition"><i
+                            class="fa-solid fa-xmark text-white"></i></button>
+                </div>
+                <div id="chat-messages"
+                    class="h-80 overflow-y-auto p-4 space-y-3 bg-slate-50 text-[11px] no-scrollbar scroll-smooth">
+                    <div class="bg-white p-3 rounded-2xl border mb-2 shadow-sm text-slate-600 w-fit">Oss! Sou seu Sensei
+                        Virtual. Como posso ajudar na gestão do seu dojo hoje?</div>
+                </div>
+                <div class="p-4 border-t bg-white flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Pergunte sobre gestão, treinos..."
+                        class="flex-1 bg-slate-100 rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all border border-transparent">
+                    <button onclick="askSensei()"
+                        class="w-10 h-10 orange-gradient text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg hover:shadow-orange-200 transition-transform active:scale-95"><i
+                            class="fa-solid fa-paper-plane text-xs"></i></button>
+                </div>
+            </div>
+
+            <button onclick="toggleSensei()"
+                class="fixed bottom-6 right-6 w-14 h-14 orange-gradient text-white rounded-full shadow-2xl flex items-center justify-center text-xl border-4 border-white transition-all hover:scale-110 active:scale-95 z-50 hover:rotate-12">
+                <i class="fa-solid fa-comment-dots"></i>
+            </button>
+
+            <!-- MODAL -->
+            <div id="ui-modal"
+                class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-4 transition-opacity duration-300"
+                style="display: none;">
+                <div class="bg-white rounded-[2.5rem] p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-100 no-scrollbar transform scale-95 opacity-0 transition-all duration-300"
+                    id="modal-panel">
+                    <button onclick="closeModal()"
+                        class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all z-10"><i
+                            class="fa-solid fa-xmark"></i></button>
+                    <div id="modal-content"></div>
+                </div>
+            </div>
+
+            <!-- TOAST -->
+            <div id="toast"
+                class="fixed top-6 right-6 bg-slate-900 text-white px-6 py-4 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-3 transform translate-x-32 opacity-0 transition-all duration-500 z-[3000]">
+                <div class="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white"><i
+                        class="fa-solid fa-check"></i></div>
+                <span id="toast-msg">Mensagem</span>
+            </div>
+
+            <!-- LOGOUT CONFIRMATION MODAL -->
+            <div id="logout-confirm-modal" class="fixed inset-0 z-[2001] hidden" aria-labelledby="logout-modal-title"
+                role="dialog" aria-modal="true" style="display: none;">
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0"
+                    id="logout-backdrop"></div>
+
+                <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div id="logout-panel"
+                            class="relative transform overflow-hidden rounded-[2rem] bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md scale-95 opacity-0 border border-slate-100">
+
+                            <div class="bg-white px-6 pb-6 pt-6">
+                                <div class="sm:flex sm:items-start">
+                                    <div
+                                        class="mx-auto flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-orange-50 sm:mx-0 sm:h-12 sm:w-12">
+                                        <i class="fa-solid fa-right-from-bracket text-orange-500 text-xl"></i>
+                                    </div>
+                                    <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                        <h3 class="text-lg font-bold leading-6 text-slate-900" id="logout-modal-title">
+                                            Encerrar Sessão
+                                        </h3>
+                                        <div class="mt-2">
+                                            <p class="text-xs text-slate-500 leading-relaxed">
+                                                Deseja encerrar a sessão?
+                                                <br><br>
+                                                Você será redirecionado para a tela de login.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-slate-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6 gap-3 border-t border-slate-100">
+                                <button type="button" id="btn-logout-confirm"
+                                    class="inline-flex w-full justify-center items-center rounded-xl bg-orange-600 px-4 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-orange-200 hover:bg-orange-500 hover:shadow-orange-300 sm:ml-3 sm:w-auto transition-all transform hover:-translate-y-0.5">
+                                    <i class="fa-solid fa-right-from-bracket mr-2"></i>
+                                    Sim, Sair
+                                </button>
+                                <button type="button" onclick="closeLogoutModal()"
+                                    class="mt-3 inline-flex w-full justify-center items-center rounded-xl bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-all">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONFIRMATION MODAL (New) -->
+            <div id="ui-confirm-modal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog"
+                aria-modal="true" style="display: none;">
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0"
+                    id="confirm-backdrop">
+                </div>
+
+                <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+
+                        <div id="confirm-panel"
+                            class="relative transform overflow-hidden rounded-[2rem] bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md scale-95 opacity-0 border border-slate-100">
+
+                            <div class="bg-white px-6 pb-6 pt-6">
+                                <div class="sm:flex sm:items-start">
+                                    <div
+                                        class="mx-auto flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-red-50 sm:mx-0 sm:h-12 sm:w-12">
+                                        <i class="fa-solid fa-triangle-exclamation text-red-500 text-xl"></i>
+                                    </div>
+                                    <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                        <h3 class="text-lg font-bold leading-6 text-slate-900 font-brand"
+                                            id="confirm-title">
+                                            Remover Guerreiro</h3>
+                                        <div class="mt-2">
+                                            <p class="text-xs text-slate-500 leading-relaxed" id="confirm-msg">Tem
+                                                certeza que
+                                                deseja remover este registro? Esta ação é irreversível e afetará os
+                                                relatórios
+                                                da unidade.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-slate-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-6 gap-3 border-t border-slate-100">
+                                <button type="button" id="btn-confirm-yes"
+                                    class="inline-flex w-full justify-center items-center rounded-xl bg-red-600 px-4 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-red-200 hover:bg-red-500 hover:shadow-red-300 sm:ml-3 sm:w-auto transition-all transform hover:-translate-y-0.5">
+                                    Sim, Remover
+                                </button>
+                                <button type="button" onclick="closeConfirmModal()"
+                                    class="mt-3 inline-flex w-full justify-center items-center rounded-xl bg-white px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-all">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JAVASCRIPT LOGIC (Connected to Backend) -->
+            <script src="franchise-client.js"></script>
+            <script>
+                // Toggle Sensei Panel
+                function toggleSensei() {
+                    const win = document.getElementById('sensei-window');
+                    if (win) {
+                        win.classList.toggle('hidden');
+                    }
+                }
+
+                // Modal Confirm Helpers
+                window.closeConfirmModal = () => {
+                    const modal = document.getElementById('ui-confirm-modal');
+                    const panel = document.getElementById('confirm-panel');
+                    const backdrop = document.getElementById('confirm-backdrop');
+
+                    panel.classList.remove('scale-100', 'opacity-100');
+                    panel.classList.add('scale-95', 'opacity-0');
+                    backdrop.classList.remove('opacity-100');
+                    backdrop.classList.add('opacity-0');
+
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                    }, 300);
+                };
+            </script>
+
+            <!-- SortableJS Library (Drag & Drop) -->
+            <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+            <!-- Widget System Core -->
+            <script src="widget-system.js?v=3"></script>
+            <script src="widgets-franchisee.js?v=4"></script>
+
+            <!-- Initialize Widget System -->
+</body>
+
+</html>

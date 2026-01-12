@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Jiu-Jitsu Hub | Documentação Oficial</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for code blocks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F8FAFC;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .orange-gradient {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF9500 100%);
+        }
+
+        /* Markdown Styles */
+        .markdown-body {
+            color: #334155;
+            line-height: 1.7;
+        }
+
+        .markdown-body h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            letter-spacing: -0.025em;
+        }
+
+        .markdown-body h2 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        .markdown-body h3 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .markdown-body p {
+            margin-bottom: 1.25rem;
+        }
+
+        .markdown-body ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .markdown-body ol {
+            list-style-type: decimal;
+            padding-left: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .markdown-body pre {
+            background-color: #1e293b;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            color: #f8fafc;
+        }
+
+        .markdown-body code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-body :not(pre)>code {
+            background-color: #f1f5f9;
+            color: #ea580c;
+            padding: 0.2em 0.4em;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .markdown-body blockquote {
+            border-left: 4px solid #ea580c;
+            padding-left: 1rem;
+            margin-left: 0;
+            margin-bottom: 1.5rem;
+            color: #64748b;
+            font-style: italic;
+            background: #fff7ed;
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+
+        .markdown-body th,
+        .markdown-body td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .markdown-body a {
+            color: #ea580c;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .markdown-body a:hover {
+            color: #c2410c;
+        }
+
+        .markdown-body hr {
+            margin: 2rem 0;
+            border-color: #e2e8f0;
+        }
+
+        .active-doc {
+            background-color: #fff7ed;
+            color: #ea580c;
+            border-right: 3px solid #ea580c;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col md:flex-row h-screen overflow-hidden">
+
+    <!-- Mobile Header -->
+    <header class="md:hidden bg-white border-b border-slate-100 p-4 flex justify-between items-center z-20">
+        <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+            <span class="text-orange-500"><i class="fa-solid fa-book-open"></i></span>
+            Arena Docs
+        </div>
+        <button onclick="toggleSidebar()" class="text-slate-500 hover:text-orange-500">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="glass-sidebar w-full md:w-72 border-r border-slate-200 hidden md:flex flex-col h-full absolute md:relative z-10 transition-transform duration-300">
+        <!-- Logo Area -->
+        <div class="p-6 border-b border-slate-100">
+            <div class="flex items-center gap-3 mb-1 text-orange-600">
+                <i class="fa-solid fa-layer-group text-2xl"></i>
+                <span class="font-extrabold text-xl tracking-tight text-slate-800">ARENA JIU-JITSU <span
+                        class="text-orange-500">HUB</span></span>
+            </div>
+            <p class="text-xs text-slate-400 font-medium pl-9">CENTRAL DE DOCUMENTAÇÃO</p>
+        </div>
+
+        <!-- Search -->
+        <div class="p-4">
+            <div class="relative">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="doc-search" placeholder="Filtrar arquivos..."
+                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+            </div>
+        </div>
+
+        <!-- Doc List -->
+        <nav class="flex-1 overflow-y-auto px-4 pb-6 space-y-1" id="file-list">
+            <!-- Items injected by JS -->
+        </nav>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-slate-100 bg-slate-50">
+            <a href="index.html"
+                class="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-orange-600 transition-colors">
+                <i class="fa-solid fa-arrow-left"></i> Voltar ao Dashboard
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-full overflow-hidden flex flex-col relative bg-white">
+        <!-- Loading Indicator -->
+        <div id="loading" class="absolute inset-0 bg-white/80 z-50 flex items-center justify-center hidden">
+            <div class="animate-spin text-orange-500 text-4xl"><i class="fa-solid fa-circle-notch"></i></div>
+        </div>
+
+        <!-- Toolbar -->
+        <div
+            class="h-16 border-b border-slate-100 flex items-center justify-between px-8 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+            <h2 id="current-doc-title" class="font-bold text-slate-800 truncate">Selecionar um arquivo</h2>
+            <div class="flex gap-2">
+                <button onclick="copyCurrentUrl()" title="Copiar Link"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-orange-500 transition-colors">
+                    <i class="fa-solid fa-link"></i>
+                </button>
+                <a id="download-btn" href="#" download title="Baixar Markdown"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-orange-500 transition-colors">
+                    <i class="fa-solid fa-download"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Content Viewer -->
+        <div class="flex-1 overflow-y-auto p-8 md:p-12 scroll-smooth" id="scroll-container">
+            <div class="max-w-4xl mx-auto">
+                <div id="content-area" class="markdown-body animate-fade-in">
+                    <!-- Markdown rendered here -->
+                    <div class="text-center py-20 text-slate-400">
+                        <i class="fa-regular fa-file-lines text-6xl mb-4 opacity-30"></i>
+                        <p class="text-lg">Selecione um documento no menu lateral para começar a leitura.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // CONFIGURATION: List of Markdown files available
+        const documents = [
+            { file: 'SYSTEM_DOCUMENTATION.md', title: '📘 Documentação do Sistema', category: 'Principal' },
+            { file: 'README.md', title: '📌 README', category: 'Principal' },
+            { file: 'QUICK_START.md', title: '🚀 Guia Rápido', category: 'Principal' },
+            { file: 'BACKEND_GUIDE.md', title: '⚙️ Manual do Backend', category: 'Técnico' },
+            { file: 'api-client.js', title: '📜 API Client (Source)', category: 'Código', isCode: true },
+            { file: 'TROUBLESHOOTING.md', title: '🔧 Solução de Problemas', category: 'Suporte' },
+            { file: 'IMPLEMENTATION_STATUS.md', title: '📊 Status de Implementação', category: 'Projeto' },
+            { file: 'BUILD_SUMMARY.md', title: '🏗️ Resumo do Build', category: 'Projeto' },
+            { file: 'FINAL_BRANDING.md', title: '🎨 Branding Final', category: 'Design' },
+            { file: 'GEOCODING_DOCS.md', title: '📍 Geolocalização', category: 'Técnico' },
+            { file: 'INTEGRATION_PLAN.md', title: '🔗 Plano de Integração', category: 'Projeto' },
+            { file: 'ADICIONAR_UNIDADES.md', title: '🏢 Adicionar Unidades', category: 'Guias' },
+        ];
+
+        // State
+        let currentFile = null;
+
+        // Elements
+        const fileListEl = document.getElementById('file-list');
+        const contentArea = document.getElementById('content-area');
+        const loader = document.getElementById('loading');
+        const titleEl = document.getElementById('current-doc-title');
+        const downloadBtn = document.getElementById('download-btn');
+        const searchInput = document.getElementById('doc-search');
+        const sidebar = document.getElementById('sidebar');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSidebar(documents);
+
+            // Auto-load first doc or doc from hash
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                loadFile(hash);
+            } else {
+                loadFile('SYSTEM_DOCUMENTATION.md');
+            }
+        });
+
+        // Search Filter
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = documents.filter(doc =>
+                doc.title.toLowerCase().includes(term) ||
+                doc.file.toLowerCase().includes(term)
+            );
+            renderSidebar(filtered);
+        });
+
+        function renderSidebar(docs) {
+            fileListEl.innerHTML = '';
+
+            // Group by category
+            const categories = {};
+            docs.forEach(doc => {
+                if (!categories[doc.category]) categories[doc.category] = [];
+                categories[doc.category].push(doc);
+            });
+
+            // Render groups
+            for (const [cat, items] of Object.entries(categories)) {
+                const catHeader = document.createElement('div');
+                catHeader.className = 'px-3 pt-4 pb-2 text-xs font-bold text-slate-400 uppercase tracking-wider';
+                catHeader.textContent = cat;
+                fileListEl.appendChild(catHeader);
+
+                items.forEach(doc => {
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-1 flex items-center gap-2 ${currentFile === doc.file ? 'active-doc' : 'text-slate-600 hover:bg-slate-100'}`;
+                    btn.innerHTML = `<span>${doc.title}</span>`;
+                    btn.onclick = () => loadFile(doc.file);
+
+                    if (currentFile === doc.file) {
+                        btn.classList.add('active-doc');
+                    }
+
+                    fileListEl.appendChild(btn);
+                });
+            }
+        }
+
+        async function loadFile(filename) {
+            if (!filename) return;
+
+            // Update State
+            currentFile = filename;
+            window.location.hash = filename;
+
+            // Update UI Selection
+            const allBtns = fileListEl.querySelectorAll('button');
+            allBtns.forEach(btn => btn.classList.remove('active-doc', 'bg-orange-50', 'text-orange-600', 'border-r-2', 'border-orange-500'));
+
+            // Find button by text content is tricky, let's just re-render or find by iteration if needed. 
+            // Re-rendering sidebar to simplicity to apply active class
+            renderSidebar(documents.filter(d => d.title.toLowerCase().includes(searchInput.value.toLowerCase())));
+
+            // Setup
+            loader.classList.remove('hidden');
+            const docInfo = documents.find(d => d.file === filename) || { title: filename, file: filename };
+            titleEl.textContent = docInfo.title;
+            downloadBtn.setAttribute('href', filename);
+
+            try {
+                const response = await fetch(filename);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                let text = await response.text();
+
+                // If JS file, wrap in code block
+                if (filename.endsWith('.js')) {
+                    text = '```javascript\n' + text + '\n```';
+                }
+
+                // Render MD
+                contentArea.innerHTML = marked.parse(text);
+
+                // Highlight Code
+                hljs.highlightAll();
+
+                // Reset scroll
+                document.getElementById('scroll-container').scrollTop = 0;
+
+            } catch (error) {
+                console.error('Error loading file:', error);
+                contentArea.innerHTML = `
+                    <div class="p-4 bg-red-50 text-red-600 rounded-lg border border-red-200">
+                        <h3 class="font-bold">Erro ao carregar documento</h3>
+                        <p class="text-sm mt-1">Não foi possível ler o arquivo <strong>${filename}</strong>.</p>
+                        <p class="text-xs mt-2 opacity-75">${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                loader.classList.add('hidden');
+                // Creating a simulated active state visual without full re-render logic for performance
+                const btns = Array.from(fileListEl.querySelectorAll('button'));
+                const activeBtn = btns.find(b => b.innerText.includes(docInfo.title));
+                if (activeBtn) {
+                    activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                    activeBtn.classList.add('active-doc');
+                }
+
+                // Close sidebar on mobile
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('hidden');
+                }
+            }
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('hidden');
+            if (!sidebar.classList.contains('hidden')) {
+                sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'z-30', 'w-3/4', 'shadow-2xl');
+            }
+        }
+
+        function copyCurrentUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('Link copiado para a área de transferência!');
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Jiu-Jitsu Hub | Portal de Acesso</title>
+    <meta name="description" content="Selecione seu perfil de acesso ao Arena Jiu-Jitsu Hub">
+
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <!-- Eurostile Font -->
+    <link href="https://fonts.cdnfonts.com/css/eurostile" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        @font-face {
+            font-family: 'Eurostile Bold Extended';
+            src: local('Eurostile Bold Extended'), local('Eurostile-BoldExtended'), local('Arial Black');
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .brand-typography {
+            font-family: 'Eurostile Bold Extended', sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .bg-grid-pattern {
+            background-image:
+                linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+
+        .card-choice {
+            background: white;
+            border: 1px solid #f1f5f9;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-choice::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 100%);
+            transition: all 0.3s ease;
+        }
+
+        .card-choice:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 107, 0, 0.3);
+            box-shadow: 0 20px 60px -10px rgba(255, 107, 0, 0.15);
+        }
+
+        .card-choice:hover::before {
+            background: linear-gradient(90deg, #FF6B00 0%, #FF8A00 100%);
+        }
+
+        .card-choice:hover .icon-container {
+            transform: scale(1.1) rotate(5deg);
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8A00 100%);
+            color: white;
+            box-shadow: 0 10px 30px -5px rgba(255, 107, 0, 0.4);
+        }
+
+        .icon-container {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #f8fafc;
+            color: #94a3b8;
+        }
+
+        .orange-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 107, 0, 0.05) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .btn-action {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+
+        .card-choice:hover .btn-action {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8A00 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+        }
+
+        .animate-enter {
+            animation: enter-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes enter-up {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .delay-100 {
+            animation-delay: 100ms;
+        }
+
+        .delay-200 {
+            animation-delay: 200ms;
+        }
+
+        .delay-300 {
+            animation-delay: 300ms;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center p-6 relative">
+
+    <!-- Background Effects -->
+    <div class="fixed inset-0 bg-grid-pattern z-0 opacity-50"></div>
+    <div class="orange-glow"></div>
+
+    <div class="max-w-5xl w-full z-10 relative">
+
+        <!-- Header -->
+        <div class="text-center mb-16 animate-enter">
+            <h1 class="brand-typography text-4xl md:text-5xl mb-4 tracking-tighter text-slate-900">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-orange-500">ARENA</span>
+                <span>JIU-JITSU HUB</span>
+            </h1>
+            <p class="text-slate-500 text-sm md:text-base font-medium tracking-wide uppercase">
+                Sistema Integrado de Gestão & Performance
+            </p>
+        </div>
+
+        <!-- Cards Container -->
+        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+
+            <!-- OPTION 1: MATRIZ -->
+            <a href="matriz-login.html" class="block group h-full">
+                <div
+                    class="card-choice p-10 rounded-[2.5rem] h-full flex flex-col items-center text-center cursor-pointer animate-enter delay-100 shadow-sm">
+                    <div class="icon-container w-24 h-24 rounded-3xl flex items-center justify-center mb-8">
+                        <i class="fa-solid fa-building-columns text-4xl"></i>
+                    </div>
+
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 group-hover:text-orange-600 transition-colors">
+                        Matriz
+                    </h2>
+                    <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
+                        Acesso administrativo central para gestão da rede, monitoramento de KPIs e controle de
+                        franquias.
+                    </p>
+
+                    <div
+                        class="btn-action w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
+                        <span>Acessar Portal</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- OPTION 2: FRANQUEADO -->
+            <a href="franqueado-login.html" class="block group h-full">
+                <div
+                    class="card-choice p-10 rounded-[2.5rem] h-full flex flex-col items-center text-center cursor-pointer animate-enter delay-200 shadow-sm">
+                    <div class="icon-container w-24 h-24 rounded-3xl flex items-center justify-center mb-8">
+                        <i class="fa-solid fa-store text-4xl"></i>
+                    </div>
+
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 group-hover:text-orange-600 transition-colors">
+                        Franqueado
+                    </h2>
+                    <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
+                        Área exclusiva para parceiros. Gestão de unidade, alunos, financeiro e suporte da rede.
+                    </p>
+
+                    <div
+                        class="btn-action w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
+                        <span>Minha Unidade</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-16 animate-enter delay-300">
+            <p class="text-xs text-slate-400 font-medium">
+                &copy; 2026 Arena Jiu-Jitsu Networking System
+            </p>
+        </div>
+
+</body>
+
+</html>

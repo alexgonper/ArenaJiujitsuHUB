@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>Arena Hub Mobile - Teste de Detecção</title>
+
+    <!-- Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Arena Hub">
+    <meta name="theme-color" content="#FF6B00">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile-styles.css">
+
+    <style>
+        .info-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-inactive {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .device-icon {
+            font-size: 3rem;
+            color: #FF6B00;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-slate-50">
+
+    <div class="orange-gradient text-white p-6 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-2xl font-bold flex items-center gap-3">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+                Arena Hub - Teste Mobile
+            </h1>
+            <p class="text-sm opacity-90 mt-1">Sistema de Detecção Automática de Dispositivo</p>
+        </div>
+    </div>
+
+    <main class="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
+
+        <!-- Device Type -->
+        <div class="info-card">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-devices text-orange-500"></i>
+                Tipo de Dispositivo
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div id="mobile-card" class="text-center p-4 rounded-lg border-2 border-slate-200">
+                    <i class="fa-solid fa-mobile-screen device-icon"></i>
+                    <h3 class="font-bold mt-2">Mobile</h3>
+                    <span id="mobile-status" class="status-badge status-inactive mt-2">
+                        <i class="fa-solid fa-circle-xmark"></i> Inativo
+                    </span>
+                </div>
+
+                <div id="tablet-card" class="text-center p-4 rounded-lg border-2 border-slate-200">
+                    <i class="fa-solid fa-tablet-screen-button device-icon"></i>
+                    <h3 class="font-bold mt-2">Tablet</h3>
+                    <span id="tablet-status" class="status-badge status-inactive mt-2">
+                        <i class="fa-solid fa-circle-xmark"></i> Inativo
+                    </span>
+                </div>
+
+                <div id="desktop-card" class="text-center p-4 rounded-lg border-2 border-slate-200">
+                    <i class="fa-solid fa-desktop device-icon"></i>
+                    <h3 class="font-bold mt-2">Desktop</h3>
+                    <span id="desktop-status" class="status-badge status-inactive mt-2">
+                        <i class="fa-solid fa-circle-xmark"></i> Inativo
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Device Info -->
+        <div class="info-card">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-orange-500"></i>
+                Informações do Dispositivo
+            </h2>
+
+            <div class="space-y-3">
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <span class="font-medium text-slate-600">Largura da Tela</span>
+                    <span id="screen-width" class="font-bold text-slate-900">-</span>
+                </div>
+
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <span class="font-medium text-slate-600">Altura da Tela</span>
+                    <span id="screen-height" class="font-bold text-slate-900">-</span>
+                </div>
+
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <span class="font-medium text-slate-600">Orientação</span>
+                    <span id="orientation" class="font-bold text-slate-900">-</span>
+                </div>
+
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <span class="font-medium text-slate-600">Pixel Ratio</span>
+                    <span id="pixel-ratio" class="font-bold text-slate-900">-</span>
+                </div>
+
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <span class="font-medium text-slate-600">Touch Support</span>
+                    <span id="touch-support" class="font-bold text-slate-900">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Agent -->
+        <div class="info-card">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-code text-orange-500"></i>
+                User Agent
+            </h2>
+            <div class="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto">
+                <code id="user-agent">-</code>
+            </div>
+        </div>
+
+        <!-- CSS Classes -->
+        <div class="info-card">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-palette text-orange-500"></i>
+                Classes CSS Aplicadas
+            </h2>
+            <div class="flex flex-wrap gap-2" id="css-classes">
+                <!-- Classes will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Test Widgets -->
+        <div class="info-card">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-grid-2 text-orange-500"></i>
+                Teste de Layout Responsivo
+            </h2>
+
+            <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12 lg:col-span-6 bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
+                    <h3 class="font-bold text-orange-900">Widget 1 (50% Desktop)</h3>
+                    <p class="text-sm text-orange-700 mt-2">Este widget ocupa 6 colunas no desktop e 12 no mobile</p>
+                </div>
+
+                <div class="col-span-12 lg:col-span-6 bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
+                    <h3 class="font-bold text-orange-900">Widget 2 (50% Desktop)</h3>
+                    <p class="text-sm text-orange-700 mt-2">Este widget ocupa 6 colunas no desktop e 12 no mobile</p>
+                </div>
+
+                <div class="col-span-12 lg:col-span-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                    <h3 class="font-bold text-blue-900">Widget 3 (33% Desktop)</h3>
+                    <p class="text-sm text-blue-700 mt-2">4 colunas desktop, 12 mobile</p>
+                </div>
+
+                <div class="col-span-12 lg:col-span-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                    <h3 class="font-bold text-blue-900">Widget 4 (33% Desktop)</h3>
+                    <p class="text-sm text-blue-700 mt-2">4 colunas desktop, 12 mobile</p>
+                </div>
+
+                <div class="col-span-12 lg:col-span-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                    <h3 class="font-bold text-blue-900">Widget 5 (33% Desktop)</h3>
+                    <p class="text-sm text-blue-700 mt-2">4 colunas desktop, 12 mobile</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="info-card">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-rocket text-orange-500"></i>
+                Ações de Teste
+            </h2>
+
+            <button onclick="simulateDevice('mobile')"
+                class="bg-white border-2 border-slate-300 text-slate-700 px-6 py-4 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-mobile-screen"></i>
+                Simular Mobile
+            </button>
+
+            <button onclick="simulateDevice('tablet')"
+                class="bg-white border-2 border-slate-300 text-slate-700 px-6 py-4 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-tablet-screen-button"></i>
+                Simular Tablet
+            </button>
+
+            <button onclick="simulateDevice('desktop')"
+                class="bg-white border-2 border-slate-300 text-slate-700 px-6 py-4 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-desktop"></i>
+                Simular Desktop
+            </button>
+
+            <button onclick="resetSimulation()"
+                class="bg-white border-2 border-red-200 text-red-600 px-6 py-4 rounded-xl font-bold hover:bg-red-50 transition-all flex items-center justify-center gap-2 col-span-1 md:col-span-2">
+                <i class="fa-solid fa-rotate-left"></i>
+                Resetar (Detecção Auto)
+            </button>
+
+            <button onclick="window.location.href='index.html'"
+                class="orange-gradient text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-home"></i>
+                Ir para Dashboard Matrix
+            </button>
+
+            <button onclick="window.location.href='franqueado-premium.html'"
+                class="bg-slate-700 text-white px-6 py-4 rounded-xl font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-user"></i>
+                Ir para Painel Franqueado
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 p-6 mt-12">
+        <div class="max-w-4xl mx-auto text-center text-sm text-slate-500">
+            <p>🥋 <strong>Arena Jiu-Jitsu Hub</strong> - Sistema Mobile Responsivo</p>
+            <p class="mt-1">Desenvolvido com Antigravity AI</p>
+        </div>
+    </footer>
+
+    <!-- Mobile Detection (Load before inline script) -->
+    <script src="mobile-detector.js"></script>
+
+    <script>
+        function updateInfo() {
+            if (!window.deviceDetector) {
+                console.error('Device detector not loaded');
+                return;
+            }
+
+            const info = window.deviceDetector.getDeviceInfo();
+
+            // Update device type cards
+            document.getElementById('mobile-card').classList.remove('border-green-500', 'bg-green-50');
+            document.getElementById('tablet-card').classList.remove('border-green-500', 'bg-green-50');
+            document.getElementById('desktop-card').classList.remove('border-green-500', 'bg-green-50');
+
+            document.getElementById('mobile-status').className = 'status-badge status-inactive mt-2';
+            document.getElementById('tablet-status').className = 'status-badge status-inactive mt-2';
+            document.getElementById('desktop-status').className = 'status-badge status-inactive mt-2';
+
+            if (info.isMobile) {
+                document.getElementById('mobile-card').classList.add('border-green-500', 'bg-green-50');
+                document.getElementById('mobile-status').className = 'status-badge status-active mt-2';
+                document.getElementById('mobile-status').innerHTML = '<i class="fa-solid fa-circle-check"></i> Ativo';
+            } else if (info.isTablet) {
+                document.getElementById('tablet-card').classList.add('border-green-500', 'bg-green-50');
+                document.getElementById('tablet-status').className = 'status-badge status-active mt-2';
+                document.getElementById('tablet-status').innerHTML = '<i class="fa-solid fa-circle-check"></i> Ativo';
+            } else {
+                document.getElementById('desktop-card').classList.add('border-green-500', 'bg-green-50');
+                document.getElementById('desktop-status').className = 'status-badge status-active mt-2';
+                document.getElementById('desktop-status').innerHTML = '<i class="fa-solid fa-circle-check"></i> Ativo';
+            }
+
+            // Update device info
+            document.getElementById('screen-width').textContent = info.screenWidth + 'px';
+            document.getElementById('screen-height').textContent = info.screenHeight + 'px';
+            document.getElementById('orientation').textContent = info.orientation.toUpperCase();
+            document.getElementById('pixel-ratio').textContent = window.devicePixelRatio + 'x';
+            document.getElementById('touch-support').textContent = ('ontouchstart' in window) ? 'Sim ✓' : 'Não ✗';
+            document.getElementById('user-agent').textContent = info.userAgent;
+
+            // Update CSS classes
+            const classes = document.body.className.split(' ').filter(c => c.trim());
+            const classesContainer = document.getElementById('css-classes');
+            classesContainer.innerHTML = '';
+
+            classes.forEach(className => {
+                const badge = document.createElement('span');
+                badge.className = 'px-3 py-1 bg-slate-900 text-green-400 rounded-full text-xs font-mono';
+                badge.textContent = '.' + className;
+                classesContainer.appendChild(badge);
+            });
+        }
+
+        function toggleOrientation() {
+            alert('Para testar a rotação, use as ferramentas de desenvolvedor do navegador ou gire seu dispositivo físico.');
+        }
+
+        function simulateDevice(type) {
+            console.log('Requesting simulation for:', type);
+            // Call method directly on instance to avoid recursion
+            if (window.deviceDetector && typeof window.deviceDetector.simulate === 'function') {
+                window.deviceDetector.simulate(type);
+                updateInfo();
+            } else {
+                console.error("deviceDetector.simulate method not found", window.deviceDetector);
+            }
+        }
+
+        function resetSimulation() {
+            // Call method directly on instance
+            if (window.deviceDetector && typeof window.deviceDetector.resetSimulation === 'function') {
+                window.deviceDetector.resetSimulation();
+                updateInfo();
+            } else {
+                 console.error("deviceDetector.resetSimulation method not found");
+            }
+        }
+
+        // Listen for device changes
+        window.addEventListener('arenaDeviceChange', () => {
+            console.log('Device changed!');
+            updateInfo();
+        });
+
+        window.addEventListener('arenaOrientationChange', () => {
+            console.log('Orientation changed!');
+            updateInfo();
+        });
+
+        // Initial update
+        setTimeout(updateInfo, 100);
+    </script>
+
+</body>
+
+</html>
