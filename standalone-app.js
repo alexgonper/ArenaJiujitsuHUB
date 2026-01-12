@@ -2106,41 +2106,94 @@ window.changeSection = (id) => {
 };
 
 // ===== AI INTEGRATION (SECURE BACKEND PROXY) =====
-async function callGemini(prompt) {
-    try {
-        console.log(`📡 Calling AI Service: ${API_BASE_URL}/ai/generate`);
-        const response = await fetch(`${API_BASE_URL}/ai/generate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Bypass-Tunnel-Reminder': 'true'
-            },
-            body: JSON.stringify({ prompt: prompt })
-        });
+async function callGemini(prompt, retries = 3) {
+    const delays = [1000, 2000, 4000]; // Backoff exponencial: 1s, 2s, 4s
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Server returned ${response.status}: ${errorText}`);
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            console.log(`📡 Calling AI Service (Tentativa ${attempt + 1}/${retries}): ${API_BASE_URL}/ai/generate`);
+
+            const response = await fetch(`${API_BASE_URL}/ai/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Bypass-Tunnel-Reminder': 'true'
+                },
+                body: JSON.stringify({ prompt: prompt }),
+                signal: AbortSignal.timeout(30000) // 30 segundos timeout
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+
+                // Parse error para verificar se é "overloaded"
+                let errorMessage = errorText;
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.error || errorText;
+                } catch (e) {
+                    // Se não for JSON, usa o texto direto
+                }
+
+                // Se for erro de sobrecarga E ainda temos tentativas, retry
+                if ((errorMessage.includes('overloaded') || response.status === 503 || response.status === 429) && attempt < retries - 1) {
+                    console.warn(`⚠️ Modelo sobrecarregado. Tentando novamente em ${delays[attempt]}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+                    continue; // Tenta novamente
+                }
+
+                throw new Error(`Server returned ${response.status}: ${errorMessage}`);
+            }
+
+            const json = await response.json();
+
+            if (!json.success || !json.data) {
+                // Verifica se é erro de overload
+                const errorMsg = json.error || 'Falha na comunicação com IA';
+                if ((errorMsg.includes('overloaded') || errorMsg.includes('quota')) && attempt < retries - 1) {
+                    console.warn(`⚠️ Erro de cota/sobrecarga. Tentando novamente em ${delays[attempt]}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+                    continue; // Tenta novamente
+                }
+                throw new Error(errorMsg);
+            }
+
+            // ✅ Sucesso! Limpar markdown e retornar
+            let cleanedData = json.data;
+            if (typeof cleanedData === 'string') {
+                cleanedData = cleanedData
+                    .replace(/```html\n?/gi, '')
+                    .replace(/```json\n?/gi, '')
+                    .replace(/```\n?/g, '')
+                    .trim();
+            }
+
+            console.log(`✅ AI Service respondeu com sucesso na tentativa ${attempt + 1}`);
+            return cleanedData;
+
+        } catch (e) {
+            // Se for o último retry, retorna erro
+            if (attempt === retries - 1) {
+                console.error(`❌ AI Service Error após ${retries} tentativas:`, e);
+
+                // Mensagens de erro mais amigáveis
+                if (e.message.includes('overloaded')) {
+                    return `ERROR: O serviço de IA está temporariamente sobrecarregado. Por favor, aguarde alguns minutos e tente novamente.`;
+                } else if (e.message.includes('quota')) {
+                    return `ERROR: Limite de uso da IA atingido. Contate o administrador do sistema.`;
+                } else if (e.message.includes('timeout') || e.name === 'AbortError') {
+                    return `ERROR: Tempo de resposta excedido. Verifique sua conexão com a internet.`;
+                } else if (e.message.includes('Failed to fetch')) {
+                    return `ERROR: Não foi possível conectar ao servidor. Verifique se o backend está rodando.`;
+                }
+
+                return `ERROR: ${e.message}`;
+            }
+
+            // Se não for o último retry e for erro de rede, tenta novamente
+            console.warn(`⚠️ Erro na tentativa ${attempt + 1}. Tentando novamente em ${delays[attempt]}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delays[attempt]));
         }
-
-        const json = await response.json();
-        if (!json.success || !json.data) throw new Error(json.error || 'Falha na comunicação com IA');
-
-        // Clean markdown code block markers from Gemini response
-        let cleanedData = json.data;
-        if (typeof cleanedData === 'string') {
-            // Remove ```html, ```json, ``` markers
-            cleanedData = cleanedData
-                .replace(/```html\n?/gi, '')
-                .replace(/```json\n?/gi, '')
-                .replace(/```\n?/g, '')
-                .trim();
-        }
-
-        return cleanedData;
-    } catch (e) {
-        console.error("AI Service Error:", e);
-        return `ERROR: ${e.message}`;
     }
 }
 
