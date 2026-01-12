@@ -106,28 +106,28 @@ function formatAiResponse(text) {
 }
 
 async function callGemini(prompt, systemInstruction = "Mentor Matrix Arena Jiu-Jitsu.") {
-    if (!geminiConfig.apiKey) {
-        console.warn("Gemini API key not configured");
-        return generateMockAIResponse(prompt);
-    }
+    const apiBase = window.API_URL || 'http://localhost:5000/api/v1';
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiConfig.modelName}:generateContent?key=${geminiConfig.apiKey}`;
-        const response = await fetch(url, {
+        const response = await fetch(`${apiBase}/ai/generate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                systemInstruction: {
-                    parts: [{
-                        text: systemInstruction + " IMPORTANTE: Não use caracteres especiais como #, *, _ ou hífens. Texto limpo."
-                    }]
-                }
+                prompt: prompt,
+                systemInstruction: systemInstruction + " IMPORTANTE: Não use caracteres especiais como #, *, _ ou hífens. Texto limpo."
             })
         });
 
-        const data = await response.json();
-        let textResponse = data.candidates[0].content.parts[0].text;
+        const json = await response.json();
+
+        if (!json.success || !json.data) {
+            throw new Error(json.error || 'Falha na resposta da IA');
+        }
+
+        let textResponse = json.data;
 
         // Clean markdown code block markers from Gemini response
         if (typeof textResponse === 'string') {
@@ -140,34 +140,35 @@ async function callGemini(prompt, systemInstruction = "Mentor Matrix Arena Jiu-J
 
         return textResponse;
     } catch (error) {
-        console.error("Error calling Gemini API:", error);
+        console.error("Error calling backend AI:", error);
         return generateMockAIResponse(prompt);
     }
 }
 
 async function callImagen(prompt) {
-    if (!geminiConfig.apiKey) {
-        console.warn("Gemini API key not configured");
-        return generateMockImage();
-    }
+    const apiBase = window.API_URL || 'http://localhost:5000/api/v1';
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiConfig.imageModel}:predict?key=${geminiConfig.apiKey}`;
         const finalPrompt = `${ARENA_PERSONA_PROMPT}. Scenario: ${prompt}. Cinematic lighting, professional photography.`;
 
-        const response = await fetch(url, {
+        const response = await fetch(`${apiBase}/ai/image`, {
             method: "POST",
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                instances: [{ prompt: finalPrompt }],
-                parameters: { sampleCount: 1 }
-            })
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
+            body: JSON.stringify({ prompt: finalPrompt })
         });
 
-        const result = await response.json();
-        return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+        const json = await response.json();
+
+        if (!json.success || !json.data) {
+            throw new Error(json.error || 'Falha na geração de imagem');
+        }
+
+        return json.data;
     } catch (error) {
-        console.error("Error calling Imagen API:", error);
+        console.error("Error calling backend Image service:", error);
         return generateMockImage();
     }
 }

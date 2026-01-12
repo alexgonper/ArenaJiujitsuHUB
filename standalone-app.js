@@ -2216,7 +2216,7 @@ window.runAiAnalysis = async (manual = false, targetId = 'ai-insight-content') =
         container.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full py-12 text-slate-400 italic text-center">
                 <i class="fa-solid fa-bolt animate-pulse mb-3 text-orange-500 text-2xl"></i>
-                <span class="animate-pulse font-medium block">Consultando Gemini 1.5 Flash...</span>
+                <span class="animate-pulse font-medium block">Consultando Gemini 2.0 Flash...</span>
                 <span class="text-[10px] mt-2 block opacity-70">Enviando telemetria ${isNetworkContext ? 'da REDE' : 'da UNIDADE'} para análise neural.</span>
             </div>
         `;
@@ -2357,9 +2357,9 @@ window.runAiAnalysis = async (manual = false, targetId = 'ai-insight-content') =
 
         SAÍDA ESPERADA (APENAS JSON VÁLIDO e SEMPRE com as chaves cfo, coo, cmo):
     {
-        "cfo": "Análise financeira executiva. Fale sobre saúde do caixa, margem de lucro e eficiência financeira ${isNetworkContext ? 'global da rede' : 'da unidade'}.",
-        "coo": "Análise operacional estratégica. Fale sobre ${isNetworkContext ? 'padronização, suporte às unidades e qualidade técnica' : 'turmas, retenção e estrutura'}.",
-        "cmo": "Plano de marketing ${isNetworkContext ? 'institucional e de marca' : 'local e aquisição'}. Sugira campanhas específicas."
+        "cfo": "Texto da análise (FORMATO STRING SIMPLES, NUNCA OBJETO)",
+        "coo": "Texto da análise (FORMATO STRING SIMPLES, NUNCA OBJETO)",
+        "cmo": "Texto da análise (FORMATO STRING SIMPLES, NUNCA OBJETO)"
     }
     `;
 
@@ -2386,51 +2386,70 @@ window.runAiAnalysis = async (manual = false, targetId = 'ai-insight-content') =
             if (startIdx !== -1 && endIdx !== -1) {
                 let cleanJson = resultText.substring(startIdx, endIdx + 1);
 
-                // 2. Múltiplas estratégias de sanitização para caracteres de controle
-                // Estratégia 1: Tentar parsing direto primeiro
                 try {
                     aiResponse = JSON.parse(cleanJson);
                 } catch (firstError) {
                     console.warn("First parse attempt failed, trying sanitization...");
 
                     // Estratégia 2: Escapar caracteres problemáticos dentro de strings JSON
-                    // Preserva quebras de linha mas as escapa corretamente
                     let sanitizedJson = cleanJson
-                        .replace(/\n/g, '\\n')        // Escapar quebras de linha
-                        .replace(/\r/g, '\\r')        // Escapar retorno de carro
-                        .replace(/\t/g, '\\t')        // Escapar tabs
-                        .replace(/\f/g, '\\f')        // Escapar form feed
-                        .replace(/\b/g, '\\b');       // Escapar backspace
+                        .replace(/\n/g, '\\n')
+                        .replace(/\r/g, '\\r')
+                        .replace(/\t/g, '\\t')
+                        .replace(/\f/g, '\\f')
+                        .replace(/\b/g, '\\b');
 
                     try {
                         aiResponse = JSON.parse(sanitizedJson);
                     } catch (secondError) {
                         console.warn("Second parse attempt failed, trying aggressive cleanup...");
-
-                        // Estratégia 3: Limpeza agressiva - remove todos os caracteres de controle
-                        // (exceto espaços normais)
                         sanitizedJson = cleanJson.replace(/[\x00-\x1F\x7F]/g, " ");
 
                         try {
                             aiResponse = JSON.parse(sanitizedJson);
                         } catch (thirdError) {
                             console.warn("Third parse attempt failed, trying character-by-character sanitization...");
-
-                            // Estratégia 4: Sanitização caractere por caractere
-                            // Remove apenas caracteres verdadeiramente problemáticos
                             sanitizedJson = cleanJson.split('').map(char => {
                                 const code = char.charCodeAt(0);
-                                // Remove caracteres de controle perigosos, mas preserva espaços
-                                if (code >= 32 || code === 9 || code === 10 || code === 13) {
-                                    return char;
-                                }
+                                if (code >= 32 || code === 9 || code === 10 || code === 13) return char;
                                 return ' ';
                             }).join('');
-
                             aiResponse = JSON.parse(sanitizedJson);
                         }
                     }
                 }
+
+                // --- NORMALIZAÇÃO EXAUSTIVA (Evita [object Object] e Garante Texto Limpo) ---
+                ['cfo', 'coo', 'cmo'].forEach(key => {
+                    let content = aiResponse[key];
+
+                    if (content && typeof content === 'object') {
+                        // Tenta campos comuns (incluindo variações com acento que a IA 2.0 costuma gerar)
+                        content = content.text || content.analise || content.análise ||
+                            content.analysis || content.insight || content.conteudo ||
+                            content.conteúdo || content.content || JSON.stringify(content);
+                    }
+
+                    if (typeof content === 'string') {
+                        // 1. Decodifica se houver stringificação dupla (comum quando a IA manda string dentro de JSON)
+                        if (content.startsWith('"') && content.endsWith('"')) {
+                            try { content = JSON.parse(content); } catch (e) { }
+                        }
+
+                        // 2. Converte quebras de linha literais (\\n ou \n) para tags <br>
+                        aiResponse[key] = content
+                            .replace(/\\n/g, '<br>')
+                            .replace(/\n/g, '<br>')
+                            .replace(/\r/g, '')
+                            .trim();
+
+                        // 3. Remove aspas extras remanescentes do início/fim se houver erro de parsing
+                        if (aiResponse[key].startsWith('"')) aiResponse[key] = aiResponse[key].substring(1);
+                        if (aiResponse[key].endsWith('"')) aiResponse[key] = aiResponse[key].substring(0, aiResponse[key].length - 1);
+                    } else {
+                        aiResponse[key] = content || "Informação não processada.";
+                    }
+                });
             } else {
                 throw new Error("Formato JSON não identificado na resposta.");
             }
@@ -2471,7 +2490,7 @@ window.runAiAnalysis = async (manual = false, targetId = 'ai-insight-content') =
             </div>
             
             <div class="flex justify-between items-center text-[9px] text-slate-400 mt-4 border-t border-slate-100 pt-2 opacity-60">
-                <span>Análise via Gemini 1.5 Flash</span>
+                <span>Análise via Gemini 2.0 Flash</span>
                 <span>${new Date().toLocaleTimeString()}</span>
             </div>
         </div>

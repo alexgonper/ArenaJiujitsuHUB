@@ -109,7 +109,7 @@ Para ativar os recursos de IA:
 ```javascript
 const geminiConfig = {
     apiKey: "SUA_GEMINI_API_KEY",
-    modelName: "gemini-1.5-flash",
+    modelName: "gemini-2.0-flash",
     imageModel: "imagen-3.0-generate-001"
 };
 ```

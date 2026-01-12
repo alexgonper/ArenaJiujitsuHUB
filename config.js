@@ -18,8 +18,8 @@ const appConfig = {
 
 // ===== GEMINI AI CONFIGURATION =====
 const geminiConfig = {
-    apiKey: "AIzaSyCCk6fcfIKolUiwuxXNgChe5Pa6d-_iDVc", // Add your Gemini API key here
-    modelName: "gemini-1.5-flash",
+    apiKey: "", // NUNCA COLOQUE SUA CHAVE AQUI. Use o arquivo .env no servidor.
+    modelName: "gemini-2.0-flash",
     imageModel: "imagen-3.0-generate-001"
 };
 

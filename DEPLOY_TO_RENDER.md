@@ -38,7 +38,7 @@
    - Add these variables:
      - `NODE_ENV` = `production`
      - `MONGODB_URI` = `mongodb://localhost:27017/arena-matrix` (or your MongoDB Atlas URI)
-     - `GEMINI_API_KEY` = `AIzaSyCCk6fcfIKolUiwuxXNgChe5Pa6d-_iDVc`
+     - `GEMINI_API_KEY` = `SUA_NOVA_CHAVE_AQUI`
 
 5. Click **"Create Web Service"**
 
