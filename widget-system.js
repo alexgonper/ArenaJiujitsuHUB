@@ -168,9 +168,11 @@ function getDefaultLayout(appType) {
         return [
             { id: 'matrix-unit-stats', position: 0 },
             { id: 'matrix-unit-performance', position: 1 },
-            { id: 'matrix-unit-students', position: 2 },
-            { id: 'matrix-unit-teachers', position: 3 },
-            { id: 'matrix-unit-ai-auditor', position: 4 }
+            { id: 'matrix-unit-settings', position: 2 },
+            { id: 'matrix-unit-students', position: 3 },
+            { id: 'matrix-unit-teachers', position: 4 },
+            { id: 'matrix-unit-graduation', position: 5 },
+            { id: 'matrix-unit-ai-auditor', position: 6 }
         ];
     }
     return [];
@@ -195,8 +197,18 @@ function renderDashboard(container, layout) {
         const widgetElement = createWidgetElement(widget, item);
         container.appendChild(widgetElement);
 
-        // Call widget's render function
-        widget.render(widgetElement.querySelector('.widget-content'));
+        // Call widget's render function with safety wrap
+        try {
+            widget.render(widgetElement.querySelector('.widget-content'));
+        } catch (error) {
+            console.error(`❌ Error rendering widget [${item.id}]:`, error);
+            widgetElement.querySelector('.widget-content').innerHTML = `
+                <div class="p-4 text-center">
+                    <i class="fa-solid fa-triangle-exclamation text-red-500 mb-2"></i>
+                    <p class="text-[10px] text-slate-400 italic">Erro ao carregar widget.</p>
+                </div>
+            `;
+        }
     });
 }
 
@@ -371,24 +383,32 @@ window.addWidget = function (widgetId) {
 };
 
 window.removeWidget = function (widgetId) {
-    if (!confirm('Deseja remover este widget do seu painel?')) return;
+    const confirmMsg = 'Deseja remover este widget do seu painel?';
 
-    currentLayout = currentLayout.filter(w => w.id !== widgetId);
+    const doRemove = () => {
+        currentLayout = currentLayout.filter(w => w.id !== widgetId);
 
-    // Re-render
-    const container = document.getElementById(CURRENT_CONTAINER_ID);
-    renderDashboard(container, currentLayout);
-    saveUserLayout(currentLayout, CURRENT_APP_TYPE);
+        // Re-render
+        const container = document.getElementById(CURRENT_CONTAINER_ID);
+        renderDashboard(container, currentLayout);
+        saveUserLayout(currentLayout, CURRENT_APP_TYPE);
 
-    // Re-enable drag-drop if in edit mode
-    if (editMode) {
-        enableDragDrop(CURRENT_CONTAINER_ID);
-        container.querySelectorAll('.widget-drag-handle, .widget-remove-btn').forEach(el => {
-            el.classList.remove('hidden');
-        });
+        // Re-enable drag-drop if in edit mode
+        if (editMode) {
+            enableDragDrop(CURRENT_CONTAINER_ID);
+            container.querySelectorAll('.widget-drag-handle, .widget-remove-btn').forEach(el => {
+                el.classList.remove('hidden');
+            });
+        }
+
+        showNotification('Widget removido', 'success');
+    };
+
+    if (typeof showPortalConfirm === 'function') {
+        showPortalConfirm('Remover Widget', confirmMsg, doRemove, 'error');
+    } else if (confirm(confirmMsg)) {
+        doRemove();
     }
-
-    showNotification('Widget removido', 'success');
 };
 
 window.resetDashboard = function () {

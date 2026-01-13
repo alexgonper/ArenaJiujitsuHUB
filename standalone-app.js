@@ -276,18 +276,18 @@ window.closeModal = () => {
 window.confirmAction = (message) => {
     return new Promise((resolve) => {
         const html = `
-            <div class="text-center p-6">
-                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500">
-                    <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+            <div class="text-center p-4">
+                <div class="w-24 h-24 bg-amber-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 text-amber-500 text-3xl transition-all duration-500">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
                 </div>
-                <h3 class="text-lg font-black text-slate-800 mb-2">Confirmação</h3>
-                <p class="text-slate-500 mb-6 font-medium">${message}</p>
-                <div class="flex gap-3 justify-center w-full">
-                    <button id="btn-cancel-confirm" class="flex-1 px-5 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors">
-                        Cancelar
-                    </button>
-                    <button id="btn-confirm-action" class="flex-1 px-5 py-3 rounded-xl font-bold text-white orange-gradient hover:scale-[1.02] shadow-lg shadow-orange-200 transition-all">
+                <h3 class="text-2xl font-black text-[#0F172A] mb-3 tracking-tight">Confirmação</h3>
+                <p class="text-sm text-slate-400 mb-10 font-medium leading-relaxed px-4">${message}</p>
+                <div class="flex flex-col gap-3 w-full">
+                    <button id="btn-confirm-action" class="w-full bg-[#0F172A] text-white font-bold py-5 rounded-[24px] hover:bg-slate-800 active:scale-[0.98] transition-all uppercase tracking-[0.15em] text-[11px] shadow-lg shadow-slate-200">
                         Confirmar
+                    </button>
+                    <button id="btn-cancel-confirm" class="w-full py-4 bg-transparent text-slate-400 rounded-xl font-bold uppercase tracking-[0.1em] text-[10px] active:scale-[0.95] transition-all">
+                        Agora não
                     </button>
                 </div>
             </div>
@@ -365,12 +365,21 @@ window.openUnitForm = () => {
                     </div>
                 </div>
                 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Repasse / Royalties (%)</label>
-                    <input type="number" name="royaltyPercent" min="0" max="100" step="0.1" value="10"
-                        class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
-                        placeholder="Ex: 10">
-                    <p class="text-[9px] text-slate-400 mt-1">Percentual do faturamento repassado à matriz.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Repasse / Royalties (%)</label>
+                        <input type="number" name="royaltyPercent" min="0" max="100" step="0.1" value="10"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                            placeholder="Ex: 10">
+                        <p class="text-[9px] text-slate-400 mt-1">Percentual do faturamento repassado à matriz.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Despesas Mensais (R$)</label>
+                        <input type="number" name="expenses" min="0" step="0.01" value="0"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                            placeholder="Ex: 5000.00">
+                        <p class="text-[9px] text-slate-400 mt-1">Custo fixo/variável estimado da unidade.</p>
+                    </div>
                 </div>
                 
 
@@ -404,7 +413,7 @@ async function handleCreateFranchise(e) {
     formData.forEach((value, key) => {
         if (value !== '') {
             data[key] = value;
-            if (key === 'royaltyPercent') {
+            if (key === 'royaltyPercent' || key === 'expenses') {
                 data[key] = parseFloat(value);
             }
         }
@@ -511,10 +520,17 @@ window.openEditForm = (id) => {
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Repasse / Royalties (%)</label>
-                    <input type="number" name="royaltyPercent" min="0" max="100" step="0.1" value="${franchise.royaltyPercent || 10}"
-                        class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Repasse / Royalties (%)</label>
+                        <input type="number" name="royaltyPercent" min="0" max="100" step="0.1" value="${franchise.royaltyPercent || 10}"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Despesas Mensais (R$)</label>
+                        <input type="number" name="expenses" min="0" step="0.01" value="${franchise.expenses || 0}"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm">
+                    </div>
                 </div>
                 
                 <div class="flex gap-3 pt-4 border-t border-slate-100">
@@ -547,7 +563,7 @@ async function handleUpdateFranchise(e) {
     formData.forEach((value, key) => {
         if (key !== 'id' && value !== '') {
             data[key] = value;
-            if (key === 'royaltyPercent') {
+            if (key === 'royaltyPercent' || key === 'expenses') {
                 data[key] = parseFloat(value);
             }
         }
@@ -608,6 +624,66 @@ async function handleUpdateFranchise(e) {
         submitBtn.disabled = false;
     }
 }
+
+// ===== SAVE UNIT SETTINGS FROM WIDGET (MATRIX) =====
+window.saveUnitSettingsMatrix = async () => {
+    if (!selectedFranchiseId) return;
+
+    const name = document.getElementById('unit-edit-name')?.value;
+    const owner = document.getElementById('unit-edit-owner')?.value;
+    const phone = document.getElementById('unit-edit-phone')?.value;
+    const address = document.getElementById('unit-edit-address')?.value;
+    const royaltyPercent = parseFloat(document.getElementById('unit-edit-royalty')?.value || 0);
+    const expenses = parseFloat(document.getElementById('unit-edit-expenses')?.value || 0);
+
+    const btn = document.getElementById('btn-save-unit-settings');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Salvando...';
+    btn.disabled = true;
+
+    try {
+        const data = { name, owner, phone, address, royaltyPercent, expenses };
+
+        // Geocode if address was changed
+        const currentFranchise = franchises.find(f => f.id === selectedFranchiseId || f._id === selectedFranchiseId);
+        if (address && address !== currentFranchise?.address) {
+            const coords = await geocodeAddress(address);
+            data.lat = coords.lat;
+            data.lng = coords.lng;
+        }
+
+        const response = await apiRequest(`/franchises/${selectedFranchiseId}`, 'PUT', data);
+
+        // Update local array
+        const index = franchises.findIndex(f => f.id === selectedFranchiseId || f._id === selectedFranchiseId);
+        if (index !== -1) {
+            franchises[index] = {
+                ...franchises[index],
+                ...response.data,
+                ...data,
+                id: response.data._id || franchises[index].id,
+                lat: response.data.location?.coordinates[1] || data.lat || franchises[index].lat,
+                lng: response.data.location?.coordinates[0] || data.lng || franchises[index].lng
+            };
+        }
+
+        // Update UI
+        updateStats();
+        // Refresh detail title if needed
+        const detailTitle = document.getElementById('detail-title');
+        if (detailTitle) detailTitle.textContent = name;
+
+        showNotification('✅ Configurações da unidade salvas!', 'success');
+    } catch (error) {
+        console.error('Error saving unit settings:', error);
+        showNotification('❌ Erro ao salvar: ' + error.message, 'error');
+    } finally {
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+};
 
 // ===== DELETE FRANCHISE =====
 window.deleteFranchise = async (id) => {
@@ -1556,13 +1632,20 @@ window.renderTeachers = () => {
     }).join('');
 };
 
-window.openTeacherForm = (teacherId = null) => {
+window.openTeacherForm = async (teacherId = null) => {
     const f = franchises.find(u => u.id === selectedFranchiseId);
     if (!f) return;
 
     let teacher = null;
     if (teacherId) {
-        teacher = teachers.find(t => t._id === teacherId);
+        try {
+            const response = await fetch(`${API_URL}/teachers/${teacherId}`);
+            const data = await response.json();
+            teacher = data.data || data;
+        } catch (error) {
+            console.error('Error fetching teacher:', error);
+            teacher = teachers.find(t => t._id === teacherId);
+        }
     }
 
     const formHtml = `
@@ -1610,6 +1693,12 @@ window.openTeacherForm = (teacherId = null) => {
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Telefone</label>
                         <input type="tel" name="phone" value="${teacher?.phone || ''}" placeholder="(00) 0 0000-0000"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
+                        <input type="email" name="email" required value="${teacher?.email || ''}" placeholder="exemplo@email.com"
                             class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all">
                     </div>
 
@@ -1739,13 +1828,20 @@ window.deleteTeacher = async (id) => {
     }
 };
 
-window.openStudentForm = (studentId = null) => {
+window.openStudentForm = async (studentId = null) => {
     const f = franchises.find(u => u.id === selectedFranchiseId);
     if (!f) return;
 
     let student = null;
     if (studentId) {
-        student = students.find(s => s._id === studentId);
+        try {
+            const response = await fetch(`${API_URL}/students/${studentId}`);
+            const data = await response.json();
+            student = data.data || data;
+        } catch (error) {
+            console.error('Error fetching student:', error);
+            student = students.find(s => s._id === studentId);
+        }
     }
 
     const formHtml = `
@@ -1789,7 +1885,14 @@ window.openStudentForm = (studentId = null) => {
                         <label class="block text-xs font-bold text-slate-700 mb-1">Telefone</label>
                         <input type="text" name="phone" value="${student ? student.phone || '' : ''}"
                             class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
-                            placeholder="(00) 00000-0000">
+                            placeholder="(00) 0 0000-0000">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                        <input type="email" name="email" value="${student ? student.email || '' : ''}"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                            placeholder="exemplo@email.com">
                     </div>
                     
                     <div>
@@ -1812,7 +1915,7 @@ window.openStudentForm = (studentId = null) => {
                     
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Valor Mensalidade (R$)</label>
-                        <input type="number" step="0.01" name="amount" value="${student ? (Array.isArray(student.amount) ? student.amount[student.amount.length - 1] : student.amount) : '150'}" min="0"
+                        <input type="number" step="0.01" name="amount" value="${student ? (Array.isArray(student.amount) ? (parseFloat(student.amount[student.amount.length - 1]) || 0).toFixed(2) : (parseFloat(student.amount) || 0).toFixed(2)) : '150.00'}" min="0"
                             class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm">
                     </div>
                     

@@ -31,6 +31,18 @@ const studentSchema = new mongoose.Schema({
             message: 'Formato de telefone inválido'
         }
     },
+    email: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        validate: {
+            validator: function (v) {
+                if (!v || v === '') return true;
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            },
+            message: 'Formato de email inválido'
+        }
+    },
     belt: {
         type: String,
         enum: ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'],
@@ -63,7 +75,17 @@ const studentSchema = new mongoose.Schema({
     notes: {
         type: String,
         maxlength: [500, 'Notas não podem exceder 500 caracteres']
-    }
+    },
+    lastGraduationDate: {
+        type: Date,
+        default: Date.now
+    },
+    graduationHistory: [{
+        belt: String,
+        degree: String,
+        date: { type: Date, default: Date.now },
+        promotedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' }
+    }]
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -106,7 +128,8 @@ studentSchema.statics.getByFranchise = function (franchiseId, filters = {}) {
     if (filters.search) {
         query.$or = [
             { name: { $regex: filters.search, $options: 'i' } },
-            { phone: { $regex: filters.search, $options: 'i' } }
+            { phone: { $regex: filters.search, $options: 'i' } },
+            { email: { $regex: filters.search, $options: 'i' } }
         ];
     }
 

@@ -39,6 +39,37 @@
         .orange-gradient {
             background: linear-gradient(135deg, #FF6B00 0%, #FF9500 100%);
         }
+
+        /* Modal Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .animate-zoom-in {
+            animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
     </style>
 </head>
 
@@ -97,6 +128,10 @@
             <button onclick="switchTab('teachers')" id="nav-teachers"
                 class="nav-btn w-full text-left px-4 py-3 rounded-xl font-medium text-sm text-slate-500 hover:bg-slate-50 transition-all flex items-center gap-3">
                 <i class="fa-solid fa-graduation-cap w-5"></i> Meus Professores
+            </button>
+            <button onclick="switchTab('graduation')" id="nav-graduation"
+                class="nav-btn w-full text-left px-4 py-3 rounded-xl font-medium text-sm text-slate-500 hover:bg-slate-50 transition-all flex items-center gap-3">
+                <i class="fa-solid fa-medal w-5"></i> Graduações
             </button>
             <button onclick="switchTab('financial')" id="nav-financial"
                 class="nav-btn w-full text-left px-4 py-3 rounded-xl font-medium text-sm text-slate-500 hover:bg-slate-50 transition-all flex items-center gap-3">
@@ -291,6 +326,59 @@
                 </div>
             </div>
 
+            <!-- VIEW: GRADUATION -->
+            <div id="view-graduation" class="hidden space-y-6">
+                <!-- Eligibility Widget -->
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-slate-800">Alunos Elegíveis para Graduação</h3>
+                            <p class="text-xs text-slate-400">Com base na frequência e tempo mínimo exigido</p>
+                        </div>
+                        <i class="fa-solid fa-medal text-brand-500 text-2xl"></i>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4">Aluno</th>
+                                    <th class="px-6 py-4">Atual</th>
+                                    <th class="px-6 py-4">Presenças</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="graduation-table-body" class="divide-y divide-slate-50">
+                                <!-- Eligible students will be injected here -->
+                                <tr>
+                                    <td colspan="5" class="text-center py-8 text-slate-400">
+                                        <i class="fa-solid fa-spinner fa-spin mr-2"></i>Verificando elegibilidade...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Rules Info -->
+                <div class="bg-blue-50 border border-blue-100 rounded-2xl p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-white rounded-xl text-blue-500 shadow-sm">
+                            <i class="fa-solid fa-circle-info text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">Como funciona a graduação?</h4>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                O Arena Hub segue as diretrizes da IBJJF. Para estar apto, o aluno deve cumprir o número
+                                mínimo de aulas do grau/faixa atual e o tempo mínimo de permanência. Somente professores
+                                faixas-preta podem processar graduações acima da faixa azul.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- VIEW: MATRIX HUB -->
             <div id="view-matrix" class="hidden space-y-6">
                 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
@@ -313,9 +401,29 @@
         </div>
     </main>
 
-    <!-- API Client -->
-    <script src="api-config.js"></script>
-    <script src="api-client.js"></script>
+    <!-- UI Modal System -->
+    <div id="portal-modal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center p-6 bg-[#0F172A]/40 backdrop-blur-sm animate-fade-in">
+        <div class="bg-white w-full max-w-sm rounded-[40px] overflow-hidden shadow-2xl animate-zoom-in">
+            <div id="modal-header" class="p-10 pb-4 text-center">
+                <!-- Icon injected -->
+                <div id="modal-icon"
+                    class="w-24 h-24 mx-auto rounded-[32px] flex items-center justify-center text-4xl mb-6"></div>
+                <h2 id="modal-title" class="text-2xl font-black text-[#0F172A] tracking-tight"></h2>
+                <p id="modal-message" class="text-sm text-slate-400 mt-3 leading-relaxed font-medium px-4"></p>
+            </div>
+            <div class="p-10 pt-4" id="modal-footer">
+                <button onclick="closePortalModal()"
+                    class="w-full bg-[#0F172A] text-white font-bold py-5 rounded-[24px] hover:bg-slate-800 active:scale-[0.98] transition-all uppercase tracking-[0.15em] text-[11px]">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Config -->
+    <script src="api-config.js?v=111"></script>
+    <script src="franchise-client.js?v=111"></script>
     <!-- Franchisee App Script -->
     <script src="franqueado-app.js"></script>
 </body>

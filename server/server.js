@@ -15,6 +15,10 @@ const teacherRoutes = require('./routes/teacherRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const metricRoutes = require('./routes/metricRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const authRoutes = require('./routes/authRoutes');
+const graduationRoutes = require('./routes/graduationRoutes');
+const classRoutes = require('./routes/classRoutes');
 
 // Initialize express app
 const app = express();
@@ -76,6 +80,10 @@ app.use(`${API_PREFIX}/teachers`, teacherRoutes);
 app.use(`${API_PREFIX}/ai`, aiRoutes);
 app.use(`${API_PREFIX}/metrics`, metricRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
+app.use(`${API_PREFIX}/payments`, paymentRoutes);
+app.use(`${API_PREFIX}/auth`, authRoutes);
+app.use(`${API_PREFIX}/graduation`, graduationRoutes);
+app.use(`${API_PREFIX}/classes`, classRoutes);
 
 
 // Welcome route

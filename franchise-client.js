@@ -1,3 +1,8 @@
+// ========================================
+// FRANCHISE CLIENT v105 - EMAIL FIELD FIX
+// ========================================
+console.log('%c🔧 FRANCHISE CLIENT v106 LOADED - TEACHER EMAIL DEBUG', 'background: #FF6B00; color: white; padding: 5px; font-weight: bold;');
+
 // Configuration - FORCE RENDER URL FALLBACK for mobile cache issues
 const RENDER_API_URL = 'https://arenajiujitsuhub-2.onrender.com/api/v1';
 var API_URL = window.API_URL;
@@ -808,23 +813,52 @@ window.setSort = (key) => {
 
 // --- CRUD ACTIONS (REAL API) ---
 
-// 1. OPEN MODAL
-window.openStudentModal = (id = null) => {
-    const student = id ? myStudents.find(s => s._id === id) : null;
+// 1. OPEN MODAL - FETCH FRESH DATA FROM API
+window.openStudentModal = async (id = null) => {
+    let student = null;
+
+    // If editing existing student, fetch fresh data from API
+    if (id) {
+        try {
+            const response = await fetch(`${API_URL}/students/${id}`);
+            const data = await response.json();
+            student = data.data || data;
+            console.log('✅ Fetched fresh student data from API:', student);
+        } catch (error) {
+            console.error('❌ Error fetching student:', error);
+            // Fallback to cached data
+            student = myStudents.find(s => s._id === id);
+        }
+    }
+
     const modal = document.getElementById('modal-panel');
     const modalContent = document.getElementById('modal-content');
 
     // Default values
-    let name = '', phone = '', amount = 150, belt = 'Branca', gender = 'Masculino', degree = 'Nenhum', birthDate = '';
+    let name = '', phone = '', email = '', amount = 150, belt = 'Branca', gender = 'Masculino', degree = 'Nenhum', birthDate = '';
     if (student) {
         name = student.name;
         phone = student.phone || '';
+        email = student.email || '';
         gender = student.gender || 'Masculino';
         belt = student.belt || 'Branca';
         degree = student.degree || 'Nenhum';
-        amount = Array.isArray(student.amount) ? student.amount[student.amount.length - 1] : (parseFloat(student.amount) || 0);
+        const rawAmount = Array.isArray(student.amount) ? student.amount[student.amount.length - 1] : student.amount;
+        amount = (parseFloat(rawAmount) || 0).toFixed(2);
         birthDate = student.birthDate ? new Date(student.birthDate).toISOString().split('T')[0] : '';
     }
+
+    // DEBUG: Log email value
+    console.log('📧 Student Email Debug:', {
+        studentId: student?._id,
+        studentName: student?.name,
+        emailValue: email,
+        emailFromStudent: student?.email,
+        studentHasEmail: !!student?.email,
+        studentObject: student
+    });
+
+    console.log(`🔍 Email value that will be used in template: "${email}"`);
 
     // HTML for Form
     modalContent.innerHTML = `
@@ -867,6 +901,11 @@ window.openStudentModal = (id = null) => {
                     </div>
 
                     <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
+                        <input type="email" id="new-email" required class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all" value="${email || ''}" placeholder="exemplo@email.com">
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Faixa</label>
                         <select id="new-belt" class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm bg-white transition-all">
                             ${Object.keys(beltColors).map(b => `<option ${belt === b ? 'selected' : ''}>${b}</option>`).join('')}
@@ -893,7 +932,7 @@ window.openStudentModal = (id = null) => {
                     <!-- FINANCIALS -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Valor Mensalidade (R$)</label>
-                        <input type="number" id="new-fee" class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all" value="${amount}">
+                        <input type="number" id="new-fee" step="0.01" class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all" value="${amount}">
                     </div>
 
                     <!-- NEW: DATE FIELD -->
@@ -948,11 +987,10 @@ window.saveStudent = async () => {
         gender: document.getElementById('new-gender').value,
         birthDate: document.getElementById('new-birthDate').value,
         phone: document.getElementById('new-phone').value,
+        email: document.getElementById('new-email').value,
         belt: document.getElementById('new-belt').value,
         degree: document.getElementById('new-degree').value,
         amount: amount, // Schema expects Number, not Array
-        degree: document.getElementById('new-degree').value,
-        amount: amount,
         franchiseId: currentFranchiseId,
         paymentStatus: document.getElementById('new-payment-status').value,
         registrationDate: document.getElementById('new-date').value // Capture Date
@@ -997,14 +1035,39 @@ window.saveStudent = async () => {
 };
 
 // --- TEACHER ACTIONS ---
-window.openTeacherModal = (id = null) => {
-    const teacher = id ? myTeachers.find(t => t._id === id) : null;
+window.openTeacherModal = async (id = null) => {
+    let teacher = null;
+
+    // If editing existing teacher, fetch fresh data from API
+    if (id) {
+        try {
+            const response = await fetch(`${API_URL}/teachers/${id}`);
+            const data = await response.json();
+
+            // DEBUG: Log raw API response
+            console.log('🔍 RAW API Response:', data);
+            console.log('🔍 data.data exists?', !!data.data);
+            console.log('🔍 data.email exists?', !!data.email);
+            console.log('🔍 data.data?.email:', data.data?.email);
+            console.log('🔍 data.email:', data.email);
+
+            teacher = data.data || data;
+            console.log('✅ Fetched fresh teacher data from API:', teacher);
+            console.log('✅ Teacher has email?', !!teacher.email);
+            console.log('✅ Teacher email value:', teacher.email);
+        } catch (error) {
+            console.error('❌ Error fetching teacher:', error);
+            // Fallback to cached data
+            teacher = myTeachers.find(t => t._id === id);
+        }
+    }
+
     const modal = document.getElementById('modal-panel');
     const modalContent = document.getElementById('modal-content');
 
     // Default values
     let name = '', belt = 'Preta', degree = 'Nenhum', birthDate = '', hireDate = new Date().toISOString().split('T')[0];
-    let gender = 'Masculino', phone = '', address = '';
+    let gender = 'Masculino', phone = '', email = '', address = '';
     if (teacher) {
         name = (teacher.name || '').replace(/\s*\((Coral|Vermelha|Vermelho)\)/gi, '');
         belt = teacher.belt || 'Preta';
@@ -1013,8 +1076,21 @@ window.openTeacherModal = (id = null) => {
         hireDate = teacher.hireDate ? new Date(teacher.hireDate).toISOString().split('T')[0] : '';
         gender = teacher.gender || 'Masculino';
         phone = teacher.phone || '';
+        email = teacher.email || '';
         address = teacher.address || '';
     }
+
+    // DEBUG: Log email value
+    console.log('📧 Teacher Email Debug:', {
+        teacherId: teacher?._id,
+        teacherName: teacher?.name,
+        emailValue: email,
+        emailFromTeacher: teacher?.email,
+        teacherHasEmail: !!teacher?.email,
+        teacherObject: teacher
+    });
+
+    console.log(`🔍 Teacher Email value that will be used in template: "${email}"`);
 
     modalContent.innerHTML = `
         <div class="text-left">
@@ -1086,6 +1162,10 @@ window.openTeacherModal = (id = null) => {
                         <input type="tel" id="teacher-phone" class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all" value="${phone}" placeholder="(00) 0 0000-0000">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
+                        <input type="email" id="teacher-email" required class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all" value="${email || ''}" placeholder="exemplo@email.com">
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Endereço Completo</label>
                         <input type="text" id="teacher-address" class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all" value="${address}" placeholder="Rua, Número, Bairro, Cidade - UF">
                     </div>
@@ -1126,6 +1206,7 @@ window.saveTeacher = async () => {
         hireDate: document.getElementById('teacher-hireDate').value,
         gender: document.getElementById('teacher-gender').value,
         phone: document.getElementById('teacher-phone').value,
+        email: document.getElementById('teacher-email').value,
         address: document.getElementById('teacher-address').value,
         franchiseId: currentFranchiseId
     };

@@ -24,6 +24,18 @@ const teacherSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    email: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        validate: {
+            validator: function (v) {
+                if (!v || v === '') return true;
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            },
+            message: 'Formato de email inválido'
+        }
+    },
     address: {
         type: String,
         trim: true

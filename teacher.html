@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arena Hub | Painel do Professor</title>
+
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind.config.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Eurostile Font -->
+    <link href="https://fonts.cdnfonts.com/css/eurostile" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        @font-face {
+            font-family: 'Eurostile Bold Extended';
+            src: local('Eurostile Bold Extended'), local('Eurostile-BoldExtended'), local('Arial Black');
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+            /* Space for bottom nav */
+        }
+
+        .brand-typography {
+            font-family: 'Eurostile Bold Extended', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .safe-area-top {
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .bottom-nav {
+            background: rgba(15, 15, 15, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #666;
+            transition: all 0.3s ease;
+            width: 25%;
+        }
+
+        .nav-item.active {
+            color: #FF6B00;
+        }
+
+        .nav-item i {
+            font-size: 1.25rem;
+        }
+
+        .nav-item span {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card {
+            background: #111111;
+            border: 1px solid #222222;
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+        }
+
+        .active-class-pulse {
+            position: relative;
+        }
+
+        .active-class-pulse::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 10px;
+            height: 10px;
+            background: #FF6B00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #FF6B00;
+            animation: pulse-orange 2s infinite;
+        }
+
+        @keyframes pulse-orange {
+            0% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+        }
+
+        .belt-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Student List Styling */
+        .student-row {
+            border-bottom: 1px solid #1a1a1a;
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .student-row:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body class="safe-area-top">
+
+    <!-- Header -->
+    <header
+        class="p-6 flex justify-between items-center bg-black/50 sticky top-0 z-50 backdrop-blur-md border-b border-white/5">
+        <div>
+            <h1 class="brand-typography text-xl tracking-tighter">
+                <span class="text-brand-500">ARENA</span> HUB
+            </h1>
+            <p id="teacher-name-header" class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">
+                Professor Carregando...
+            </p>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="logout()"
+                class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                <i class="fa-solid fa-power-off text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <main id="main-content" class="p-6">
+
+        <!-- TAB: HOME -->
+        <div id="tab-home" class="tab-content active">
+            <!-- Active Class Card -->
+            <div id="active-class-section" class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Aula em Curso</h2>
+                    <span class="flex items-center gap-1.5 text-[10px] text-brand-500 font-bold">
+                        <span class="w-2 h-2 bg-brand-500 rounded-full animate-pulse"></span> AO VIVO
+                    </span>
+                </div>
+                <div id="active-class-card" class="card border-brand-500/30 bg-gradient-to-br from-zinc-900 to-black">
+                    <!-- Dynamic content here -->
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p id="active-class-category"
+                                class="text-[10px] font-bold text-brand-500 uppercase tracking-widest mb-1">Carga
+                                Horária</p>
+                            <h3 id="active-class-name" class="text-xl font-bold mb-1">Nenhuma aula ativa</h3>
+                            <p id="active-class-time" class="text-xs text-zinc-500">Verifique sua grade horária</p>
+                        </div>
+                        <i class="fa-solid fa-clock-rotate-left text-zinc-800 text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Grid -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="card bg-zinc-900/50">
+                    <p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Total Alunos</p>
+                    <div class="flex items-end gap-2">
+                        <span id="stat-total-students" class="text-2xl font-black">0</span>
+                        <i class="fa-solid fa-users text-zinc-800 mb-1"></i>
+                    </div>
+                </div>
+                <div class="card bg-zinc-900/50">
+                    <p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Presenças Hoje</p>
+                    <div class="flex items-end gap-2">
+                        <span id="stat-attendance-today" class="text-2xl font-black">0</span>
+                        <i class="fa-solid fa-calendar-check text-zinc-800 mb-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div>
+                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 mb-4">Atividade Recente</h2>
+                <div id="recent-attendance-list" class="space-y-3">
+                    <!-- Dynamic list -->
+                    <p class="text-xs text-zinc-600 italic">Nenhuma presença registrada recentemente.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: AGENDA -->
+        <div id="tab-agenda" class="tab-content">
+            <h2 class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 mb-6">Minha Grade Horária</h2>
+            <div id="agenda-list" class="space-y-4">
+                <!-- Dynamic schedule -->
+            </div>
+        </div>
+
+        <!-- TAB: CHAMADA -->
+        <div id="tab-attendance" class="tab-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Controle de Presença</h2>
+                <div class="relative">
+                    <input type="text" id="student-search" placeholder="Buscar aluno..."
+                        class="bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-4 text-xs w-48 focus:outline-none focus:border-brand-500">
+                </div>
+            </div>
+
+            <div id="students-attendance-list" class="space-y-1">
+                <!-- Dynamic student list with buttons -->
+            </div>
+        </div>
+
+        <!-- TAB: PERFIL -->
+        <div id="tab-profile" class="tab-content">
+            <div class="text-center mb-8">
+                <div id="profile-avatar"
+                    class="w-24 h-24 rounded-full bg-zinc-900 border-2 border-brand-500 mx-auto mb-4 flex items-center justify-center text-3xl font-black text-brand-500">
+                    ?
+                </div>
+                <h2 id="profile-name" class="text-xl font-bold">...</h2>
+                <p id="profile-belt" class="text-sm text-zinc-500 mt-1">...</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="card">
+                    <p class="text-[10px] text-zinc-500 uppercase font-bold mb-1">Unidade Vinculada</p>
+                    <p id="profile-franchise" class="font-bold">...</p>
+                </div>
+                <div class="card">
+                    <p class="text-[10px] text-zinc-500 uppercase font-bold mb-1">Data de Ingresso</p>
+                    <p id="profile-hire-date" class="font-bold">...</p>
+                </div>
+                <div class="card">
+                    <p class="text-[10px] text-zinc-500 uppercase font-bold mb-1">Email de Acesso</p>
+                    <p id="profile-email" class="font-bold">...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button onclick="switchTab('home')" class="nav-item active" id="nav-home">
+            <i class="fa-solid fa-house"></i>
+            <span>Início</span>
+        </button>
+        <button onclick="switchTab('agenda')" class="nav-item" id="nav-agenda">
+            <i class="fa-solid fa-calendar-alt"></i>
+            <span>Agenda</span>
+        </button>
+        <button onclick="switchTab('attendance')" class="nav-item" id="nav-attendance">
+            <i class="fa-solid fa-clipboard-check"></i>
+            <span>Chamada</span>
+        </button>
+        <button onclick="switchTab('profile')" class="nav-item" id="nav-profile">
+            <i class="fa-solid fa-user-circle"></i>
+            <span>Perfil</span>
+        </button>
+    </nav>
+
+    <!-- Modal: Confirm Attendance -->
+    <div id="attendance-modal" class="fixed inset-0 z-[2000] hidden flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeAttendanceModal()"></div>
+        <div class="card w-full max-w-sm relative z-10 animate-up">
+            <h3 class="text-lg font-bold mb-4">Confirmar Presença</h3>
+            <p id="attendance-student-name" class="text-zinc-400 text-sm mb-6">...</p>
+
+            <div class="mb-6">
+                <label class="text-[10px] font-bold text-zinc-500 uppercase mb-2 block">Selecionar Aula</label>
+                <select id="attendance-class-select"
+                    class="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-500">
+                    <!-- Dynamic classes for current day -->
+                </select>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeAttendanceModal()"
+                    class="flex-1 py-3 rounded-lg bg-zinc-800 text-zinc-400 font-bold text-xs uppercase">Cancelar</button>
+                <button id="confirm-attendance-btn"
+                    class="flex-1 py-3 rounded-lg bg-brand-500 text-white font-bold text-xs uppercase">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed top-6 left-6 right-6 md:left-auto md:w-80 bg-zinc-900 text-white px-6 py-4 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-3 transform translate-y-[-100px] opacity-0 transition-all duration-500 z-[3000] border border-zinc-800">
+        <div id="toast-icon" class="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <span id="toast-msg">Mensagem</span>
+    </div>
+
+    <script src="api-config.js"></script>
+    <script src="teacher-app.js"></script>
+</body>
+
+</html>

@@ -12,6 +12,7 @@ const firebaseConfig = {
 // ===== APP CONFIGURATION =====
 const appConfig = {
     appId: 'arena-matrix-v4-mobile',
+    apiBaseUrl: 'http://localhost:5000/api/v1', // Backend API URL
     enableFirebase: false, // Set to true when Firebase is configured
     useMockData: true // Use mock data instead of Firebase
 };

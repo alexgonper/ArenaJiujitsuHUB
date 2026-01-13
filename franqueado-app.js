@@ -49,6 +49,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// --- UI MODAL SYSTEM ---
+function showPortalModal(title, message, iconType = 'info') {
+    const modal = document.getElementById('portal-modal');
+    if (!modal) return;
+    const titleEl = document.getElementById('modal-title');
+    const msgEl = document.getElementById('modal-message');
+    const iconEl = document.getElementById('modal-icon');
+    const footerEl = document.getElementById('modal-footer');
+
+    // Reset Footer to default (Single "ENTENDIDO" button)
+    footerEl.innerHTML = `
+        <button onclick="closePortalModal()"
+            class="w-full bg-[#0F172A] text-white font-bold py-5 rounded-[24px] hover:bg-[#1E293B] active:scale-[0.98] transition-all uppercase tracking-[0.15em] text-[11px] shadow-lg shadow-slate-200">
+            Entendido
+        </button>
+    `;
+
+    // Configure Icon & Color (Matching high-fidelity reference)
+    iconEl.className = 'w-24 h-24 mx-auto rounded-[32px] flex items-center justify-center text-3xl mb-6 transition-all duration-500';
+    if (iconType === 'success') {
+        iconEl.classList.add('bg-emerald-50', 'text-emerald-500');
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+    } else if (iconType === 'error') {
+        iconEl.classList.add('bg-[#FEF2F2]', 'text-[#EF4444]');
+        iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+    } else if (iconType === 'confirm') {
+        iconEl.classList.add('bg-amber-50', 'text-amber-500');
+        iconEl.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i>';
+    } else {
+        iconEl.classList.add('bg-blue-50', 'text-blue-500');
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+    }
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function showPortalConfirm(title, message, onConfirm, iconType = 'confirm') {
+    showPortalModal(title, message, iconType);
+    const footerEl = document.getElementById('modal-footer');
+
+    // Replace footer with two buttons - High Fidelity Style
+    footerEl.innerHTML = `
+        <div class="flex flex-col gap-3">
+            <button id="modal-confirm-btn" 
+                class="w-full bg-[#0F172A] text-white font-bold py-5 rounded-[24px] hover:bg-[#1E293B] active:scale-[0.98] transition-all uppercase tracking-[0.15em] text-[11px] shadow-lg shadow-slate-200">
+                Confirmar
+            </button>
+            <button onclick="closePortalModal()" 
+                class="w-full py-4 bg-transparent text-slate-400 rounded-xl font-bold uppercase tracking-[0.1em] text-[10px] active:scale-[0.95] transition-all">
+                Agora não
+            </button>
+        </div>
+    `;
+
+    document.getElementById('modal-confirm-btn').onclick = () => {
+        closePortalModal();
+        if (onConfirm) onConfirm();
+    };
+}
+
+function closePortalModal() {
+    const modal = document.getElementById('portal-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
 function initLoginScreen() {
     const list = document.getElementById('unit-selector');
     list.innerHTML = franchises.map(f => `
@@ -95,7 +167,13 @@ window.login = () => {
 };
 
 window.logout = () => {
-    location.reload();
+    showPortalConfirm(
+        'Sair do Painel',
+        'Tem certeza que deseja sair do painel da unidade? Você precisará selecionar a unidade novamente.',
+        () => {
+            location.reload();
+        }
+    );
 };
 
 async function loadDashboard(unit) {
@@ -106,6 +184,22 @@ async function loadDashboard(unit) {
     // Set Stats
     document.getElementById('stat-students').textContent = unit.students || 0;
     document.getElementById('stat-revenue').textContent = `R$ ${(unit.revenue || 0).toLocaleString()}`;
+
+    // Get Graduation Stats (New in Phase 2)
+    try {
+        const gradRes = await GraduationAPI.getEligible(unit._id || unit.id);
+        const eligibleCount = gradRes.count || 0;
+        // Optimization: Use an existing placeholder or update the retention rate text
+        const retentionElem = document.querySelector('#stat-students').closest('.grid').children[2];
+        if (retentionElem) {
+            retentionElem.querySelector('span').textContent = eligibleCount;
+            retentionElem.querySelector('p').textContent = 'Prontos para Graduar';
+            retentionElem.querySelector('.p-3').className = 'p-3 bg-orange-50 text-brand-500 rounded-xl';
+            retentionElem.querySelector('i').className = 'fa-solid fa-medal';
+        }
+    } catch (err) {
+        console.error('Erro ao buscar stats de graduação:', err);
+    }
 
     // Load Messages
     renderMessages();
@@ -319,7 +413,7 @@ window.openTeacherModal = (id = null) => {
         };
 
         if (!body.name || !body.birthDate || !body.franchiseId) {
-            alert('Por favor, preencha o nome, data de nascimento e verifique sua conexão.');
+            showPortalModal('Campos Obrigatórios', 'Por favor, preencha o nome, data de nascimento e verifique sua conexão.', 'error');
             return;
         }
 
@@ -330,23 +424,30 @@ window.openTeacherModal = (id = null) => {
                 await TeacherAPI.create(body);
             }
             document.getElementById('teacher-modal-overlay').remove();
+            showPortalModal('Sucesso!', 'Os dados do professor foram salvos com sucesso.', 'success');
             renderTeachersList();
         } catch (error) {
             console.error('Error saving teacher:', error);
-            alert('ERRO: Verifique se todos os campos obrigatórios (*) foram preenchidos corretamente.');
+            showPortalModal('Erro', 'Verifique se todos os campos obrigatórios (*) foram preenchidos corretamente.', 'error');
         }
     };
 };
 
 window.deleteTeacher = async (id) => {
-    if (confirm('Tem certeza que deseja excluir este professor?')) {
-        try {
-            await TeacherAPI.delete(id);
-            renderTeachersList();
-        } catch (error) {
-            alert('Erro ao excluir professor');
-        }
-    }
+    showPortalConfirm(
+        'Excluir Professor',
+        'Tem certeza que deseja excluir este professor? Esta ação não pode ser desfeita.',
+        async () => {
+            try {
+                await TeacherAPI.delete(id);
+                showPortalModal('Excluído', 'O professor foi removido do sistema.', 'success');
+                renderTeachersList();
+            } catch (error) {
+                showPortalModal('Erro', 'Não foi possível excluir o professor. Tente novamente.', 'error');
+            }
+        },
+        'error'
+    );
 };
 
 // Navigation Logic
@@ -370,6 +471,7 @@ window.switchTab = (tabId) => {
         'dashboard': 'Visão Geral',
         'students': 'Gestão de Alunos',
         'teachers': 'Gestão de Professores',
+        'graduation': 'Gestão de Graduações',
         'financial': 'Financeiro',
         'matrix': 'Matrix Hub'
     };
@@ -378,4 +480,79 @@ window.switchTab = (tabId) => {
     if (tabId === 'teachers') {
         renderTeachersList();
     }
+    if (tabId === 'graduation') {
+        renderGraduationView();
+    }
+};
+
+async function renderGraduationView() {
+    if (!currentUnit) return;
+
+    const tableBody = document.getElementById('graduation-table-body');
+    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Verificando elegibilidade...</td></tr>';
+
+    try {
+        const response = await GraduationAPI.getEligible(currentUnit._id || currentUnit.id);
+        const eligibleStudents = response.data || [];
+
+        if (eligibleStudents.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400">Nenhum aluno elegível no momento.</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = eligibleStudents.map(s => `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
+                <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
+                <td class="px-6 py-4">
+                    <span class="text-xs text-slate-500">${s.belt} - ${s.degree}</span>
+                    <i class="fa-solid fa-arrow-right mx-2 text-slate-300 text-[10px]"></i>
+                    <span class="text-xs font-bold text-brand-500">${s.next}</span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-700">${s.attended}</span>
+                        <span class="text-[10px] text-slate-400">/ ${s.required}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 bg-green-100 text-green-600 rounded-full text-[10px] font-bold uppercase">Pronto</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <button onclick="processPromotion('${s.id}', '${s.name}', '${s.next}')" 
+                            class="px-3 py-1.5 bg-brand-500 text-white rounded-lg text-xs font-bold hover:bg-brand-600 transition shadow-sm">
+                        Graduar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Erro ao carregar graduáveis:', error);
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-400">Erro ao verificar elegibilidade.</td></tr>';
+    }
+}
+
+window.processPromotion = async (studentId, name, nextLevel) => {
+    showPortalConfirm(
+        'Confirmar Graduação',
+        `Deseja confirmar a graduação de ${name} para ${nextLevel}?`,
+        async () => {
+            try {
+                // Find a black belt teacher to "sign" the promotion (optional validation, using first for now)
+                const teachersRes = await TeacherAPI.getByFranchise(currentUnit._id || currentUnit.id);
+                const blackBelt = teachersRes.data.find(t => t.belt === 'Preta');
+                const teacherId = blackBelt ? blackBelt._id : (teachersRes.data[0]?._id || null);
+
+                const response = await GraduationAPI.promote(studentId, teacherId);
+
+                if (response.success) {
+                    showPortalModal('Graduação Realizada!', `${name} agora é ${nextLevel}. Oss!`, 'success');
+                    renderGraduationView();
+                }
+            } catch (error) {
+                console.error('Erro ao processar graduação:', error);
+                showPortalModal('Erro na Graduação', 'Não foi possível processar. Verifique se há um professor faixa-preta cadastrado.', 'error');
+            }
+        }
+    );
 };

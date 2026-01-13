@@ -19,6 +19,32 @@ function getRandomDate(start, end) {
     return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 }
 
+function generateEmail(name) {
+    const cleanName = name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z\s]/g, '')
+        .trim();
+
+    const nameParts = cleanName.split(' ').filter(part => part.length > 0);
+    const firstName = nameParts[0] || 'user';
+    const lastName = nameParts[nameParts.length - 1] || 'name';
+
+    const domains = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com.br', 'icloud.com', 'uol.com.br', 'bol.com.br', 'terra.com.br'];
+    const domain = domains[Math.floor(Math.random() * domains.length)];
+    const randomNum = Math.floor(Math.random() * 9999);
+
+    const formats = [
+        `${firstName}.${lastName}${randomNum}@${domain}`,
+        `${firstName}${lastName}${randomNum}@${domain}`,
+        `${firstName}_${lastName}${randomNum}@${domain}`,
+        `${firstName}${randomNum}@${domain}`
+    ];
+
+    return formats[Math.floor(Math.random() * formats.length)];
+}
+
 function generateRandomTeacher(franchiseId, forceBelt = null) {
     const firstName = getRandomElement(firstNames);
     const lastName = getRandomElement(lastNames);
@@ -44,6 +70,7 @@ function generateRandomTeacher(franchiseId, forceBelt = null) {
     return {
         name: `${firstName} ${lastName}`,
         birthDate: birthDate,
+        email: generateEmail(`${firstName} ${lastName}`),
         belt: belt,
         degree: degree,
         hireDate: hireDate,

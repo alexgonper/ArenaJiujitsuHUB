@@ -693,6 +693,213 @@ async function loadAndRenderDirectives() {
     }
 }
 
+// ===== GRADUATION ELIGIBILITY WIDGET =====
+registerWidget({
+    id: 'franchisee-graduation',
+    name: 'Gestão de Graduações',
+    description: 'Verificação automática de alunos prontos para o próximo nível',
+    size: 'col-span-12',
+    category: 'Graduação',
+    icon: 'fa-solid fa-medal',
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Alunos Prontos para Graduar</h3>
+                        <p class="text-[10px] text-slate-400">Com base em frequência e tempo mínimo</p>
+                    </div>
+                    <div class="p-2 bg-orange-100 text-brand-500 rounded-xl">
+                        <i class="fa-solid fa-medal text-lg"></i>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left text-[11px]">
+                        <thead class="bg-slate-50/50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
+                            <tr>
+                                <th class="px-6 py-4">Aluno</th>
+                                <th class="px-6 py-4">De -> Para</th>
+                                <th class="px-6 py-4">Aulas</th>
+                                <th class="px-6 py-4 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="graduation-table-body" class="divide-y divide-slate-50">
+                            <tr>
+                                <td colspan="4" class="text-center py-10 text-slate-400">
+                                    <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verificando...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="p-4 bg-orange-50/50 border-t border-orange-100/50 text-orange-600 text-[10px] font-medium italic">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Só aparecem nesta lista alunos que atingiram critério de tempo e presença.
+                </div>
+            </div>
+        `;
+        this.update();
+    },
+
+    update: async function () {
+        const tableBody = document.getElementById('graduation-table-body');
+        if (!tableBody || typeof currentFranchise === 'undefined' || !currentFranchise) return;
+
+        try {
+            const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+            const response = await fetch(`${apiUrl}/graduation/eligible/${currentFranchise._id || currentFranchise.id}`, {
+                headers: { 'Bypass-Tunnel-Reminder': 'true' }
+            });
+            const result = await response.json();
+            const eligibleStudents = result.data || [];
+
+            if (eligibleStudents.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-slate-400 italic">Nenhum aluno elegível no momento.</td></tr>';
+                return;
+            }
+
+            // Belt Colors helper
+            const getBeltStyle = (belt) => {
+                const colors = {
+                    'Branca': { bg: '#F8FAFC', text: '#334155', border: '#CBD5E1' },
+                    'Cinza': { bg: '#6B7280', text: '#FFFFFF', border: '#6B7280' },
+                    'Amarela': { bg: '#FCD34D', text: '#713F12', border: '#FCD34D' },
+                    'Laranja': { bg: '#FF6B00', text: '#FFFFFF', border: '#FF6B00' },
+                    'Verde': { bg: '#22C55E', text: '#FFFFFF', border: '#22C55E' },
+                    'Azul': { bg: '#3B82F6', text: '#FFFFFF', border: '#3B82F6' },
+                    'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
+                    'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
+                    'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
+                    'Coral': { bg: 'none', text: 'transparent', border: '#EE1111', extra: 'background-image: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%), linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%); background-clip: text, padding-box; -webkit-background-clip: text, padding-box; font-weight: 900; position: relative;' },
+                    'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
+                };
+                return colors[belt] || colors['Branca'];
+            };
+
+            const renderBadge = (fullString) => {
+                if (!fullString) return '';
+                const parts = fullString.split(' - ');
+                const belt = parts[0] || 'Branca';
+                const style = getBeltStyle(belt);
+                return `<span class="inline-block px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase border whitespace-nowrap" 
+                              style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border}; ${style.extra || ''}">
+                            ${fullString}
+                        </span>`;
+            };
+
+            tableBody.innerHTML = eligibleStudents.map(s => `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
+                    <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                             ${renderBadge(s.current || s.belt)}
+                             <i class="fa-solid fa-arrow-right text-[8px] text-slate-300"></i>
+                             ${renderBadge(s.next)}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 font-bold text-slate-600">
+                        ${s.attended} <span class="text-slate-400 font-normal">/ ${s.required}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="processCandidatePromotion('${s.id}', '${s.name}', '${s.next}')" 
+                                class="px-3 py-1.5 bg-brand-500 text-white rounded-lg text-[9px] font-bold hover:bg-brand-600 transition shadow-sm uppercase tracking-wider">
+                            Graduar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            console.error('Erro ao carregar graduáveis:', error);
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-red-400 text-xs">Erro ao verificar elegibilidade.</td></tr>';
+        }
+    }
+});
+
+window.processCandidatePromotion = async (studentId, name, nextLevel) => {
+    const confirmMsg = `Deseja confirmar a graduação de ${name} para ${nextLevel}?`;
+
+    // Check if custom modal system is available
+    if (typeof showPortalConfirm === 'function') {
+        showPortalConfirm('Confirmar Graduação', confirmMsg, () => executePromotion(studentId, name, nextLevel));
+    } else if (confirm(confirmMsg)) {
+        executePromotion(studentId, name, nextLevel);
+    }
+};
+
+async function executePromotion(studentId, name, nextLevel) {
+    try {
+        const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+
+        // Find a black belt teacher to "sign" the promotion
+        const teachersRes = await fetch(`${apiUrl}/teachers?franchiseId=${currentFranchise._id || currentFranchise.id}`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const teachersData = await teachersRes.json();
+        const teachers = teachersData.data || [];
+
+        const blackBelt = teachers.find(t => t.belt === 'Preta');
+        const teacherId = blackBelt ? blackBelt._id : (teachers[0]?._id || null);
+
+        const response = await fetch(`${apiUrl}/graduation/promote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
+            body: JSON.stringify({ studentId, teacherId })
+        });
+
+        const resData = await response.json();
+
+        if (resData.success) {
+            const successTitle = 'Graduação Realizada!';
+            const successMsg = `${name} agora é ${nextLevel}. Oss!`;
+
+            if (typeof showPortalModal === 'function') {
+                showPortalModal(successTitle, successMsg, 'success');
+            } else {
+                alert(successMsg);
+            }
+
+            // Optimistically update the local myStudents array
+            if (typeof myStudents !== 'undefined' && Array.isArray(myStudents)) {
+                const studentIndex = myStudents.findIndex(s => s._id === studentId || s.id === studentId);
+                if (studentIndex !== -1) {
+                    const parts = nextLevel.split(' - ');
+                    if (parts.length === 2) {
+                        myStudents[studentIndex].belt = parts[0];
+                        myStudents[studentIndex].degree = parts[1];
+                    }
+                }
+            }
+
+            // Update widget
+            const widget = typeof WIDGET_REGISTRY !== 'undefined' ? WIDGET_REGISTRY['franchisee-graduation'] : null;
+            if (widget) widget.update();
+
+            // Also update the students list widget to reflect the new degree
+            const studentsWidget = typeof WIDGET_REGISTRY !== 'undefined' ? WIDGET_REGISTRY['franchisee-students-list'] : null;
+            if (studentsWidget) {
+                studentsWidget.update();
+            } else if (typeof renderStudents === 'function') {
+                // Fallback if widget not found but global render function exists
+                renderStudents();
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao processar graduação:', error);
+        const errorMsg = 'Não foi possível processar a graduação. Verifique se há um professor faixa-preta cadastrado.';
+        if (typeof showPortalModal === 'function') {
+            showPortalModal('Erro na Graduação', errorMsg, 'error');
+        } else {
+            alert(errorMsg);
+        }
+    }
+}
+
 // Refresh directives function
 window.refreshDirectives = function () {
     loadAndRenderDirectives();

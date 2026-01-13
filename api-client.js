@@ -267,6 +267,21 @@ const TeacherAPI = {
     }
 };
 
+// Graduation API Methods
+const GraduationAPI = {
+    async checkEligibility(studentId) {
+        return await API.get(`/graduation/eligibility/${studentId}`);
+    },
+
+    async getEligible(franchiseId) {
+        return await API.get(`/graduation/eligible/${franchiseId}`);
+    },
+
+    async promote(studentId, teacherId) {
+        return await API.post('/graduation/promote', { studentId, teacherId });
+    }
+};
+
 // Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -275,6 +290,10 @@ if (typeof module !== 'undefined' && module.exports) {
         FranchiseAPI,
         DirectiveAPI,
         StudentAPI,
-        TeacherAPI
+        TeacherAPI,
+        GraduationAPI
     };
+} else {
+    // Make it available globally if not in a module environment
+    window.GraduationAPI = GraduationAPI;
 }

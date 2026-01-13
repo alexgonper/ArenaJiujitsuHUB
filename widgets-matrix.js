@@ -934,4 +934,275 @@ registerWidget({
     }
 });
 
+// ===== UNIT SETTINGS WIDGET =====
+registerWidget({
+    id: 'matrix-unit-settings',
+    name: 'Configurações da Unidade',
+    description: 'Gestão direta de dados, royalties e despesas da academia',
+    size: 'col-span-12',
+    category: 'Detalhes Unidade',
+    icon: 'fa-solid fa-gears',
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h4 class="font-bold text-slate-800 text-xs">Dados Oficiais da Unidade</h4>
+                    <p class="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">Sincronizado com a Matrix</p>
+                </div>
+                <div class="p-2 bg-slate-50 text-slate-400 rounded-xl">
+                    <i class="fa-solid fa-building-circle-check text-base"></i>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Nome da Academia</label>
+                    <input type="text" id="unit-edit-name" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="Nome">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Responsável/Dono</label>
+                    <input type="text" id="unit-edit-owner" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="Responsável">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Telefone de Contato</label>
+                    <input type="text" id="unit-edit-phone" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="Telefone">
+                </div>
+                <div class="lg:col-span-3">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Endereço Completo</label>
+                    <input type="text" id="unit-edit-address" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="Endereço">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Royalties (%)</label>
+                    <input type="number" id="unit-edit-royalty" step="0.1" class="w-full px-4 py-2 bg-orange-50/50 border border-orange-100 rounded-xl text-xs font-bold text-orange-600 focus:ring-2 focus:ring-orange-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Despesas Mensais (R$)</label>
+                    <input type="number" id="unit-edit-expenses" step="0.01" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-6 pt-5 border-t border-slate-50">
+                <button onclick="saveUnitSettingsMatrix()" id="btn-save-unit-settings" class="px-6 py-2.5 orange-gradient text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+                </button>
+            </div>
+        `;
+        this.update();
+    },
+
+    update: function () {
+        // Use window properties for maximum safety across files
+        const fId = window.selectedFranchiseId;
+        const franchesList = window.franchises || [];
+
+        if (!fId || franchesList.length === 0) return;
+
+        const franchise = franchesList.find(f => f.id === fId || f._id === fId);
+        if (!franchise) return;
+
+        const fields = {
+            'unit-edit-name': franchise.name,
+            'unit-edit-owner': franchise.owner,
+            'unit-edit-phone': franchise.phone,
+            'unit-edit-address': franchise.address,
+            'unit-edit-royalty': franchise.royaltyPercent,
+            'unit-edit-expenses': franchise.expenses
+        };
+
+        Object.entries(fields).forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value || (id.includes('royalty') ? 5 : (id.includes('expenses') ? 0 : ''));
+        });
+    }
+});
+
+// ===== UNIT GRADUATION WIDGET =====
+registerWidget({
+    id: 'matrix-unit-graduation',
+    name: 'Gestão de Graduações',
+    description: 'Verificação automática de alunos prontos para o próximo nível',
+    size: 'col-span-12',
+    category: 'Detalhes Unidade',
+    icon: 'fa-solid fa-medal',
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Alunos Prontos para Graduar</h3>
+                        <p class="text-[10px] text-slate-400">Com base em frequência e tempo mínimo</p>
+                    </div>
+                    <div class="p-2 bg-orange-100 text-brand-500 rounded-xl">
+                        <i class="fa-solid fa-medal text-lg"></i>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left text-[11px]">
+                        <thead class="bg-slate-50/50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
+                            <tr>
+                                <th class="px-6 py-4">Aluno</th>
+                                <th class="px-6 py-4">De -> Para</th>
+                                <th class="px-6 py-4">Aulas</th>
+                                <th class="px-6 py-4 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrix-graduation-table-body" class="divide-y divide-slate-50">
+                            <tr>
+                                <td colspan="4" class="text-center py-10 text-slate-400">
+                                    <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verificando...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="p-4 bg-orange-50/50 border-t border-orange-100/50 text-orange-600 text-[10px] font-medium italic">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Só aparecem nesta lista alunos que atingiram critério de tempo e presença.
+                </div>
+            </div>
+        `;
+        this.update();
+    },
+
+    update: async function () {
+        const tableBody = document.getElementById('matrix-graduation-table-body');
+        if (!tableBody) return;
+
+        // Use window properties for maximum safety
+        const fId = window.selectedFranchiseId;
+        if (!fId) return;
+
+        try {
+            const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+            const response = await fetch(`${apiUrl}/graduation/eligible/${fId}`, {
+                headers: { 'Bypass-Tunnel-Reminder': 'true' }
+            });
+            const result = await response.json();
+            const eligibleStudents = result.data || [];
+
+            if (eligibleStudents.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-slate-400 italic">Nenhum aluno elegível no momento.</td></tr>';
+                return;
+            }
+
+            // Belt Colors helper
+            const getBeltStyle = (belt) => {
+                const colors = {
+                    'Branca': { bg: '#F8FAFC', text: '#334155', border: '#CBD5E1' },
+                    'Cinza': { bg: '#6B7280', text: '#FFFFFF', border: '#6B7280' },
+                    'Amarela': { bg: '#FCD34D', text: '#713F12', border: '#FCD34D' },
+                    'Laranja': { bg: '#FF6B00', text: '#FFFFFF', border: '#FF6B00' },
+                    'Verde': { bg: '#22C55E', text: '#FFFFFF', border: '#22C55E' },
+                    'Azul': { bg: '#3B82F6', text: '#FFFFFF', border: '#3B82F6' },
+                    'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
+                    'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
+                    'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
+                    'Coral': { bg: 'none', text: 'transparent', border: '#EE1111', extra: 'background-image: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%), linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%); background-clip: text, padding-box; -webkit-background-clip: text, padding-box; font-weight: 900; position: relative;' },
+                    'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
+                };
+                return colors[belt] || colors['Branca'];
+            };
+
+            const renderBadge = (fullString) => {
+                if (!fullString) return '';
+                const parts = fullString.split(' - ');
+                const belt = parts[0] || 'Branca';
+                const style = getBeltStyle(belt);
+                return `<span class="inline-block px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase border whitespace-nowrap" 
+                              style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border}; ${style.extra || ''}">
+                            ${fullString}
+                        </span>`;
+            };
+
+            tableBody.innerHTML = eligibleStudents.map(s => `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
+                    <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                             ${renderBadge(s.current || s.belt)}
+                             <i class="fa-solid fa-arrow-right text-[8px] text-slate-300"></i>
+                             ${renderBadge(s.next)}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 font-bold text-slate-600">
+                        ${s.attended} <span class="text-slate-400 font-normal">/ ${s.required}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="processMatrixUnitGraduation('${s.id}', '${s.name}', '${s.next}')" 
+                                class="px-3 py-1.5 bg-brand-500 text-white rounded-lg text-[9px] font-bold hover:bg-brand-600 transition shadow-sm uppercase tracking-wider">
+                            Graduar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            console.error('Erro ao carregar graduáveis:', error);
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-red-400 text-xs">Erro ao verificar elegibilidade.</td></tr>';
+        }
+    }
+});
+
+window.processMatrixUnitGraduation = async (studentId, name, nextLevel) => {
+    if (!confirm(`Confirmar graduação de ${name} para ${nextLevel}?`)) return;
+
+    try {
+        const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+        const fId = window.selectedFranchiseId;
+
+        // Find a black belt teacher to "sign" the promotion (optional validation, using first for now)
+        const teachersRes = await fetch(`${apiUrl}/teachers?franchiseId=${fId}`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const teachersData = await teachersRes.json();
+        const teachers = teachersData.data || [];
+
+        const blackBelt = teachers.find(t => t.belt === 'Preta');
+        const teacherId = blackBelt ? blackBelt._id : (teachers[0]?._id || null);
+
+        const response = await fetch(`${apiUrl}/graduation/promote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
+            body: JSON.stringify({ studentId, teacherId })
+        });
+
+        const resData = await response.json();
+
+        if (resData.success) {
+            alert(`Sucesso! ${name} foi graduado.`);
+
+            // Optimistically update the local students array if it exists
+            // This ensures renderStudents() shows the new degree immediately
+            if (typeof students !== 'undefined' && Array.isArray(students)) {
+                const studentIndex = students.findIndex(s => s._id === studentId || s.id === studentId);
+                if (studentIndex !== -1) {
+                    const parts = nextLevel.split(' - ');
+                    if (parts.length === 2) {
+                        students[studentIndex].belt = parts[0];
+                        students[studentIndex].degree = parts[1];
+                        console.log(`Optimistically updated student ${name} to ${nextLevel}`);
+                    }
+                }
+            }
+
+            // Update widget
+            const widget = typeof WIDGET_REGISTRY !== 'undefined' ? WIDGET_REGISTRY['matrix-unit-graduation'] : null;
+            if (widget) widget.update();
+
+            // Also update the students list widget to reflect the new degree
+            const studentsWidget = typeof WIDGET_REGISTRY !== 'undefined' ? WIDGET_REGISTRY['matrix-unit-students'] : null;
+            if (studentsWidget) studentsWidget.update();
+        }
+    } catch (error) {
+        console.error('Erro ao processar graduação:', error);
+        alert('Erro ao processar graduação. Tente novamente.');
+    }
+};
+
 console.log('✅ Matrix Widgets loaded');

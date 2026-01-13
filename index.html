@@ -161,27 +161,26 @@
         </div>
 
         <!-- Cards Container -->
-        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
 
             <!-- OPTION 1: MATRIZ -->
             <a href="matriz-login.html" class="block group h-full">
                 <div
-                    class="card-choice p-10 rounded-card h-full flex flex-col items-center text-center cursor-pointer animate-enter delay-100 shadow-sm">
-                    <div class="icon-container w-24 h-24 rounded-3xl flex items-center justify-center mb-8">
-                        <i class="fa-solid fa-building-columns text-4xl"></i>
+                    class="card-choice p-8 rounded-card h-full flex flex-col items-center text-center cursor-pointer animate-enter delay-100 shadow-sm">
+                    <div class="icon-container w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-building-columns text-2xl"></i>
                     </div>
 
-                    <h2 class="text-3xl font-bold text-slate-800 mb-4 group-hover:text-brand-500 transition-colors">
+                    <h2 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-brand-500 transition-colors">
                         Matriz
                     </h2>
-                    <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
-                        Acesso administrativo central para gestão da rede, monitoramento de KPIs e controle de
-                        franquias.
+                    <p class="text-slate-500 text-[11px] leading-relaxed mb-6 flex-1">
+                        Gestão da rede, monitoramento de KPIs e controle de franquias.
                     </p>
 
                     <div
-                        class="btn-action w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
-                        <span>Acessar Portal</span>
+                        class="btn-action w-full py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
+                        <span>Acessar</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </div>
                 </div>
@@ -190,21 +189,68 @@
             <!-- OPTION 2: FRANQUEADO -->
             <a href="franqueado-login.html" class="block group h-full">
                 <div
-                    class="card-choice p-10 rounded-card h-full flex flex-col items-center text-center cursor-pointer animate-enter delay-200 shadow-sm">
-                    <div class="icon-container w-24 h-24 rounded-3xl flex items-center justify-center mb-8">
-                        <i class="fa-solid fa-store text-4xl"></i>
+                    class="card-choice p-8 rounded-card h-full flex flex-col items-center text-center cursor-pointer animate-enter delay-200 shadow-sm">
+                    <div class="icon-container w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-store text-2xl"></i>
                     </div>
 
-                    <h2 class="text-3xl font-bold text-slate-800 mb-4 group-hover:text-brand-500 transition-colors">
+                    <h2 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-brand-500 transition-colors">
                         Franqueado
                     </h2>
-                    <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
-                        Área exclusiva para parceiros. Gestão de unidade, alunos, financeiro e suporte da rede.
+                    <p class="text-slate-500 text-[11px] leading-relaxed mb-6 flex-1">
+                        Gestão de unidade, alunos, financeiro e suporte da rede.
                     </p>
 
                     <div
-                        class="btn-action w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
+                        class="btn-action w-full py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
                         <span>Minha Unidade</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- OPTION 3: PROFESSOR -->
+            <a href="teacher-login.html" class="block group h-full">
+                <div
+                    class="card-choice p-8 rounded-card h-full flex flex-col items-center text-center cursor-pointer animate-enter delay-300 shadow-sm border-brand-100">
+                    <div
+                        class="icon-container w-16 h-16 rounded-2xl flex items-center justify-center mb-6 bg-slate-900 !text-white group-hover:bg-brand-500 transition-all">
+                        <i class="fa-solid fa-person-chalkboard text-2xl"></i>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-brand-500 transition-colors">
+                        Professor
+                    </h2>
+                    <p class="text-slate-500 text-[11px] leading-relaxed mb-6 flex-1">
+                        Controle de presença, agenda de aulas e gestão técnica do tatame.
+                    </p>
+
+                    <div
+                        class="btn-action w-full py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
+                        <span>Entrar no Tatame</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- OPTION 4: ALUNO -->
+            <a href="aluno-login.html" class="block group h-full">
+                <div
+                    class="card-choice p-8 rounded-card h-full flex flex-col items-center text-center cursor-pointer animate-enter delay-[400ms] shadow-sm">
+                    <div class="icon-container w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-user-graduate text-2xl"></i>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-brand-500 transition-colors">
+                        Aluno
+                    </h2>
+                    <p class="text-slate-500 text-[11px] leading-relaxed mb-6 flex-1">
+                        Minhas aulas, check-in, ranking e progresso de graduação.
+                    </p>
+
+                    <div
+                        class="btn-action w-full py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 group-hover:gap-3 transition-all">
+                        <span>Meu Perfil</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </div>
                 </div>

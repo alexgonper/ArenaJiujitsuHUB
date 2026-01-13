@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Jiu-Jitsu Hub | Professor Portal Login</title>
+    <meta name="description" content="Acesso exclusivo para instrutores Arena Jiu-Jitsu Hub">
+
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="tailwind.config.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Eurostile Font -->
+    <link href="https://fonts.cdnfonts.com/css/eurostile" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        @font-face {
+            font-family: 'Eurostile Bold Extended';
+            src: local('Eurostile Bold Extended'), local('Eurostile-BoldExtended'), local('Arial Black');
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .brand-typography {
+            font-family: 'Eurostile Bold Extended', sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .orange-gradient-text {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8A00 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-shadow {
+            box-shadow: 0 0 50px rgba(255, 107, 0, 0.1);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.875rem;
+            color: white;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #FF6B00;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8A00 100%);
+            color: white;
+            font-weight: 800;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            box-shadow: 0 10px 20px rgba(255, 107, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(255, 107, 0, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .login-container {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
+            padding: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center p-4">
+
+    <div class="login-container card-shadow animate-up">
+        <!-- Logo Section -->
+        <div class="text-center mb-10">
+            <h1 class="brand-typography text-3xl mb-2">
+                <span class="orange-gradient-text">ARENA</span>
+                <span class="text-white">HUB</span>
+            </h1>
+            <p class="text-[10px] font-bold tracking-[0.3em] text-zinc-500 uppercase">
+                Portal do Instrutor
+            </p>
+        </div>
+
+        <!-- Instructor Authority Hook -->
+        <div class="mb-8 text-center bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+            <i class="fa-solid fa-person-chalkboard text-brand-500 text-2xl mb-2"></i>
+            <h2 class="text-sm font-bold text-zinc-200">Liderança & Controle</h2>
+            <p class="text-[11px] text-zinc-500 mt-1">Acesse sua agenda e gerencie suas aulas em tempo real.</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="teacher-login-form" class="space-y-6">
+            <div>
+                <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 block ml-1">
+                    E-mail do Instrutor
+                </label>
+                <input type="email" id="teacher-email" class="input-field" placeholder="ex: mestre@arenajj.com"
+                    required>
+            </div>
+
+            <button type="submit" class="w-full btn-primary flex items-center justify-center gap-2">
+                <span>Entrar no Tatame</span>
+                <i class="fa-solid fa-right-to-bracket"></i>
+            </button>
+        </form>
+
+        <!-- Help Info -->
+        <div class="mt-8 text-center">
+            <p class="text-[10px] text-zinc-600">
+                Problemas no acesso? <br>Entre em contato com a administração da sua unidade.
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed top-6 right-6 bg-zinc-900 text-white px-6 py-4 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-3 transform translate-x-full opacity-0 transition-all duration-500 z-[3000] border border-zinc-800">
+        <div id="toast-icon" class="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center text-white">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <span id="toast-msg">Mensagem</span>
+    </div>
+
+    <script src="api-config.js"></script>
+    <script>
+        const form = document.getElementById('teacher-login-form');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('teacher-email').value;
+
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/teachers/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Save teacher info to localStorage
+                    localStorage.setItem('arena_teacher', JSON.stringify(result.data));
+                    showToast('Acesso autorizado! Preparando seu painel...', 'success');
+
+                    setTimeout(() => {
+                        window.location.href = 'teacher.html';
+                    }, 1500);
+                } else {
+                    showToast(result.error || 'Erro ao realizar login', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Erro de conexão com o servidor', 'error');
+            }
+        });
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+            const icon = toastIcon.querySelector('i');
+
+            toastMsg.textContent = message;
+
+            if (type === 'success') {
+                toastIcon.className = 'w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white';
+                icon.className = 'fa-solid fa-check';
+            } else {
+                toastIcon.className = 'w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white';
+                icon.className = 'fa-solid fa-xmark';
+            }
+
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0', 'opacity-100');
+                toast.classList.add('translate-x-full', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

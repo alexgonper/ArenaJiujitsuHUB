@@ -1,30 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const studentController = require('../controllers/studentController');
 
-const {
-    getStudents,
-    getStudent,
-    createStudent,
-    updateStudent,
-    deleteStudent,
-    getStudentStats,
-    updatePaymentStatus
-} = require('../controllers/studentController');
+// ==========================
+// PORTAL ROUTES (PHASE 2)
+// ==========================
+router.post('/login', studentController.login);
+router.post('/checkin', studentController.checkIn);
+router.get('/dashboard/:studentId', studentController.getDashboard);
+router.get('/ranking/:franchiseId', studentController.getLeaderboard);
+router.get('/badges/:studentId', studentController.getBadges);
 
-// Routes
-router.route('/')
-    .get(getStudents)
-    .post(createStudent);
-
-router.route('/stats/:franchiseId')
-    .get(getStudentStats);
-
-router.route('/:id')
-    .get(getStudent)
-    .put(updateStudent)
-    .delete(deleteStudent);
-
-router.route('/:id/payment')
-    .patch(updatePaymentStatus);
+// ==========================
+// ADMIN / CRUD ROUTES
+// ==========================
+router.get('/', studentController.getAllStudents);
+router.post('/', studentController.createStudent);
+router.get('/:id', studentController.getStudentById);
+router.put('/:id', studentController.updateStudent);
+router.delete('/:id', studentController.deleteStudent);
 
 module.exports = router;
