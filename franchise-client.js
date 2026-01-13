@@ -42,7 +42,7 @@ const beltColors = {
     'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
     'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
     'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
-    'Coral': { bg: 'none', text: 'transparent', border: '#EE1111', extra: 'background-image: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%), linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%); background-clip: text, padding-box; -webkit-background-clip: text, padding-box; font-weight: 900; position: relative;' },
+    'Coral': { bg: 'repeating-linear-gradient(90deg, #F00 0, #F00 10px, #FFF 10px, #FFF 20px)', text: '#000000', border: '#DC2626' },
     'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
 };
 
@@ -97,6 +97,24 @@ async function loadLoginOptions() {
 
         btn.disabled = false;
         btn.innerHTML = 'Aceder ao Painel';
+
+        // Add change listener to select to apply branding immediately
+        select.addEventListener('change', async () => {
+            const selectedId = select.value;
+            if (selectedId) {
+                try {
+                    const res = await fetch(`${API_URL}/franchises/${selectedId}`, {
+                        headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                        applyBranding(json.data);
+                    }
+                } catch (e) {
+                    console.error("Error applying live branding:", e);
+                }
+            }
+        });
     } catch (e) {
         console.error(e);
         const apiUrl = window.API_URL || 'undefined';
@@ -269,6 +287,9 @@ async function initApp() {
         if (currentFranchise) {
             document.getElementById('gym-name-header').innerText = currentFranchise.name;
             document.getElementById('gym-owner-header').innerText = currentFranchise.owner || 'Gerente da Unidade';
+
+            // Apply White Label branding
+            applyBranding(currentFranchise);
         }
 
         // Initialize widget system safely
@@ -474,13 +495,25 @@ window.updateGymSettings = async function () {
         return;
     }
 
+    const branding = {
+        brandName: document.getElementById('edit-branding-name')?.value.trim() || '',
+        logoUrl: document.getElementById('edit-branding-logo')?.value.trim() || '',
+        primaryColor: document.getElementById('edit-branding-primary-color')?.value || '#FF6B00',
+        secondaryColor: document.getElementById('edit-branding-secondary-color')?.value || '#000000',
+        faviconUrl: document.getElementById('edit-branding-favicon')?.value.trim() || '',
+        loginBackground: document.getElementById('edit-branding-bg')?.value.trim() || '',
+        supportEmail: document.getElementById('edit-branding-email')?.value.trim() || '',
+        supportPhone: document.getElementById('edit-branding-phone')?.value.trim() || ''
+    };
+
     const updatedData = {
         name: nameField.value.trim(),
         owner: ownerField.value.trim(),
         phone: phoneField.value.trim(),
         address: addressField.value.trim(),
         royaltyPercent: parseFloat(royaltyField.value) || 0,
-        expenses: expensesField ? parseFloat(expensesField.value) || 0 : 0
+        expenses: expensesField ? parseFloat(expensesField.value) || 0 : 0,
+        branding: branding
     };
 
     // Validation
@@ -519,6 +552,9 @@ window.updateGymSettings = async function () {
         if (settingsWidget && settingsWidget.update) {
             settingsWidget.update();
         }
+
+        // Apply new branding immediately
+        applyBranding(currentFranchise);
 
         showToast('✅ Dados atualizados com sucesso!', 'success');
     } catch (error) {
@@ -860,6 +896,49 @@ window.openStudentModal = async (id = null) => {
 
     console.log(`🔍 Email value that will be used in template: "${email}"`);
 
+    // Prepare History HTML
+    let historyHTML = '';
+    if (student && student.graduationHistory && student.graduationHistory.length > 0) {
+        historyHTML = `
+            <div class="mt-6 border-t border-slate-100 pt-6">
+                <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-orange-500"></i> Histórico de Graduação
+                </h3>
+                <div class="overflow-x-auto bg-slate-50 rounded-xl border border-slate-100 p-1">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-white border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th class="px-3 py-2">Data</th>
+                                <th class="px-3 py-2">Faixa</th>
+                                <th class="px-3 py-2">Grau</th>
+                                <th class="px-3 py-2">Mestre</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${student.graduationHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).map(h => `
+                                <tr>
+                                    <td class="px-3 py-2 text-slate-600 font-medium">${new Date(h.date).toLocaleDateString()}</td>
+                                    <td class="px-3 py-2 font-bold text-slate-800">${h.belt}</td>
+                                    <td class="px-3 py-2 text-slate-500">${h.degree}</td>
+                                    <td class="px-3 py-2 text-slate-500 text-[10px]">${h.promotedBy?.name || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } else if (student) {
+        historyHTML = `
+            <div class="mt-6 border-t border-slate-100 pt-6">
+                <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-orange-500"></i> Histórico de Graduação
+                </h3>
+                <p class="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl text-center border border-slate-100">Nenhum registro de graduação encontrado.</p>
+            </div>
+        `;
+    }
+
     // HTML for Form
     modalContent.innerHTML = `
         <div class="text-left">
@@ -951,6 +1030,8 @@ window.openStudentModal = async (id = null) => {
                     </div>
                 </div>
             </div>
+
+            ${historyHTML}
             
             <div class="flex gap-3 pt-6 border-t border-slate-100 mt-6">
                 <button type="button" onclick="closeModal()" class="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all">
@@ -1837,3 +1918,110 @@ window.listenToAudit = () => {
     u.lang = 'pt-BR';
     speechSynthesis.speak(u);
 };
+
+// --- WHITE LABEL / BRANDING ---
+function applyBranding(unit) {
+    if (!unit) return;
+    const b = unit.branding || {};
+
+    const primaryColor = b.primaryColor || '#FF6B00';
+    const secondaryColor = b.secondaryColor || '#000000';
+    const brandName = b.brandName || unit.name;
+
+    // 1. CSS Variables / Dynamic Styles
+    const styleEl = document.getElementById('branding-styles');
+    if (styleEl) {
+        styleEl.innerHTML = `
+            :root {
+                --brand-primary: ${primaryColor};
+                --brand-secondary: ${secondaryColor};
+            }
+            .orange-gradient {
+                background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%) !important;
+            }
+            .text-brand-500 { color: ${primaryColor} !important; }
+            .bg-brand-500 { background-color: ${primaryColor} !important; }
+            .border-brand-500 { border-color: ${primaryColor} !important; }
+            .hover\\:text-brand-500:hover { color: ${primaryColor} !important; }
+            .hover\\:bg-brand-500:hover { background-color: ${primaryColor} !important; }
+            .text-orange-500 { color: ${primaryColor} !important; }
+            .text-orange-600 { color: ${primaryColor} !important; }
+            .bg-orange-500 { background-color: ${primaryColor} !important; }
+            .bg-orange-50 { background-color: ${primaryColor}10 !important; }
+            .border-orange-500 { border-color: ${primaryColor} !important; }
+            .border-orange-200 { border-color: ${primaryColor}50 !important; }
+            .hover\\:border-orange-500:hover { border-color: ${primaryColor} !important; }
+            .hover\\:border-orange-200:hover { border-color: ${primaryColor}50 !important; }
+            .hover\\:bg-orange-50:hover { background-color: ${primaryColor}10 !important; }
+            .hover\\:bg-orange-500:hover { background-color: ${primaryColor} !important; }
+            .shadow-orange-200 { shadow-color: ${primaryColor}50 !important; }
+            
+            /* Specific Widget Overrides */
+            .btn-primary { background: ${primaryColor} !important; }
+            .input-field:focus { border-color: ${primaryColor} !important; }
+        `;
+    }
+
+    // 2. Logo, Brand Title & Login Support
+    const portalLogoImg = document.getElementById('portal-logo-img');
+    const portalBrandTitle = document.getElementById('portal-brand-title');
+    const loginLogoImg = document.getElementById('login-logo-img');
+    const loginLogoIcon = document.getElementById('login-logo-icon');
+    const loginBtn = document.getElementById('btn-login-action');
+
+    // Portal Logo
+    if (b.logoUrl && portalLogoImg) {
+        portalLogoImg.src = b.logoUrl;
+        portalLogoImg.classList.remove('hidden');
+    }
+
+    // Login Logo
+    if (b.logoUrl && loginLogoImg) {
+        loginLogoImg.src = b.logoUrl;
+        loginLogoImg.classList.remove('hidden');
+        if (loginLogoIcon) loginLogoIcon.classList.add('hidden');
+    } else if (loginLogoIcon) {
+        loginLogoIcon.classList.remove('hidden');
+        if (loginLogoImg) loginLogoImg.classList.add('hidden');
+    }
+
+    // Login Button Color
+    if (loginBtn) {
+        loginBtn.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`;
+    }
+
+    if (portalBrandTitle) {
+        // Try to break name in two colors if it has spaces
+        const parts = brandName.split(' ');
+        if (parts.length > 1) {
+            portalBrandTitle.innerHTML = `<span class="text-brand-500">${parts.slice(0, -1).join(' ')}</span> <span class="text-black">${parts.slice(-1)}</span>`;
+        } else {
+            portalBrandTitle.innerHTML = `<span class="text-brand-500">${brandName}</span>`;
+        }
+    }
+
+    // 3. Favicon & Document Title
+    if (b.faviconUrl) {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.href = b.faviconUrl;
+    }
+    document.title = `${brandName} | Painel do Franqueado`;
+
+    // 4. Login Background
+    const loginScreen = document.getElementById('login-screen') || document.body;
+    if (b.loginBackground) {
+        if (b.loginBackground.startsWith('http') || b.loginBackground.startsWith('data:')) {
+            loginScreen.style.backgroundImage = `url(${b.loginBackground})`;
+            loginScreen.style.backgroundSize = 'cover';
+            loginScreen.style.backgroundPosition = 'center';
+        } else {
+            loginScreen.style.backgroundColor = b.loginBackground;
+            loginScreen.style.backgroundImage = 'none';
+        }
+    }
+}

@@ -197,6 +197,7 @@
             }
         }
     </style>
+    <style id="branding-styles"></style>
 </head>
 
 <body class="flex items-center justify-center min-h-screen p-4 relative">
@@ -211,8 +212,10 @@
     <div class="max-w-md w-full">
         <div class="login-container card-shadow animate-fade-in-up">
             <!-- Logo Section -->
-            <div class="logo-container mb-8 text-center animate-fade-in-up delay-1">
-                <span class="brand-typography text-2xl md:text-3xl block mb-2">
+            <div id="login-logo-container" class="logo-container mb-8 text-center animate-fade-in-up delay-1">
+                <img id="login-logo-img" class="hidden h-16 mx-auto mb-4 object-contain" src="" alt="Logo">
+                <i id="login-logo-icon" class="fa-solid fa-graduation-cap text-brand-500 text-4xl mb-4 block"></i>
+                <span id="portal-brand-title" class="brand-typography text-2xl md:text-3xl block mb-2">
                     <span class="text-brand-500">ARENA JIU-JITSU</span>
                     <span class="text-black">HUB FRANQUEADO</span>
                 </span>

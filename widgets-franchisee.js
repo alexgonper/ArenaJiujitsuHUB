@@ -476,6 +476,7 @@ registerWidget({
     render: function (container) {
         container.innerHTML = `
             <div class="space-y-6">
+                <!-- Basic Info Section -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div>
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block required-label">Nome da Academia</label>
@@ -494,7 +495,7 @@ registerWidget({
                         <input type="text" id="edit-gym-address" class="input-field" placeholder="Endereço" required>
                     </div>
                 </div>
-                <!-- Extra Row for Royalties and Expenses -->
+                
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-4">
                      <div>
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Repasse / Royalties (%)</label>
@@ -505,7 +506,62 @@ registerWidget({
                         <input type="number" id="edit-gym-expenses" class="input-field" min="0" step="0.01" placeholder="Ex: 5000.00">
                     </div>
                 </div>
-                <div class="flex justify-end pt-2">
+
+                <!-- Design & Branding (White Label) Section -->
+                <div class="border-t border-slate-100 pt-6 mt-6">
+                    <h3 class="text-xs font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-orange-500"></i> Design & Branding (White Label)
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Nome da Marca</label>
+                            <input type="text" id="edit-branding-name" class="input-field" placeholder="Ex: Arena Pro Florianópolis">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">URL do Logo</label>
+                            <input type="url" id="edit-branding-logo" class="input-field" placeholder="https://exemplo.com/logo.png">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">URL do Favicon</label>
+                            <input type="url" id="edit-branding-favicon" class="input-field" placeholder="https://exemplo.com/favicon.ico">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Cor Primária</label>
+                            <div class="flex gap-2">
+                                <input type="color" id="edit-branding-primary-color" class="h-10 w-12 border border-slate-200 rounded-lg cursor-pointer bg-white p-1">
+                                <input type="text" id="edit-branding-primary-text" oninput="document.getElementById('edit-branding-primary-color').value = this.value" class="flex-1 input-field uppercase">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Cor Secundária</label>
+                            <div class="flex gap-2">
+                                <input type="color" id="edit-branding-secondary-color" class="h-10 w-12 border border-slate-200 rounded-lg cursor-pointer bg-white p-1">
+                                <input type="text" id="edit-branding-secondary-text" oninput="document.getElementById('edit-branding-secondary-color').value = this.value" class="flex-1 input-field uppercase">
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">URL do Fundo de Login</label>
+                            <input type="url" id="edit-branding-bg" class="input-field" placeholder="https://exemplo.com/background.jpg">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Email de Suporte (Aluno/Prof)</label>
+                            <input type="email" id="edit-branding-email" class="input-field" placeholder="suporte@academia.com">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Telefone de Suporte (WhatsApp)</label>
+                            <input type="text" id="edit-branding-phone" class="input-field" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-6 border-t border-slate-100 mt-6">
                     <button onclick="updateGymSettings()" id="btn-update-settings"
                         class="px-8 py-3 orange-gradient text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 hover:scale-105 transition-all">
                         <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
@@ -513,6 +569,17 @@ registerWidget({
                 </div>
             </div>
         `;
+
+        // Sync color picker with text input
+        setTimeout(() => {
+            const pColor = document.getElementById('edit-branding-primary-color');
+            const pText = document.getElementById('edit-branding-primary-text');
+            if (pColor && pText) pColor.oninput = (e) => pText.value = e.target.value.toUpperCase();
+
+            const sColor = document.getElementById('edit-branding-secondary-color');
+            const sText = document.getElementById('edit-branding-secondary-text');
+            if (sColor && sText) sColor.oninput = (e) => sText.value = e.target.value.toUpperCase();
+        }, 100);
 
         this.update();
     },
@@ -531,14 +598,37 @@ registerWidget({
             if (addressField) addressField.value = currentFranchise.address || '';
 
             const royaltyField = document.getElementById('edit-gym-royalty');
-            if (royaltyField) {
-                royaltyField.value = currentFranchise.royaltyPercent || 5;
-            }
+            if (royaltyField) royaltyField.value = currentFranchise.royaltyPercent || 5;
 
             const expensesField = document.getElementById('edit-gym-expenses');
-            if (expensesField) {
-                expensesField.value = currentFranchise.expenses || 0;
-            }
+            if (expensesField) expensesField.value = currentFranchise.expenses || 0;
+
+            // Branding fields
+            const b = currentFranchise.branding || {};
+            const bName = document.getElementById('edit-branding-name');
+            const bLogo = document.getElementById('edit-branding-logo');
+            const bFavicon = document.getElementById('edit-branding-favicon');
+            const bBg = document.getElementById('edit-branding-bg');
+            const bPrimary = document.getElementById('edit-branding-primary-color');
+            const bPrimaryText = document.getElementById('edit-branding-primary-text');
+            const bSecondary = document.getElementById('edit-branding-secondary-color');
+            const bSecondaryText = document.getElementById('edit-branding-secondary-text');
+
+            if (bName) bName.value = b.brandName || '';
+            if (bLogo) bLogo.value = b.logoUrl || '';
+            if (bFavicon) bFavicon.value = b.faviconUrl || '';
+            if (bBg) bBg.value = b.loginBackground || '';
+
+            const bEmail = document.getElementById('edit-branding-email');
+            const bPhone = document.getElementById('edit-branding-phone');
+            if (bEmail) bEmail.value = b.supportEmail || '';
+            if (bPhone) bPhone.value = b.supportPhone || '';
+
+            if (bPrimary) bPrimary.value = b.primaryColor || '#FF6B00';
+            if (bPrimaryText) bPrimaryText.value = (b.primaryColor || '#FF6B00').toUpperCase();
+
+            if (bSecondary) bSecondary.value = b.secondaryColor || '#000000';
+            if (bSecondaryText) bSecondaryText.value = (b.secondaryColor || '#000000').toUpperCase();
         }
     }
 });
@@ -869,10 +959,8 @@ async function executePromotion(studentId, name, nextLevel) {
                 const studentIndex = myStudents.findIndex(s => s._id === studentId || s.id === studentId);
                 if (studentIndex !== -1) {
                     const parts = nextLevel.split(' - ');
-                    if (parts.length === 2) {
-                        myStudents[studentIndex].belt = parts[0];
-                        myStudents[studentIndex].degree = parts[1];
-                    }
+                    myStudents[studentIndex].belt = parts[0];
+                    myStudents[studentIndex].degree = parts.length > 1 ? parts[1] : 'Nenhum';
                 }
             }
 
@@ -900,9 +988,325 @@ async function executePromotion(studentId, name, nextLevel) {
     }
 }
 
+// Generic Modal Helper
+window.openModal = function (htmlContent) {
+    const modal = document.getElementById('ui-modal');
+    const modalContent = document.getElementById('modal-content');
+    const modalPanel = document.getElementById('modal-panel');
+
+    if (modal && modalContent) {
+        modalContent.innerHTML = htmlContent;
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+        // Animation
+        setTimeout(() => {
+            modalPanel.classList.remove('scale-95', 'opacity-0');
+            modalPanel.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+};
+
 // Refresh directives function
 window.refreshDirectives = function () {
     loadAndRenderDirectives();
+};
+
+// ===== SCHEDULE MANAGEMENT WIDGET =====
+registerWidget({
+    id: 'franchisee-schedule',
+    name: 'Grade de Horários',
+    description: 'Gestão completa da grade semanal de aulas',
+    size: 'col-span-12',
+    category: 'Gestão',
+    icon: 'fa-regular fa-calendar-days',
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="flex flex-col h-full bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
+                <!-- Header -->
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Grade Semanal</h3>
+                        <p class="text-xs text-slate-400">Gerencie os horários das aulas</p>
+                    </div>
+                    <button onclick="openAddClassModal()" 
+                        class="text-[9px] font-bold text-white orange-gradient px-4 py-2 rounded-xl shadow-md hover:scale-105 transition-all flex items-center gap-2 uppercase">
+                        <i class="fa-solid fa-plus"></i> Nova Aula
+                    </button>
+                </div>
+
+                <!-- Schedule Grid -->
+                <div class="flex-1 overflow-x-auto p-4 custom-scrollbar">
+                    <div class="grid grid-cols-7 gap-4 min-w-[1000px]" id="schedule-grid">
+                        ${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => `
+                            <div class="flex flex-col gap-2">
+                                <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                    <span class="text-xs font-bold text-slate-500 uppercase">${day}</span>
+                                </div>
+                                <div id="day-col-${index}" class="space-y-2 flex-1 min-h-[200px]">
+                                    <!-- Classes will be injected here -->
+                                    <div class="text-center py-8 text-slate-300 text-[10px]">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.update();
+    },
+
+    update: function () {
+        loadSchedule();
+    }
+});
+
+// --- HELPER FUNCTIONS FOR SCHEDULE ---
+
+async function loadSchedule() {
+    try {
+        if (!currentFranchiseId) return;
+
+        // Ensure API_URL is available
+        const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+
+        const res = await fetch(`${apiUrl}/classes/franchise/${currentFranchiseId}?view=week`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            renderSchedule(json.data);
+        }
+    } catch (e) {
+        console.error("Error loading schedule:", e);
+        if (typeof showToast === 'function') showToast("Erro ao carregar grade", "error");
+    }
+}
+
+function renderSchedule(classes) {
+    // Clear columns
+    for (let i = 0; i < 7; i++) {
+        const col = document.getElementById(`day-col-${i}`);
+        if (col) col.innerHTML = '';
+    }
+
+    // Group by day
+    classes.forEach(cls => {
+        const col = document.getElementById(`day-col-${cls.dayOfWeek}`);
+        if (col) {
+            const teacherName = cls.teacherId ? (cls.teacherId.name || 'Professor') : 'Sem Professor';
+            const categoryColor = getCategoryColor(cls.category);
+
+            col.innerHTML += `
+                <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-${categoryColor}-50 text-${categoryColor}-600 border border-${categoryColor}-100">
+                            ${cls.category || 'Geral'}
+                        </span>
+                        <button onclick="deleteClass('${cls._id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition">
+                            <i class="fa-solid fa-trash text-[10px]"></i>
+                        </button>
+                    </div>
+                    <h4 class="font-bold text-slate-700 text-xs mb-0.5 leading-tight">${cls.name}</h4>
+                    <p class="text-[10px] text-slate-400 mb-2 truncate">${teacherName}</p>
+                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
+                        <i class="fa-regular fa-clock text-slate-400"></i>
+                        ${cls.startTime} - ${cls.endTime}
+                    </div>
+                </div>
+            `;
+        }
+    });
+}
+
+function getCategoryColor(category) {
+    const map = {
+        'BJJ': 'blue',
+        'No-Gi': 'red',
+        'Wrestling': 'orange',
+        'Kids': 'green',
+        'Fundamentals': 'slate',
+        'Muay Thai': 'red'
+    };
+    return map[category] || 'slate';
+}
+
+// Modal Functions
+window.openAddClassModal = () => {
+    // Build options for teachers
+    // Use myTeachers global from franchise-client.js
+    const teachersList = window.myTeachers || [];
+    const teacherOptions = teachersList.map(t =>
+        `<option value="${t._id}">${t.name} (${t.belt || 'Faixa?'})</option>`
+    ).join('');
+
+    const content = `
+        <div class="text-center mb-6">
+            <h3 class="text-xl font-bold text-slate-800">Nova Aula</h3>
+            <p class="text-xs text-slate-500">Adicione um novo horário à grade</p>
+        </div>
+        
+        <form id="form-new-class" onsubmit="event.preventDefault(); submitNewClass()" class="space-y-4">
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Nome da Aula</label>
+                <input type="text" id="class-name" class="input-field" placeholder="Ex: Jiu-Jitsu Avançado" required>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Dia da Semana</label>
+                    <select id="class-day" class="input-field" required>
+                        <option value="1">Segunda-feira</option>
+                        <option value="2">Terça-feira</option>
+                        <option value="3">Quarta-feira</option>
+                        <option value="4">Quinta-feira</option>
+                        <option value="5">Sexta-feira</option>
+                        <option value="6">Sábado</option>
+                        <option value="0">Domingo</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Categoria</label>
+                    <select id="class-category" class="input-field" required>
+                        <option value="BJJ">Jiu-Jitsu (Kimono)</option>
+                        <option value="No-Gi">No-Gi (Sem Kimono)</option>
+                        <option value="Kids">Kids</option>
+                        <option value="Fundamentals">Fundamentos</option>
+                        <option value="Wrestling">Wrestling</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Início</label>
+                    <input type="time" id="class-start" class="input-field" required>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Fim</label>
+                    <input type="time" id="class-end" class="input-field" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Professor Responsável</label>
+                <select id="class-teacher" class="input-field" required>
+                    <option value="">Selecione...</option>
+                    ${teacherOptions}
+                </select>
+            </div>
+
+            <button type="submit" class="w-full btn-primary mt-4">
+                Criar Aula
+            </button>
+        </form>
+    `;
+
+    // Based on franqueado-premium.html logic:
+    const modal = document.getElementById('ui-modal');
+    const modalContent = document.getElementById('modal-content');
+    const modalPanel = document.getElementById('modal-panel');
+
+    if (modal && modalContent) {
+        modalContent.innerHTML = content;
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+        // Animation
+        setTimeout(() => {
+            modalPanel.classList.remove('scale-95', 'opacity-0');
+            modalPanel.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+};
+
+window.closeModal = () => {
+    const modal = document.getElementById('ui-modal');
+    const modalPanel = document.getElementById('modal-panel');
+
+    if (modalPanel) {
+        modalPanel.classList.remove('scale-100', 'opacity-100');
+        modalPanel.classList.add('scale-95', 'opacity-0');
+    }
+
+    setTimeout(() => {
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+    }, 300);
+};
+
+window.submitNewClass = async () => {
+    const submitBtn = document.querySelector('#form-new-class button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+
+    // Ensure API_URL is available
+    const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+
+    const data = {
+        franchiseId: currentFranchiseId,
+        teacherId: document.getElementById('class-teacher').value,
+        name: document.getElementById('class-name').value,
+        dayOfWeek: parseInt(document.getElementById('class-day').value),
+        startTime: document.getElementById('class-start').value,
+        endTime: document.getElementById('class-end').value,
+        category: document.getElementById('class-category').value
+    };
+
+    try {
+        const res = await fetch(`${apiUrl}/classes`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
+            body: JSON.stringify(data)
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            if (typeof showToast === 'function') showToast('Aula criada com sucesso!', 'success');
+            closeModal();
+            loadSchedule(); // Refresh grid
+        } else {
+            throw new Error(json.message);
+        }
+    } catch (e) {
+        if (typeof showToast === 'function') showToast('Erro: ' + e.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+};
+
+window.deleteClass = async (id) => {
+    if (!confirm('Tem certeza que deseja remover esta aula?')) return;
+
+    // Ensure API_URL is available
+    const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+
+    try {
+        const res = await fetch(`${apiUrl}/classes/${id}`, {
+            method: 'DELETE',
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            if (typeof showToast === 'function') showToast('Aula removida!', 'success');
+            loadSchedule();
+        } else {
+            if (typeof showToast === 'function') showToast('Erro ao remover', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        if (typeof showToast === 'function') showToast('Erro de conexão', 'error');
+    }
 };
 
 console.log('✅ Franchisee Widgets loaded');

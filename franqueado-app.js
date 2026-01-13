@@ -30,7 +30,7 @@ const beltColors = {
     'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
     'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
     'Preta': { bg: '#000000', text: '#FFFFFF', border: '#000000' },
-    'Coral': { bg: 'none', text: 'transparent', border: '#EE1111', extra: 'background-image: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%), linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%); background-clip: text, padding-box; -webkit-background-clip: text, padding-box; font-weight: 900; position: relative;' },
+    'Coral': { bg: 'repeating-linear-gradient(90deg, #F00 0, #F00 10px, #FFF 10px, #FFF 20px)', text: '#000000', border: '#DC2626' },
     'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
 };
 
@@ -147,12 +147,15 @@ window.selectUnit = (id) => {
 
     currentUnit = franchises.find(f => (f._id || f.id) === id);
 
+    // Apply branding to login screen
+    applyBranding(currentUnit, true);
+
     // Enable Login Button
     const btn = document.getElementById('btn-login');
     btn.disabled = false;
     btn.classList.remove('bg-slate-200', 'text-slate-400');
-    btn.classList.add('orange-gradient', 'text-white', 'shadow-lg', 'hover:scale-[1.02]');
-    btn.innerText = `Acessar ${currentUnit.name}`;
+    // btn.classList.add('orange-gradient', 'text-white', 'shadow-lg', 'hover:scale-[1.02]'); // Handled by applyBranding
+    btn.innerText = `Acessar ${currentUnit.branding?.brandName || currentUnit.name}`;
 };
 
 window.login = () => {
@@ -177,6 +180,9 @@ window.logout = () => {
 };
 
 async function loadDashboard(unit) {
+    // Apply full branding
+    applyBranding(unit);
+
     // Set Header Info
     document.getElementById('unit-name-display').textContent = unit.name;
     document.getElementById('unit-avatar').textContent = unit.name.charAt(6) || unit.name.charAt(0);
@@ -556,3 +562,82 @@ window.processPromotion = async (studentId, name, nextLevel) => {
         }
     );
 };
+// --- WHITE LABEL / BRANDING ---
+function applyBranding(unit, loginOnly = false) {
+    if (!unit) return;
+    const b = unit.branding || {};
+
+    const primaryColor = b.primaryColor || '#FF6B00';
+    const secondaryColor = b.secondaryColor || '#000000';
+    const brandName = b.brandName || unit.name;
+
+    // 1. CSS Variables / Dynamic Styles
+    const styleEl = document.getElementById('branding-styles');
+    if (styleEl) {
+        styleEl.innerHTML = `
+            :root {
+                --brand-primary: ${primaryColor};
+                --brand-secondary: ${secondaryColor};
+            }
+            .orange-gradient {
+                background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%) !important;
+            }
+            .text-brand-500 { color: ${primaryColor} !important; }
+            .bg-brand-500 { background-color: ${primaryColor} !important; }
+            .border-brand-500 { border-color: ${primaryColor} !important; }
+            .hover\\:text-brand-500:hover { color: ${primaryColor} !important; }
+            .hover\\:bg-brand-500:hover { background-color: ${primaryColor} !important; }
+            .orange-50 { background-color: ${primaryColor}10 !important; }
+            /* Update specific stat icons */
+            .p-3.bg-orange-50 { background-color: ${primaryColor}15 !important; color: ${primaryColor} !important; }
+        `;
+    }
+
+    // 2. Login Screen Branding
+    const loginLogoImg = document.getElementById('login-logo-img');
+    const loginLogoIcon = document.getElementById('login-logo-icon');
+    const loginBtn = document.getElementById('btn-login');
+
+    if (b.logoUrl && loginLogoImg) {
+        loginLogoImg.src = b.logoUrl;
+        loginLogoImg.classList.remove('hidden');
+        if (loginLogoIcon) loginLogoIcon.classList.add('hidden');
+    }
+
+    if (loginBtn) {
+        loginBtn.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`;
+        loginBtn.classList.add('text-white', 'shadow-lg');
+    }
+
+    // 3. Full Portal Branding (if not loginOnly)
+    if (!loginOnly) {
+        // App Title / Brand Name
+        const brandTitle = document.getElementById('portal-brand-title');
+        if (brandTitle) {
+            brandTitle.innerHTML = brandName.replace(' ', ' <span class="text-brand-500">') + (brandName.includes(' ') ? '</span>' : '');
+        }
+
+        // Sidebar Logo
+        const logoImg = document.getElementById('logo-img');
+        const logoIcon = document.getElementById('logo-icon');
+        if (b.logoUrl && logoImg) {
+            logoImg.src = b.logoUrl;
+            logoImg.classList.remove('hidden');
+            if (logoIcon) logoIcon.classList.add('hidden');
+        }
+
+        // Favicon
+        if (b.faviconUrl) {
+            let link = document.querySelector("link[rel~='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = b.faviconUrl;
+        }
+
+        // Title Tag
+        document.title = `${brandName} | Portal do Franqueado`;
+    }
+}

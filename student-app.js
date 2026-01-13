@@ -165,9 +165,11 @@ function changePortalTab(tab) {
     document.getElementById('tab-home').classList.add('hidden');
     document.getElementById('tab-schedule').classList.add('hidden');
     document.getElementById('tab-ranking').classList.add('hidden');
+    const academyTab = document.getElementById('tab-academy');
+    if (academyTab) academyTab.classList.add('hidden');
 
     // 2. Reset Nav Icons
-    const navItems = ['home', 'schedule', 'ranking', 'store'];
+    const navItems = ['home', 'schedule', 'ranking', 'academy'];
     navItems.forEach(item => {
         const btn = document.getElementById(`nav-${item}`);
         if (btn) {
@@ -197,30 +199,100 @@ function changePortalTab(tab) {
         loadSchedule();
     } else if (tab === 'ranking') {
         loadRanking();
+    } else if (tab === 'academy') {
+        loadAcademyInfo();
     }
 }
 
-async function loadRanking() {
+async function loadAcademyInfo() {
+    try {
+        const studentData = JSON.parse(localStorage.getItem('arena_student_data') || '{}');
+        if (!studentData.franchiseId) return;
+
+        const res = await fetch(`${STUDENT_API_URL}/franchises/${studentData.franchiseId}`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            const franchise = json.data;
+            const branding = franchise.branding || {};
+
+            // Update academy info
+            document.getElementById('academy-name-detail').textContent = franchise.name;
+            document.getElementById('academy-address').textContent = franchise.address || 'Endereço não cadastrado';
+            document.getElementById('academy-phone').textContent = franchise.phone || 'Telefone não cadastrado';
+
+            // Show/hide support section
+            const supportSection = document.getElementById('support-section');
+            const emailContainer = document.getElementById('support-email-container');
+            const phoneContainer = document.getElementById('support-phone-container');
+
+            let hasSupport = false;
+
+            if (branding.supportEmail) {
+                document.getElementById('support-email').textContent = branding.supportEmail;
+                emailContainer.classList.remove('hidden');
+                hasSupport = true;
+            } else {
+                emailContainer.classList.add('hidden');
+            }
+
+            if (branding.supportPhone) {
+                document.getElementById('support-phone').textContent = branding.supportPhone;
+                phoneContainer.classList.remove('hidden');
+                hasSupport = true;
+            } else {
+                phoneContainer.classList.add('hidden');
+            }
+
+            if (hasSupport) {
+                supportSection.classList.remove('hidden');
+            } else {
+                supportSection.classList.add('hidden');
+            }
+        }
+    } catch (e) {
+        console.error('Error loading academy info:', e);
+    }
+}
+
+async function loadRanking(period = 'current_month') {
     try {
         const studentData = JSON.parse(localStorage.getItem('arena_student_data') || '{}');
 
-        // Load Leaderboard
-        const resRanking = await fetch(`${STUDENT_API_URL}/students/ranking/${studentData.franchiseId}`, {
+        // Show loading state
+        const list = document.getElementById('leaderboard-list');
+        list.innerHTML = `
+            <div class="p-10 text-center text-slate-400">
+                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+                <p class="text-xs font-bold uppercase tracking-widest">Carregando...</p>
+            </div>
+        `;
+
+        // Load Leaderboard with period filter
+        const resRanking = await fetch(`${STUDENT_API_URL}/students/ranking/${studentData.franchiseId}?period=${period}`, {
             headers: { 'Bypass-Tunnel-Reminder': 'true' }
         });
         const jsonRanking = await resRanking.json();
         if (jsonRanking.success) renderLeaderboard(jsonRanking.data);
 
-        // Load Badges
-        const resBadges = await fetch(`${STUDENT_API_URL}/students/badges/${studentData.id}`, {
-            headers: { 'Bypass-Tunnel-Reminder': 'true' }
-        });
-        const jsonBadges = await resBadges.json();
-        if (jsonBadges.success) renderBadges(jsonBadges.data.badges);
+        // Load Badges (only on first load)
+        if (period === 'current_month') {
+            const resBadges = await fetch(`${STUDENT_API_URL}/students/badges/${studentData.id}`, {
+                headers: { 'Bypass-Tunnel-Reminder': 'true' }
+            });
+            const jsonBadges = await resBadges.json();
+            if (jsonBadges.success) renderBadges(jsonBadges.data.badges);
+        }
 
     } catch (e) {
         console.error('Ranking error:', e);
     }
+}
+
+function changeRankingPeriod(period) {
+    loadRanking(period);
 }
 
 function renderLeaderboard(data) {
@@ -230,9 +302,27 @@ function renderLeaderboard(data) {
         return;
     }
 
+    // Belt styles for badges (matching student header format)
+    const beltStyles = {
+        'Branca': { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border border-slate-300' },
+        'Cinza': { bg: 'bg-gray-400', text: 'text-white', border: '' },
+        'Amarela': { bg: 'bg-yellow-400', text: 'text-yellow-900', border: '' },
+        'Laranja': { bg: 'bg-orange-500', text: 'text-white', border: '' },
+        'Verde': { bg: 'bg-green-500', text: 'text-white', border: '' },
+        'Azul': { bg: 'bg-blue-500', text: 'text-white', border: '' },
+        'Roxa': { bg: 'bg-purple-500', text: 'text-white', border: '' },
+        'Marrom': { bg: 'bg-amber-800', text: 'text-white', border: '' },
+        'Preta': { bg: 'bg-black', text: 'text-white', border: '' },
+        'Coral': { bg: 'bg-red-400', text: 'text-white', border: '' },
+        'Vermelha': { bg: 'bg-red-600', text: 'text-white', border: '' }
+    };
+
     list.innerHTML = data.map((item, index) => {
         const isTop3 = index < 3;
         const trophyColors = ['text-yellow-500', 'text-slate-400', 'text-orange-400'];
+        const style = beltStyles[item.belt] || beltStyles['Branca'];
+        const degreeText = item.degree && item.degree !== 'Nenhum' ? ` • ${item.degree}` : '';
+
         return `
             <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                 <div class="flex items-center gap-4">
@@ -242,7 +332,11 @@ function renderLeaderboard(data) {
                     </div>
                     <div>
                         <h4 class="text-xs font-bold text-slate-800">${item.name}</h4>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">${item.belt}</span>
+                        <div class="mt-1">
+                            <span class="${style.bg} ${style.text} ${style.border} text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded inline-block">
+                                ${item.belt}${degreeText}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">

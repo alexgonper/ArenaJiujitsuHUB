@@ -9,19 +9,21 @@ const classController = {
     getSchedule: async (req, res) => {
         try {
             const { franchiseId } = req.params;
-            const { date } = req.query; // e.g., "2026-01-13"
+            // If view=week, we return ALL active classes for this franchise
+            const { view, date } = req.query;
+            let query = { franchiseId, active: true };
 
-            const targetDate = date ? new Date(date) : new Date();
-            const dayOfWeek = targetDate.getDay();
+            if (view !== 'week') {
+                // Default behavior: filter by specific day
+                const targetDate = date ? new Date(date) : new Date();
+                const dayOfWeek = targetDate.getDay();
+                query.dayOfWeek = dayOfWeek;
+            }
 
-            // Find all active classes for this day
-            const classes = await Class.find({
-                franchiseId,
-                dayOfWeek,
-                active: true
-            })
+            // Find classes
+            const classes = await Class.find(query)
                 .populate('teacherId', 'name')
-                .sort({ startTime: 1 });
+                .sort({ dayOfWeek: 1, startTime: 1 });
 
             // In a real scenario, we would also check current occupations for each class
             // For MVP, we'll just return the schedule
@@ -45,6 +47,19 @@ const classController = {
             res.status(201).json({ success: true, data: newClass });
         } catch (error) {
             res.status(400).json({ success: false, message: error.message });
+        }
+    },
+
+    /**
+     * Delete a class
+     */
+    deleteClass: async (req, res) => {
+        try {
+            const { id } = req.params;
+            await Class.findByIdAndDelete(id);
+            res.status(200).json({ success: true, message: 'Aula removida com sucesso' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Erro ao remover aula' });
         }
     },
 

@@ -1100,7 +1100,7 @@ registerWidget({
                     'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
                     'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
                     'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
-                    'Coral': { bg: 'none', text: 'transparent', border: '#EE1111', extra: 'background-image: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%), linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%); background-clip: text, padding-box; -webkit-background-clip: text, padding-box; font-weight: 900; position: relative;' },
+                    'Coral': { bg: 'repeating-linear-gradient(90deg, #F00 0, #F00 10px, #FFF 10px, #FFF 20px)', text: '#000000', border: '#DC2626' },
                     'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
                 };
                 return colors[belt] || colors['Branca'];
@@ -1183,11 +1183,9 @@ window.processMatrixUnitGraduation = async (studentId, name, nextLevel) => {
                 const studentIndex = students.findIndex(s => s._id === studentId || s.id === studentId);
                 if (studentIndex !== -1) {
                     const parts = nextLevel.split(' - ');
-                    if (parts.length === 2) {
-                        students[studentIndex].belt = parts[0];
-                        students[studentIndex].degree = parts[1];
-                        console.log(`Optimistically updated student ${name} to ${nextLevel}`);
-                    }
+                    students[studentIndex].belt = parts[0];
+                    students[studentIndex].degree = parts.length > 1 ? parts[1] : 'Nenhum';
+                    console.log(`Optimistically updated student ${name} to ${nextLevel}`);
                 }
             }
 
@@ -1202,6 +1200,295 @@ window.processMatrixUnitGraduation = async (studentId, name, nextLevel) => {
     } catch (error) {
         console.error('Erro ao processar graduação:', error);
         alert('Erro ao processar graduação. Tente novamente.');
+    }
+};
+
+// ===== UNIT SCHEDULE WIDGET =====
+registerWidget({
+    id: 'matrix-unit-schedule',
+    name: 'Grade de Horários da Unidade',
+    description: 'Gestão da grade semanal de aulas da unidade',
+    size: 'col-span-12',
+    category: 'Detalhes Unidade',
+    icon: 'fa-regular fa-calendar-days',
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="flex flex-col h-full bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
+                <!-- Header -->
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Grade Semanal</h3>
+                        <p class="text-xs text-slate-400">Visualização da grade de aulas</p>
+                    </div>
+                    <button onclick="openUnitAddClassModal()" 
+                        class="text-[9px] font-bold text-white orange-gradient px-4 py-2 rounded-xl shadow-md hover:scale-105 transition-all flex items-center gap-2 uppercase">
+                        <i class="fa-solid fa-plus"></i> Nova Aula
+                    </button>
+                </div>
+
+                <!-- Schedule Grid -->
+                <div class="flex-1 overflow-x-auto p-4 custom-scrollbar">
+                    <div class="grid grid-cols-7 gap-4 min-w-[1000px]" id="unit-schedule-grid">
+                        ${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => `
+                            <div class="flex flex-col gap-2">
+                                <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                    <span class="text-xs font-bold text-slate-500 uppercase">${day}</span>
+                                </div>
+                                <div id="unit-day-col-${index}" class="space-y-2 flex-1 min-h-[200px]">
+                                    <!-- Classes will be injected here -->
+                                    <div class="text-center py-8 text-slate-300 text-[10px]">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.update();
+    },
+
+    update: function () {
+        loadUnitSchedule();
+    }
+});
+
+// --- HELPER FUNCTIONS FOR UNIT SCHEDULE ---
+async function loadUnitSchedule() {
+    try {
+        const franchiseId = window.selectedFranchiseId;
+        if (!franchiseId) return;
+
+        // Ensure API_URL is available
+        const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+
+        const res = await fetch(`${apiUrl}/classes/franchise/${franchiseId}?view=week`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            renderUnitSchedule(json.data);
+        }
+    } catch (e) {
+        console.error("Error loading unit schedule:", e);
+    }
+}
+
+function renderUnitSchedule(classes) {
+    // Clear columns
+    for (let i = 0; i < 7; i++) {
+        const col = document.getElementById(`unit-day-col-${i}`);
+        if (col) col.innerHTML = '';
+    }
+
+    // Colors helper
+    const getCategoryColor = (category) => {
+        const map = {
+            'BJJ': 'blue', 'No-Gi': 'red', 'Wrestling': 'orange',
+            'Kids': 'green', 'Fundamentals': 'slate', 'Muay Thai': 'red'
+        };
+        return map[category] || 'slate';
+    };
+
+    // Group by day
+    classes.forEach(cls => {
+        const col = document.getElementById(`unit-day-col-${cls.dayOfWeek}`);
+        if (col) {
+            const teacherName = cls.teacherId ? (cls.teacherId.name || 'Professor') : 'Sem Professor';
+            const categoryColor = getCategoryColor(cls.category);
+
+            col.innerHTML += `
+                <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-${categoryColor}-50 text-${categoryColor}-600 border border-${categoryColor}-100">
+                            ${cls.category || 'Geral'}
+                        </span>
+                        <button onclick="deleteUnitClass('${cls._id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition">
+                            <i class="fa-solid fa-trash text-[10px]"></i>
+                        </button>
+                    </div>
+                    <h4 class="font-bold text-slate-700 text-xs mb-0.5 leading-tight">${cls.name}</h4>
+                    <p class="text-[10px] text-slate-400 mb-2 truncate">${teacherName}</p>
+                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
+                        <i class="fa-regular fa-clock text-slate-400"></i>
+                        ${cls.startTime} - ${cls.endTime}
+                    </div>
+                </div>
+            `;
+        }
+    });
+}
+
+// Modal for Unit Class
+window.openUnitAddClassModal = async () => {
+    const franchiseId = window.selectedFranchiseId;
+    if (!franchiseId) return;
+
+    // Fetch teachers for this unit
+    const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+    let teacherOptions = '<option value="">Carregando...</option>';
+
+    try {
+        const res = await fetch(`${apiUrl}/teachers?franchiseId=${franchiseId}`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+            teacherOptions = json.data.map(t =>
+                `<option value="${t._id}">${t.name} (${t.belt || 'Faixa?'})</option>`
+            ).join('');
+        }
+    } catch (e) {
+        console.error("Error fetching teachers", e);
+        teacherOptions = '<option value="">Erro ao carregar</option>';
+    }
+
+    const content = `
+        <div class="text-center mb-6">
+            <h3 class="text-xl font-bold text-slate-800">Nova Aula (Unidade)</h3>
+            <p class="text-xs text-slate-500">Adicione um novo horário à grade desta unidade</p>
+        </div>
+        
+        <form id="form-new-unit-class" onsubmit="event.preventDefault(); submitNewUnitClass()" class="space-y-4">
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Nome da Aula</label>
+                <input type="text" id="unit-class-name" class="input-field" placeholder="Ex: Jiu-Jitsu Avançado" required>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Dia da Semana</label>
+                    <select id="unit-class-day" class="input-field" required>
+                        <option value="1">Segunda-feira</option>
+                        <option value="2">Terça-feira</option>
+                        <option value="3">Quarta-feira</option>
+                        <option value="4">Quinta-feira</option>
+                        <option value="5">Sexta-feira</option>
+                        <option value="6">Sábado</option>
+                        <option value="0">Domingo</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Categoria</label>
+                    <select id="unit-class-category" class="input-field" required>
+                        <option value="BJJ">Jiu-Jitsu (Kimono)</option>
+                        <option value="No-Gi">No-Gi (Sem Kimono)</option>
+                        <option value="Kids">Kids</option>
+                        <option value="Fundamentals">Fundamentos</option>
+                        <option value="Wrestling">Wrestling</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Início</label>
+                    <input type="time" id="unit-class-start" class="input-field" required>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Fim</label>
+                    <input type="time" id="unit-class-end" class="input-field" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Professor Responsável</label>
+                <select id="unit-class-teacher" class="input-field" required>
+                    <option value="">Selecione...</option>
+                    ${teacherOptions}
+                </select>
+            </div>
+
+            <button type="submit" class="w-full btn-primary mt-4">
+                Criar Aula
+            </button>
+        </form>
+    `;
+
+    // Generic Modal Access
+    const modal = document.getElementById('ui-modal');
+    const modalContent = document.getElementById('modal-content');
+    const modalPanel = document.getElementById('modal-panel');
+
+    if (modal && modalContent) {
+        modalContent.innerHTML = content;
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modalPanel.classList.remove('scale-95', 'opacity-0');
+            modalPanel.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+};
+
+window.submitNewUnitClass = async () => {
+    const submitBtn = document.querySelector('#form-new-unit-class button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+
+    const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+    const franchiseId = window.selectedFranchiseId;
+
+    const data = {
+        franchiseId: franchiseId,
+        teacherId: document.getElementById('unit-class-teacher').value,
+        name: document.getElementById('unit-class-name').value,
+        dayOfWeek: parseInt(document.getElementById('unit-class-day').value),
+        startTime: document.getElementById('unit-class-start').value,
+        endTime: document.getElementById('unit-class-end').value,
+        category: document.getElementById('unit-class-category').value
+    };
+
+    try {
+        const res = await fetch(`${apiUrl}/classes`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
+            body: JSON.stringify(data)
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            alert('Aula criada com sucesso!');
+            const modal = document.getElementById('ui-modal');
+            if (modal) modal.style.display = 'none';
+            loadUnitSchedule(); // Refresh grid
+        } else {
+            throw new Error(json.message);
+        }
+    } catch (e) {
+        alert('Erro: ' + e.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+};
+
+window.deleteUnitClass = async (id) => {
+    if (!confirm('Tem certeza que deseja remover esta aula?')) return;
+    const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+
+    try {
+        const res = await fetch(`${apiUrl}/classes/${id}`, {
+            method: 'DELETE',
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const json = await res.json();
+
+        if (json.success) {
+            loadUnitSchedule();
+        } else {
+            alert('Erro ao remover');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Erro de conexão');
     }
 };
 

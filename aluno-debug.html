@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEBUG - Portal do Aluno</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-2xl font-bold mb-4">🔍 Debug - Portal do Aluno</h1>
+
+        <div class="mb-4">
+            <button onclick="testAPI()" class="bg-blue-500 text-white px-4 py-2 rounded">
+                Testar API
+            </button>
+            <button onclick="checkLocalStorage()" class="bg-green-500 text-white px-4 py-2 rounded ml-2">
+                Ver LocalStorage
+            </button>
+        </div>
+
+        <div id="output" class="bg-gray-50 p-4 rounded border border-gray-200 font-mono text-sm">
+            <p>Clique em "Testar API" para verificar a conexão...</p>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        function log(message, data = null) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            let html = `<div class="mb-2"><strong>[${timestamp}]</strong> ${message}</div>`;
+            if (data) {
+                html += `<pre class="bg-white p-2 rounded mb-2 overflow-auto">${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            output.innerHTML += html;
+        }
+
+        function checkLocalStorage() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<h3 class="font-bold mb-2">📦 LocalStorage:</h3>';
+
+            const studentData = localStorage.getItem('studentData');
+            if (studentData) {
+                log('✅ Student Data encontrado:', JSON.parse(studentData));
+            } else {
+                log('❌ Nenhum Student Data no localStorage');
+                log('⚠️ Você precisa fazer login primeiro!');
+            }
+        }
+
+        async function testAPI() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<h3 class="font-bold mb-2">🧪 Testando API...</h3>';
+
+            const studentData = localStorage.getItem('studentData');
+            if (!studentData) {
+                log('❌ Erro: Nenhum aluno logado');
+                log('➡️ Faça login em: <a href="aluno-login.html" class="text-blue-500 underline">aluno-login.html</a>');
+                return;
+            }
+
+            const student = JSON.parse(studentData);
+            log('👤 Aluno logado:', student);
+
+            try {
+                log(`🌐 Fazendo request para: ${appConfig.apiBaseUrl}/students/${student.id}/dashboard`);
+
+                const response = await fetch(`${appConfig.apiBaseUrl}/students/${student.id}/dashboard`);
+                log(`📡 Status da resposta: ${response.status} ${response.statusText}`);
+
+                const result = await response.json();
+                log('📦 Resposta completa da API:', result);
+
+                if (result.success) {
+                    log('✅ API funcionando!');
+                    log('📊 Dados do dashboard:', result.data);
+
+                    // Verificar estrutura
+                    if (result.data.profile) log('✅ profile OK');
+                    if (result.data.stats) log('✅ stats OK');
+                    if (result.data.franchise) log('✅ franchise OK');
+                    if (result.data.payment) log('✅ payment OK');
+                } else {
+                    log('❌ API retornou erro:', result.message);
+                }
+            } catch (error) {
+                log('❌ Erro ao chamar API:', error.message);
+                console.error(error);
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            log('🚀 Página carregada');
+            log(`📍 API Base URL: ${appConfig.apiBaseUrl}`);
+            checkLocalStorage();
+        });
+    </script>
+</body>
+
+</html>

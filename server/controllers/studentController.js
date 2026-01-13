@@ -39,7 +39,7 @@ const studentController = {
      */
     getStudentById: async (req, res) => {
         try {
-            const student = await Student.findById(req.params.id);
+            const student = await Student.findById(req.params.id).populate('graduationHistory.promotedBy', 'name');
             if (!student) {
                 return res.status(404).json({ success: false, message: 'Aluno não encontrado' });
             }
@@ -147,7 +147,7 @@ const studentController = {
     getDashboard: async (req, res) => {
         try {
             const { studentId } = req.params;
-            const student = await Student.findById(studentId);
+            const student = await Student.findById(studentId).populate('graduationHistory.promotedBy', 'name');
 
             if (!student) return res.status(404).json({ message: 'Aluno não encontrado' });
 
@@ -158,8 +158,14 @@ const studentController = {
                 date: { $gte: student.lastGraduationDate || student.createdAt }
             });
 
-            // Mocking next belt requirements (simpler than the admin logic for now)
-            const classesRequired = 30; // Default placeholder
+            // Fetch next belt requirements
+            const GraduationRule = require('../models/GraduationRule');
+            const rule = await GraduationRule.findOne({
+                fromBelt: student.belt,
+                fromDegree: student.degree
+            });
+
+            const classesRequired = rule ? rule.classesRequired : 30; // Default fallback only if no rule exists
             const progress = Math.min(100, Math.floor((attendanceCount / classesRequired) * 100));
 
             // Fetch recent history
@@ -168,18 +174,67 @@ const studentController = {
                 .limit(5)
                 .populate('classId', 'name');
 
+            // Fetch franchise details
+            const franchise = await Franchise.findById(student.franchiseId);
+
+            // Calculate streak
+            const allAttendance = await Attendance.find({ studentId: student._id })
+                .sort({ date: -1 })
+                .select('date');
+
+            let streak = 0;
+            if (allAttendance.length > 0) {
+                const dates = allAttendance.map(a => {
+                    const d = new Date(a.date);
+                    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+                });
+                const uniqueDates = [...new Set(dates)].sort((a, b) => b - a);
+
+                const today = new Date();
+                const todayTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+                const yesterdayTime = todayTime - (24 * 60 * 60 * 1000);
+
+                // Start streak calculation if the last training was today or yesterday
+                if (uniqueDates[0] === todayTime || uniqueDates[0] === yesterdayTime) {
+                    streak = 1;
+                    for (let i = 0; i < uniqueDates.length - 1; i++) {
+                        if (uniqueDates[i] - uniqueDates[i + 1] === 24 * 60 * 60 * 1000) {
+                            streak++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
             res.status(200).json({
                 success: true,
                 data: {
-                    name: student.name,
-                    belt: student.belt,
-                    degree: student.degree,
-                    photo: student.photoUrl || null,
+                    profile: {
+                        id: student._id,
+                        name: student.name,
+                        belt: student.belt,
+                        degree: student.degree,
+                        photo: student.photoUrl || null,
+                        graduationHistory: student.graduationHistory // Include history here
+                    },
+                    franchise: {
+                        id: franchise?._id,
+                        name: franchise?.name || 'Academia',
+                        address: franchise?.address || '',
+                        phone: franchise?.phone || '',
+                        branding: franchise?.branding || {}
+                    },
                     stats: {
                         classesAttended: attendanceCount,
                         classesRequired: classesRequired,
                         progressPercent: progress,
-                        streak: 3 // Mock streak for now
+                        streak: streak
+                    },
+                    payment: {
+                        status: student.paymentStatus || 'Paga',
+                        amount: student.amount || 0,
+                        history: [] // Add real history if needed
                     },
                     history: history,
                     lastCheckIn: history[0] ? history[0].date : null
@@ -202,32 +257,59 @@ const studentController = {
             const student = await Student.findById(studentId);
             if (!student) return res.status(404).json({ message: 'Aluno não encontrado' });
 
-            // 1. GEOFENCING VALIDATION
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            const endOfDay = new Date();
+            endOfDay.setHours(23, 59, 59, 999);
+
+            // 1. CLASS CAPACITY CHECK (If specific class)
+            if (classId) {
+                const Class = require('../models/Class');
+                const targetClass = await Class.findById(classId);
+
+                if (!targetClass) {
+                    return res.status(404).json({ success: false, message: 'Aula não encontrada' });
+                }
+
+                // Count current attendees
+                const currentAttendees = await Attendance.countDocuments({
+                    classId: classId,
+                    date: { $gte: startOfDay, $lte: endOfDay }
+                });
+
+                if (currentAttendees >= targetClass.capacity) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `A aula está cheia (${currentAttendees}/${targetClass.capacity}). Entre na lista de espera.`
+                    });
+                }
+            }
+
+            // 2. GEOFENCING VALIDATION (Only if NO classId selected - General Check-in)
+            // If classId is present, we allow remote check-in (booking) per user request
             const franchise = await Franchise.findById(student.franchiseId);
             if (!franchise) return res.status(404).json({ message: 'Unidade não encontrada' });
 
-            if (location && location.lat && location.lng) {
-                // GeoJSON coordinates are [lng, lat]
-                const unitLng = franchise.location.coordinates[0];
-                const unitLat = franchise.location.coordinates[1];
+            if (!classId) {
+                if (location && location.lat && location.lng) {
+                    const unitLng = franchise.location.coordinates[0];
+                    const unitLat = franchise.location.coordinates[1];
 
-                const distance = calculateDistance(location.lat, location.lng, unitLat, unitLng);
-                const MAX_DISTANCE_KM = 0.2; // 200 meters
+                    const distance = calculateDistance(location.lat, location.lng, unitLat, unitLng);
+                    const MAX_DISTANCE_KM = 0.2; // 200 meters
 
-                if (distance > MAX_DISTANCE_KM) {
-                    return res.status(403).json({
-                        success: false,
-                        message: `Você está muito longe da academia (${(distance * 1000).toFixed(0)}m). Vá para o tatame!`
-                    });
+                    if (distance > MAX_DISTANCE_KM) {
+                        return res.status(403).json({
+                            success: false,
+                            message: `Você está muito longe da academia (${(distance * 1000).toFixed(0)}m). Vá para o tatame!`
+                        });
+                    }
+                } else {
+                    return res.status(400).json({ success: false, message: 'Localização necessária para o check-in geral.' });
                 }
-            } else {
-                return res.status(400).json({ success: false, message: 'Localização necessária para o check-in.' });
             }
 
-            // 2. DUPLICATE CHECK
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
-
+            // 3. DUPLICATE CHECK
             // If a classId is provided, we check if they already checked into THAT class today
             const duplicateFilter = {
                 studentId: studentId,
@@ -242,12 +324,18 @@ const studentController = {
             if (existing) {
                 return res.status(400).json({
                     success: false,
-                    message: classId ? 'Você já bateu o ponto nesta aula!' : 'Você já fez check-in hoje! Bom treino. oss'
+                    message: classId ? 'Você já confirmou presença nesta aula!' : 'Você já fez check-in hoje! Bom treino. oss'
                 });
             }
 
-            // 3. REGISTER ATTENDANCE
+            // 4. REGISTER ATTENDANCE
             const finalClassId = classId || new mongoose.Types.ObjectId();
+
+            // Calculate distance only if location is provided
+            let dist = 0;
+            if (location && location.lat && location.lng) {
+                dist = calculateDistance(location.lat, location.lng, franchise.location.coordinates[1], franchise.location.coordinates[0]);
+            }
 
             const newAttendance = await Attendance.create({
                 tenantId: student.franchiseId,
@@ -255,16 +343,16 @@ const studentController = {
                 classId: finalClassId,
                 date: new Date(),
                 status: 'Present',
-                checkInMethod: 'App',
+                checkInMethod: classId ? 'Booking' : 'App',
                 metadata: {
-                    distance: calculateDistance(location.lat, location.lng, franchise.location.coordinates[1], franchise.location.coordinates[0]),
+                    distance: dist,
                     isClassSpecific: !!classId
                 }
             });
 
             res.status(200).json({
                 success: true,
-                message: 'Check-in realizado com sucesso! Bom treino.',
+                message: classId ? 'Presença confirmada! Bom treino.' : 'Check-in realizado com sucesso! Bom treino.',
                 data: newAttendance
             });
 
@@ -275,23 +363,58 @@ const studentController = {
     },
 
     /**
-     * Get Franchise Leaderboard (Monthly)
+     * Get Franchise Leaderboard with Period Filter
+     * Query params: period = current_month | last_30_days | last_90_days | all_time
      */
     getLeaderboard: async (req, res) => {
         try {
             const { franchiseId } = req.params;
+            const { period = 'current_month' } = req.query;
 
-            const startOfMonth = new Date();
-            startOfMonth.setDate(1);
-            startOfMonth.setHours(0, 0, 0, 0);
+            // Calculate date filter based on period
+            let dateFilter = {};
+            const now = new Date();
+
+            switch (period) {
+                case 'current_month':
+                    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    startOfMonth.setHours(0, 0, 0, 0);
+                    dateFilter = { date: { $gte: startOfMonth } };
+                    break;
+
+                case 'last_30_days':
+                    const last30 = new Date(now);
+                    last30.setDate(now.getDate() - 30);
+                    last30.setHours(0, 0, 0, 0);
+                    dateFilter = { date: { $gte: last30 } };
+                    break;
+
+                case 'last_90_days':
+                    const last90 = new Date(now);
+                    last90.setDate(now.getDate() - 90);
+                    last90.setHours(0, 0, 0, 0);
+                    dateFilter = { date: { $gte: last90 } };
+                    break;
+
+                case 'all_time':
+                    // No date filter - all time
+                    dateFilter = {};
+                    break;
+
+                default:
+                    // Default to current month
+                    const defaultStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                    defaultStart.setHours(0, 0, 0, 0);
+                    dateFilter = { date: { $gte: defaultStart } };
+            }
+
+            const matchStage = {
+                tenantId: new mongoose.Types.ObjectId(franchiseId),
+                ...dateFilter
+            };
 
             const ranking = await Attendance.aggregate([
-                {
-                    $match: {
-                        tenantId: new mongoose.Types.ObjectId(franchiseId),
-                        date: { $gte: startOfMonth }
-                    }
-                },
+                { $match: matchStage },
                 {
                     $group: {
                         _id: "$studentId",
@@ -314,12 +437,13 @@ const studentController = {
                         count: 1,
                         name: "$studentInfo.name",
                         belt: "$studentInfo.belt",
+                        degree: "$studentInfo.degree",
                         photo: "$studentInfo.photoUrl"
                     }
                 }
             ]);
 
-            res.status(200).json({ success: true, data: ranking });
+            res.status(200).json({ success: true, data: ranking, period });
         } catch (error) {
             console.error('Leaderboard error:', error);
             res.status(500).json({ success: false, message: 'Erro ao carregar ranking' });

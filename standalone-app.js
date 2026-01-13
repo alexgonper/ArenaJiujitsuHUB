@@ -384,6 +384,54 @@ window.openUnitForm = () => {
                 
 
                 
+                <div class="border-t border-slate-100 pt-4 mt-2">
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-orange-500"></i> Identidade Visual (White Label)
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nome da Marca</label>
+                            <input type="text" name="branding_brandName" 
+                                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                                placeholder="Ex: Arena Pro Florianópolis">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">URL do Logo</label>
+                            <input type="url" name="branding_logoUrl" 
+                                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                                placeholder="https://exemplo.com/logo.png">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Cor Primária</label>
+                            <div class="flex gap-2">
+                                <input type="color" name="branding_primaryColor" value="#FF6B00"
+                                    class="h-9 w-12 border border-slate-200 rounded-lg cursor-pointer">
+                                <input type="text" value="#FF6B00" oninput="this.previousElementSibling.value = this.value"
+                                    class="flex-1 px-3 py-1 border border-slate-200 rounded-xl text-xs outline-none uppercase">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Cor Secundária</label>
+                            <div class="flex gap-2">
+                                <input type="color" name="branding_secondaryColor" value="#000000"
+                                    class="h-9 w-12 border border-slate-200 rounded-lg cursor-pointer">
+                                <input type="text" value="#000000" oninput="this.previousElementSibling.value = this.value"
+                                    class="flex-1 px-3 py-1 border border-slate-200 rounded-xl text-xs outline-none uppercase">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">URL do Favicon</label>
+                            <input type="url" name="branding_faviconUrl" 
+                                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                                placeholder="https://exemplo.com/favicon.ico">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex gap-3 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeModal()" 
                         class="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition">
@@ -410,14 +458,23 @@ async function handleCreateFranchise(e) {
     const formData = new FormData(e.target);
     const data = {};
 
+    const branding = {};
     formData.forEach((value, key) => {
         if (value !== '') {
-            data[key] = value;
-            if (key === 'royaltyPercent' || key === 'expenses') {
-                data[key] = parseFloat(value);
+            if (key.startsWith('branding_')) {
+                branding[key.replace('branding_', '')] = value;
+            } else {
+                data[key] = value;
+                if (key === 'royaltyPercent' || key === 'expenses') {
+                    data[key] = parseFloat(value);
+                }
             }
         }
     });
+
+    if (Object.keys(branding).length > 0) {
+        data.branding = branding;
+    }
 
     // Show loading
     const submitBtn = e.target.querySelector('[type="submit"]');
@@ -533,6 +590,54 @@ window.openEditForm = (id) => {
                     </div>
                 </div>
                 
+                <div class="border-t border-slate-100 pt-4 mt-2">
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-orange-500"></i> Identidade Visual (White Label)
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nome da Marca</label>
+                            <input type="text" name="branding_brandName" value="${franchise.branding?.brandName || ''}"
+                                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                                placeholder="Ex: Arena Pro Florianópolis">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">URL do Logo</label>
+                            <input type="url" name="branding_logoUrl" value="${franchise.branding?.logoUrl || ''}"
+                                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                                placeholder="https://exemplo.com/logo.png">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Cor Primária</label>
+                            <div class="flex gap-2">
+                                <input type="color" name="branding_primaryColor" value="${franchise.branding?.primaryColor || '#FF6B00'}"
+                                    class="h-9 w-12 border border-slate-200 rounded-lg cursor-pointer">
+                                <input type="text" value="${franchise.branding?.primaryColor || '#FF6B00'}" oninput="this.previousElementSibling.value = this.value"
+                                    class="flex-1 px-3 py-1 border border-slate-200 rounded-xl text-xs outline-none uppercase">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Cor Secundária</label>
+                            <div class="flex gap-2">
+                                <input type="color" name="branding_secondaryColor" value="${franchise.branding?.secondaryColor || '#000000'}"
+                                    class="h-9 w-12 border border-slate-200 rounded-lg cursor-pointer">
+                                <input type="text" value="${franchise.branding?.secondaryColor || '#000000'}" oninput="this.previousElementSibling.value = this.value"
+                                    class="flex-1 px-3 py-1 border border-slate-200 rounded-xl text-xs outline-none uppercase">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">URL do Favicon</label>
+                            <input type="url" name="branding_faviconUrl" value="${franchise.branding?.faviconUrl || ''}"
+                                class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                                placeholder="https://exemplo.com/favicon.ico">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex gap-3 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeModal()" 
                         class="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition">
@@ -560,14 +665,23 @@ async function handleUpdateFranchise(e) {
     const id = formData.get('id');
     const data = {};
 
+    const branding = {};
     formData.forEach((value, key) => {
         if (key !== 'id' && value !== '') {
-            data[key] = value;
-            if (key === 'royaltyPercent' || key === 'expenses') {
-                data[key] = parseFloat(value);
+            if (key.startsWith('branding_')) {
+                branding[key.replace('branding_', '')] = value;
+            } else {
+                data[key] = value;
+                if (key === 'royaltyPercent' || key === 'expenses') {
+                    data[key] = parseFloat(value);
+                }
             }
         }
     });
+
+    if (Object.keys(branding).length > 0) {
+        data.branding = branding;
+    }
 
     // Show loading
     const submitBtn = e.target.querySelector('[type="submit"]');
@@ -1397,7 +1511,7 @@ window.renderStudents = () => {
         'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
         'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
         'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
-        'Coral': { bg: 'none', text: 'transparent', border: '#EE1111', extra: 'background-image: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #000000 25%, #000000 50%, #FFFFFF 50%, #FFFFFF 75%, #000000 75%, #000000 100%), linear-gradient(90deg, #EE1111 0%, #EE1111 25%, #FFFFFF 25%, #FFFFFF 50%, #EE1111 50%, #EE1111 75%, #FFFFFF 75%, #FFFFFF 100%); background-clip: text, padding-box; -webkit-background-clip: text, padding-box; font-weight: 900; position: relative;' },
+        'Coral': { bg: 'repeating-linear-gradient(90deg, #F00 0, #F00 10px, #FFF 10px, #FFF 20px)', text: '#000000', border: '#DC2626' },
         'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
     };
 
@@ -1844,6 +1958,50 @@ window.openStudentForm = async (studentId = null) => {
         }
     }
 
+    // START HISTORY LOGIC
+    let historyHTML = '';
+    if (student && student.graduationHistory && student.graduationHistory.length > 0) {
+        historyHTML = `
+            <div class="mt-6 border-t border-slate-100 pt-6">
+                <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-orange-500"></i> Histórico de Graduação
+                </h3>
+                <div class="overflow-x-auto bg-slate-50 rounded-xl border border-slate-100 p-1">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-white border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th class="px-3 py-2">Data</th>
+                                <th class="px-3 py-2">Faixa</th>
+                                <th class="px-3 py-2">Grau</th>
+                                <th class="px-3 py-2">Mestre</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${student.graduationHistory.sort((a, b) => new Date(b.date) - new Date(a.date)).map(h => `
+                                <tr>
+                                    <td class="px-3 py-2 text-slate-600 font-medium">${new Date(h.date).toLocaleDateString()}</td>
+                                    <td class="px-3 py-2 font-bold text-slate-800">${h.belt}</td>
+                                    <td class="px-3 py-2 text-slate-500">${h.degree}</td>
+                                    <td class="px-3 py-2 text-slate-500 text-[10px]">${h.promotedBy?.name || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } else if (student) {
+        historyHTML = `
+            <div class="mt-6 border-t border-slate-100 pt-6">
+                <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-orange-500"></i> Histórico de Graduação
+                </h3>
+                <p class="text-xs text-slate-400 italic bg-slate-50 p-3 rounded-xl text-center border border-slate-100">Nenhum registro de graduação encontrado.</p>
+            </div>
+        `;
+    }
+    // END HISTORY LOGIC
+
     const formHtml = `
         <div class="text-left">
             <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
@@ -1934,6 +2092,8 @@ window.openStudentForm = async (studentId = null) => {
                     </div>
                 </div>
                 
+                ${historyHTML}
+
                 <div class="flex gap-3 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeModal()" 
                         class="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition">

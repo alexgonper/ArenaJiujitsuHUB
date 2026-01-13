@@ -108,6 +108,22 @@ const franchiseSchema = new mongoose.Schema({
         founded: Date,
         lastUpdated: Date,
         notes: String
+    },
+    plan: {
+        type: String,
+        enum: ['Free', 'Standard', 'Master'],
+        default: 'Standard'
+    },
+    branding: {
+        brandName: { type: String, default: '' },
+        logoUrl: { type: String, default: '' },
+        primaryColor: { type: String, default: '#FF6B00' },
+        secondaryColor: { type: String, default: '#000000' },
+        faviconUrl: { type: String, default: '' },
+        loginBackground: { type: String, default: '' },
+        supportEmail: { type: String, default: '' },
+        supportPhone: { type: String, default: '' },
+        customDomain: { type: String, default: '' }
     }
 }, {
     timestamps: true,

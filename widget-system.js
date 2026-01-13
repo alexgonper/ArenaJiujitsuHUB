@@ -158,21 +158,23 @@ function getDefaultLayout(appType) {
         return [
             { id: 'franchisee-metrics', position: 0 },
             { id: 'franchisee-performance', position: 1 },
-            { id: 'franchisee-students-list', position: 2 },
-            { id: 'franchisee-teachers-list', position: 3 },
-            { id: 'franchisee-ai-auditor', position: 4 },
-            { id: 'franchisee-directives', position: 5 },
-            { id: 'franchisee-settings', position: 6 }
+            { id: 'franchisee-schedule', position: 2 },
+            { id: 'franchisee-students-list', position: 3 },
+            { id: 'franchisee-teachers-list', position: 4 },
+            { id: 'franchisee-ai-auditor', position: 5 },
+            { id: 'franchisee-directives', position: 6 },
+            { id: 'franchisee-settings', position: 7 }
         ];
     } else if (appType === 'matrix-detail') {
         return [
             { id: 'matrix-unit-stats', position: 0 },
             { id: 'matrix-unit-performance', position: 1 },
-            { id: 'matrix-unit-settings', position: 2 },
-            { id: 'matrix-unit-students', position: 3 },
-            { id: 'matrix-unit-teachers', position: 4 },
-            { id: 'matrix-unit-graduation', position: 5 },
-            { id: 'matrix-unit-ai-auditor', position: 6 }
+            { id: 'matrix-unit-schedule', position: 2 },
+            { id: 'matrix-unit-settings', position: 3 },
+            { id: 'matrix-unit-students', position: 4 },
+            { id: 'matrix-unit-teachers', position: 5 },
+            { id: 'matrix-unit-graduation', position: 6 },
+            { id: 'matrix-unit-ai-auditor', position: 7 }
         ];
     }
     return [];

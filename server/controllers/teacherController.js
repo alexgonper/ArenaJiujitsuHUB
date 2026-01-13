@@ -216,17 +216,22 @@ exports.getDashboard = async (req, res, next) => {
             active: true
         }).sort({ startTime: 1 });
 
-        // Get total students in the franchise
-        const studentCount = await Student.countDocuments({
-            franchiseId: teacher.franchiseId
+        // Get total students (Students who have attended at least one class with this teacher)
+        const distinctStudents = await Attendance.distinct('studentId', {
+            checkedInBy: teacher._id
         });
+        const studentCount = distinctStudents.length;
 
-        // Get today's attendance count
+        // Get today's attendance count (Only for the classes in today's agenda)
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const classIds = classes.map(c => c._id);
         const attendanceToday = await Attendance.countDocuments({
-            tenantId: teacher.franchiseId,
-            date: { $gte: startOfDay },
+            classId: { $in: classIds },
+            date: { $gte: startOfDay, $lte: endOfDay },
             status: 'Present'
         });
 
@@ -238,10 +243,14 @@ exports.getDashboard = async (req, res, next) => {
             .sort({ createdAt: -1 })
             .populate('studentId', 'name');
 
+        // Fetch franchise details for branding
+        const franchise = await Franchise.findById(teacher.franchiseId);
+
         res.status(200).json({
             success: true,
             data: {
                 teacher,
+                franchise, // Include full franchise for branding
                 agenda: classes,
                 stats: {
                     totalStudents: studentCount,
@@ -272,7 +281,7 @@ exports.getStudentsForAttendance = async (req, res, next) => {
 
         const students = await Student.find({
             franchiseId: teacher.franchiseId
-        }).select('name belt paymentStatus');
+        }).select('name belt degree paymentStatus');
 
         res.status(200).json({
             success: true,
@@ -304,6 +313,36 @@ exports.markAttendance = async (req, res, next) => {
 
         res.status(201).json({
             success: true,
+            data: attendance
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Get Class Attendance
+ * @route   GET /api/v1/teachers/classes/:classId/attendance
+ * @access  Public
+ */
+exports.getClassAttendance = async (req, res, next) => {
+    try {
+        const { classId } = req.params;
+
+        // Define today's range
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const attendance = await Attendance.find({
+            classId: classId,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        }).populate('studentId', 'name belt degree paymentStatus');
+
+        res.status(200).json({
+            success: true,
+            count: attendance.length,
             data: attendance
         });
     } catch (error) {

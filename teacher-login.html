@@ -110,14 +110,18 @@
             animation: fadeInUp 0.6s ease-out forwards;
         }
     </style>
+    <style id="branding-styles"></style>
 </head>
 
-<body class="flex items-center justify-center p-4">
+<body id="login-screen" class="flex items-center justify-center p-4">
 
     <div class="login-container card-shadow animate-up">
         <!-- Logo Section -->
         <div class="text-center mb-10">
-            <h1 class="brand-typography text-3xl mb-2">
+            <div id="login-logo-container" class="mb-4">
+                <img id="login-logo-img" class="hidden h-16 mx-auto object-contain mb-2" src="" alt="Logo">
+            </div>
+            <h1 id="login-title" class="brand-typography text-3xl mb-2">
                 <span class="orange-gradient-text">ARENA</span>
                 <span class="text-white">HUB</span>
             </h1>
