@@ -782,6 +782,9 @@ registerWidget({
                                 <th class="pb-4 px-2 sortable group cursor-pointer hover:text-orange-500 transition-colors" onclick="setSort('phone')" id="th-phone">
                                     Contato <i class="fa-solid fa-sort sort-icon ml-1 opacity-30 group-hover:opacity-100"></i>
                                 </th>
+                                <th class="pb-4 px-2 sortable group cursor-pointer hover:text-orange-500 transition-colors" onclick="setSort('email')" id="th-email">
+                                    Email <i class="fa-solid fa-sort sort-icon ml-1 opacity-30 group-hover:opacity-100"></i>
+                                </th>
                                 <th class="pb-4 px-2 sortable group cursor-pointer hover:text-orange-500 transition-colors" onclick="setSort('monthlyFee')" id="th-monthlyFee">
                                     Mensalidade <i class="fa-solid fa-sort sort-icon ml-1 opacity-30 group-hover:opacity-100"></i>
                                 </th>
@@ -982,12 +985,78 @@ registerWidget({
                 </div>
             </div>
 
+            <!-- Design & Branding (White Label) Section -->
+            <div class="border-t border-slate-100 pt-6 mt-6">
+                <h3 class="text-xs font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-palette text-orange-500"></i> Design & Branding (White Label)
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Nome da Marca</label>
+                        <input type="text" id="unit-edit-branding-name" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="Ex: Arena Pro Florianópolis">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">URL do Logo</label>
+                        <input type="url" id="unit-edit-branding-logo" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="https://exemplo.com/logo.png">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">URL do Favicon</label>
+                        <input type="url" id="unit-edit-branding-favicon" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="https://exemplo.com/favicon.ico">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-4">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Cor Primária</label>
+                        <div class="flex gap-2">
+                            <input type="color" id="unit-edit-branding-primary-color" class="h-9 w-12 border border-slate-200 rounded-lg cursor-pointer bg-white p-1">
+                            <input type="text" id="unit-edit-branding-primary-text" oninput="document.getElementById('unit-edit-branding-primary-color').value = this.value" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] outline-none uppercase font-bold text-slate-600">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Cor Secundária</label>
+                        <div class="flex gap-2">
+                            <input type="color" id="unit-edit-branding-secondary-color" class="h-9 w-12 border border-slate-200 rounded-lg cursor-pointer bg-white p-1">
+                            <input type="text" id="unit-edit-branding-secondary-text" oninput="document.getElementById('unit-edit-branding-secondary-color').value = this.value" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] outline-none uppercase font-bold text-slate-600">
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">URL do Fundo de Login</label>
+                        <input type="url" id="unit-edit-branding-bg" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="https://exemplo.com/background.jpg">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Email de Suporte (Aluno/Prof)</label>
+                        <input type="email" id="unit-edit-branding-email" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="suporte@academia.com">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Telefone de Suporte (WhatsApp)</label>
+                        <input type="text" id="unit-edit-branding-phone" class="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-orange-500 outline-none transition-all" placeholder="(00) 00000-0000">
+                    </div>
+                </div>
+            </div>
+
             <div class="flex justify-end mt-6 pt-5 border-t border-slate-50">
                 <button onclick="saveUnitSettingsMatrix()" id="btn-save-unit-settings" class="px-6 py-2.5 orange-gradient text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center gap-2">
                     <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
                 </button>
             </div>
         `;
+
+        // Sync color pickers with text inputs
+        setTimeout(() => {
+            const pColor = document.getElementById('unit-edit-branding-primary-color');
+            const pText = document.getElementById('unit-edit-branding-primary-text');
+            if (pColor && pText) pColor.oninput = (e) => pText.value = e.target.value.toUpperCase();
+
+            const sColor = document.getElementById('unit-edit-branding-secondary-color');
+            const sText = document.getElementById('unit-edit-branding-secondary-text');
+            if (sColor && sText) sColor.oninput = (e) => sText.value = e.target.value.toUpperCase();
+        }, 100);
+
         this.update();
     },
 
@@ -1001,13 +1070,26 @@ registerWidget({
         const franchise = franchesList.find(f => f.id === fId || f._id === fId);
         if (!franchise) return;
 
+        const branding = franchise.branding || {};
+
         const fields = {
             'unit-edit-name': franchise.name,
             'unit-edit-owner': franchise.owner,
             'unit-edit-phone': franchise.phone,
             'unit-edit-address': franchise.address,
             'unit-edit-royalty': franchise.royaltyPercent,
-            'unit-edit-expenses': franchise.expenses
+            'unit-edit-expenses': franchise.expenses,
+            // Branding fields
+            'unit-edit-branding-name': branding.brandName,
+            'unit-edit-branding-logo': branding.logoUrl,
+            'unit-edit-branding-favicon': branding.faviconUrl,
+            'unit-edit-branding-primary-color': branding.primaryColor || '#FF6B00',
+            'unit-edit-branding-primary-text': branding.primaryColor || '#FF6B00',
+            'unit-edit-branding-secondary-color': branding.secondaryColor || '#000000',
+            'unit-edit-branding-secondary-text': branding.secondaryColor || '#000000',
+            'unit-edit-branding-bg': branding.loginBgUrl,
+            'unit-edit-branding-email': branding.supportEmail,
+            'unit-edit-branding-phone': branding.supportPhone
         };
 
         Object.entries(fields).forEach(([id, value]) => {

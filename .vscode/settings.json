@@ -1,0 +1,87 @@
+{
+    // ===== OTIMIZAÇÕES DE PERFORMANCE =====
+    // Limitar memória do TypeScript Server para 4GB (4096 MB)
+    // Evita consumo excessivo de RAM
+    "typescript.tsserver.maxTsServerMemory": 4096,
+    // ===== OTIMIZAÇÕES DE FILE WATCHING =====
+    // Excluir pastas do monitoramento de arquivos para economizar CPU
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "**/dist/**": true,
+        "**/build/**": true,
+        "**/.git/**": true,
+        "**/*.log": true,
+        "**/*.pid": true,
+        "**/backend.log": true,
+        "**/frontend.log": true
+    },
+    // Excluir pastas da busca (melhora performance)
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.git": true,
+        "**/coverage": true,
+        "**/.next": true,
+        "**/.cache": true,
+        "**/*.log": true,
+        "**/backend_*.log": true,
+        "**/frontend_*.log": true
+    },
+    // Excluir pastas do explorer (reduz uso de memória)
+    "files.exclude": {
+        "**/.git": false,
+        "**/.DS_Store": true,
+        "**/node_modules": false,
+        "**/*.log": false,
+        "**/*.pid": true
+    },
+    // ===== OTIMIZAÇÕES DO EDITOR =====
+    // Auto-save otimizado (salva após 1 segundo de inatividade)
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    // Reduzir número de editores abertos (economiza RAM)
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.value": 10,
+    "workbench.editor.limit.perEditorGroup": true,
+    // ===== OTIMIZAÇÕES JAVASCRIPT/TYPESCRIPT =====
+    // Desabilitar validações desnecessárias para JavaScript
+    "javascript.validate.enable": true,
+    "typescript.validate.enable": true,
+    // Otimizar sugestões (reduz uso de CPU)
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": false
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.acceptSuggestionOnCommitCharacter": true,
+    // Reduzir delay das sugestões
+    "editor.quickSuggestionsDelay": 10,
+    // ===== OTIMIZAÇÕES DO GIT =====
+    // Otimizar operações Git (reduz uso de CPU)
+    "git.autofetch": false,
+    "git.autorefresh": true,
+    "git.fetchOnPull": false,
+    "git.pruneOnFetch": false,
+    // ===== OTIMIZAÇÕES DE RENDERIZAÇÃO =====
+    // Melhorar performance de renderização
+    "editor.renderWhitespace": "selection",
+    "editor.renderControlCharacters": false,
+    "editor.minimap.enabled": true,
+    "editor.minimap.renderCharacters": false,
+    // ===== OTIMIZAÇÕES ESPECÍFICAS DO PROJETO =====
+    // Configurar formatação automática (opcional, mas útil)
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    // Tamanho de tabulação consistente
+    "editor.tabSize": 2,
+    "editor.detectIndentation": true,
+    // Melhorar experiência com arquivos grandes
+    "files.maxMemoryForLargeFilesMB": 4096,
+    // Terminal otimizado
+    "terminal.integrated.gpuAcceleration": "on",
+    "terminal.integrated.persistentSessionReviveProcess": "never"
+}

@@ -252,12 +252,26 @@ window.changeSection = (id) => {
     }
 
     const titles = {
-        'overview': 'Dashboard de Performance',
+        'overview': 'Painel de Controle',
         'network': 'Rede de Academias',
         'communication': 'Matrix Hub',
         'unit-detail': 'Detalhes da Unidade'
     };
-    document.getElementById('section-title').textContent = titles[id] || 'Arena Jiu-Jitsu Hub';
+
+    const subtitles = {
+        'overview': 'Visão Geral da Unidade',
+        'network': 'Gestão Global de Unidades',
+        'communication': 'Comunicação Oficial Matrix',
+        'unit-detail': 'Gestão Específica de Unidade'
+    };
+
+    const titleEl = document.getElementById('page-title') || document.getElementById('section-title');
+    if (titleEl) titleEl.textContent = titles[id] || 'Arena Jiu-Jitsu Hub';
+    
+    const subEl = document.getElementById('page-subtitle') || document.getElementById('section-subtitle');
+    if (subEl && subtitles[id]) {
+        subEl.textContent = subtitles[id];
+    }
 };
 
 window.openModal = (html) => {
@@ -309,6 +323,64 @@ window.confirmAction = (message) => {
 
 window.toggleSensei = () => {
     document.getElementById('sensei-window').classList.toggle('hidden');
+};
+
+window.askSensei = () => {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const chat = document.getElementById('chat-messages');
+    
+    // User Message
+    chat.innerHTML += `
+        <div class="bg-orange-600 text-white p-3 rounded-2xl rounded-tr-sm ml-8 shadow-md">
+            ${msg}
+        </div>
+    `;
+    input.value = '';
+    chat.scrollTop = chat.scrollHeight;
+
+    // Fake AI Response with "Thinking" state
+    const thinkingId = 'thinking-' + Date.now();
+    setTimeout(() => {
+        chat.innerHTML += `
+            <div id="${thinkingId}" class="bg-slate-200 text-slate-500 p-3 rounded-2xl rounded-tl-sm mr-8 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Analisando dados da rede...
+            </div>
+        `;
+        chat.scrollTop = chat.scrollHeight;
+
+        // Actual Response after delay
+        setTimeout(() => {
+            const thinkingEl = document.getElementById(thinkingId);
+            if (thinkingEl) thinkingEl.remove();
+
+            // Simple mocked logic based on keywords
+            let response = "Interessante! Posso analisar isso com mais detalhes se você conectar minha API completa. Por enquanto, os dados mostram que a rede está crescendo!";
+            
+            const lowerMsg = msg.toLowerCase();
+            if (lowerMsg.includes('aluno') || lowerMsg.includes('crescimento')) {
+                const totalStudents = franchises.reduce((sum, f) => sum + (f.students || 0), 0);
+                response = `Atualmente temos <strong>${totalStudents} alunos</strong> ativos em toda a rede. A unidade de Florianópolis teve o maior crescimento este mês (12%). Recomendamos replicar as campanhas de marketing deles.`;
+            } else if (lowerMsg.includes('faturamento') || lowerMsg.includes('receita') || lowerMsg.includes('dinheiro')) {
+                const totalRevenue = franchises.reduce((sum, f) => sum + (f.revenue || 0), 0);
+                response = `O faturamento estimado da rede é de <strong>${formatCurrency(totalRevenue)}</strong>. A margem média de lucro das franquias está em 22%, o que é considerado saudável para o setor.`;
+            } else if (lowerMsg.includes('inadimplência') || lowerMsg.includes('pagamento')) {
+                response = `A taxa de inadimplência global está em <strong>4.2%</strong>, uma queda de 0.5% em relação ao mês anterior. O sistema de cobrança automática via WhatsApp tem sido efetivo.`;
+            } else if (lowerMsg.includes('professor') || lowerMsg.includes('instrutor')) {
+                 const totalTeachers = franchises.reduce((sum, f) => sum + (f.teachers || 0), 0);
+                 response = `Contamos com <strong>${totalTeachers} professores</strong> registrados. 15% deles são faixas-preta. Há uma demanda por novos instrutores na região Sul.`;
+            }
+
+            chat.innerHTML += `
+                <div class="bg-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-sm mr-8 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <i class="fa-solid fa-robot mr-1 text-orange-500"></i> ${response}
+                </div>
+            `;
+            chat.scrollTop = chat.scrollHeight;
+        }, 1500);
+    }, 500);
 };
 
 // ===== NEW UNIT FORM =====
@@ -750,13 +822,25 @@ window.saveUnitSettingsMatrix = async () => {
     const royaltyPercent = parseFloat(document.getElementById('unit-edit-royalty')?.value || 0);
     const expenses = parseFloat(document.getElementById('unit-edit-expenses')?.value || 0);
 
+    // Collect Branding fields
+    const branding = {
+        brandName: document.getElementById('unit-edit-branding-name')?.value,
+        logoUrl: document.getElementById('unit-edit-branding-logo')?.value,
+        faviconUrl: document.getElementById('unit-edit-branding-favicon')?.value,
+        primaryColor: document.getElementById('unit-edit-branding-primary-color')?.value,
+        secondaryColor: document.getElementById('unit-edit-branding-secondary-color')?.value,
+        loginBgUrl: document.getElementById('unit-edit-branding-bg')?.value,
+        supportEmail: document.getElementById('unit-edit-branding-email')?.value,
+        supportPhone: document.getElementById('unit-edit-branding-phone')?.value
+    };
+
     const btn = document.getElementById('btn-save-unit-settings');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Salvando...';
     btn.disabled = true;
 
     try {
-        const data = { name, owner, phone, address, royaltyPercent, expenses };
+        const data = { name, owner, phone, address, royaltyPercent, expenses, branding };
 
         // Geocode if address was changed
         const currentFranchise = franchises.find(f => f.id === selectedFranchiseId || f._id === selectedFranchiseId);
@@ -1548,6 +1632,9 @@ window.renderStudents = () => {
                         ${s.gender || '-'} • 
                         ${s.birthDate ? calculateAge(s.birthDate) + ' anos' : '-'}
                     </div>
+                </td>
+                <td class="py-4 px-2">
+                    <div class="text-[11px] font-medium text-slate-500">${s.email || '-'}</div>
                 </td>
                 <td class="py-4 px-2">
                     <div class="flex flex-col items-start gap-1">

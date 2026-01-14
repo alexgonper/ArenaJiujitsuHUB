@@ -32,7 +32,16 @@ const attendanceSchema = new mongoose.Schema({
     },
     checkedInBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User' // Who performed the check-in (Professor/Admin)
+        ref: 'Teacher' // Reference Teacher model correctly
+    },
+    checkInMethod: {
+        type: String,
+        enum: ['App', 'Booking', 'Professor', 'Kiosk'],
+        default: 'App'
+    },
+    metadata: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
     }
 }, {
     timestamps: true

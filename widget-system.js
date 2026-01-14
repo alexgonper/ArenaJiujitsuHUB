@@ -163,7 +163,8 @@ function getDefaultLayout(appType) {
             { id: 'franchisee-teachers-list', position: 4 },
             { id: 'franchisee-ai-auditor', position: 5 },
             { id: 'franchisee-directives', position: 6 },
-            { id: 'franchisee-settings', position: 7 }
+            { id: 'franchisee-graduation', position: 7 },
+            { id: 'franchisee-settings', position: 8 }
         ];
     } else if (appType === 'matrix-detail') {
         return [

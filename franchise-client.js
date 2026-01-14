@@ -2111,6 +2111,17 @@ function applyBranding(unit) {
             .hover\\:bg-orange-500:hover { background-color: ${primaryColor} !important; }
             .shadow-orange-200 { shadow-color: ${primaryColor}50 !important; }
             
+            /* Sidebar & Menu Branding */
+            .sidebar-item-active {
+                background-color: ${primaryColor}15 !important;
+                color: ${primaryColor} !important;
+                border-left: 4px solid ${primaryColor} !important;
+            }
+            .sidebar-item-active i {
+                color: ${primaryColor} !important;
+            }
+            .hover\\:text-orange-600:hover { color: ${primaryColor} !important; }
+            
             /* Specific Widget Overrides */
             .btn-primary { background: ${primaryColor} !important; }
             .input-field:focus { border-color: ${primaryColor} !important; }

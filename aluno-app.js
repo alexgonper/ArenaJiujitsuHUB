@@ -69,19 +69,36 @@ async function loadDashboard() {
             renderGraduationHistoryTable(dashboardData.profile.graduationHistory);
         }
 
+
         // Load schedule and ranking
-        loadSchedule();
+        // loadSchedule(); // Deprecated - schedule now loads on demand when clicking "Grade Horária"
         loadRanking();
+
 
     } catch (error) {
         console.error('❌ Error loading dashboard:', error);
-        alert('Erro ao carregar dados. Tente novamente.');
+        showToast('Erro ao carregar dados.', 'error');
     }
 }
 
 function renderHeader() {
-    document.getElementById('student-name').textContent = dashboardData.profile.name;
-    document.getElementById('academy-name').textContent = dashboardData.franchise.name;
+    const name = dashboardData.profile.name;
+    const academy = dashboardData.franchise.name;
+
+    const nameEl = document.getElementById('student-name');
+    if (nameEl) nameEl.textContent = `Olá, ${name.split(' ')[0]}`;
+
+    const academyEl = document.getElementById('academy-name');
+    if (academyEl) academyEl.textContent = academy;
+
+    const sidebarName = document.getElementById('student-name-sidebar');
+    if (sidebarName) sidebarName.textContent = name;
+
+    const sidebarAcademy = document.getElementById('academy-name-sidebar');
+    if (sidebarAcademy) sidebarAcademy.textContent = academy;
+
+    const avatar = document.getElementById('profile-avatar-sidebar');
+    if (avatar) avatar.textContent = name.charAt(0);
 }
 
 function renderProgress() {
@@ -179,26 +196,29 @@ function renderAcademyInfo() {
     const f = dashboardData.franchise;
     const b = f.branding || {};
 
-    document.getElementById('academy-address').textContent = f.address || '--';
-    document.getElementById('academy-phone').textContent = f.phone || '--';
+    const addressEl = document.getElementById('academy-address');
+    if (addressEl) addressEl.textContent = f.address || '--';
+    
+    const phoneEl = document.getElementById('academy-phone');
+    if (phoneEl) phoneEl.textContent = f.phone || '--';
 
     // Support Info
     const emailRow = document.getElementById('support-email-row');
     const phoneRow = document.getElementById('support-phone-row');
-    const emailEl = document.getElementById('support-email');
-    const phoneEl = document.getElementById('support-phone');
+    const supportEmailEl = document.getElementById('support-email');
+    const supportPhoneEl = document.getElementById('support-phone');
 
-    if (b.supportEmail) {
-        emailEl.textContent = b.supportEmail;
+    if (b.supportEmail && supportEmailEl && emailRow) {
+        supportEmailEl.textContent = b.supportEmail;
         emailRow.classList.remove('hidden');
-    } else {
+    } else if (emailRow) {
         emailRow.classList.add('hidden');
     }
 
-    if (b.supportPhone) {
-        phoneEl.textContent = b.supportPhone;
+    if (b.supportPhone && supportPhoneEl && phoneRow) {
+        supportPhoneEl.textContent = b.supportPhone;
         phoneRow.classList.remove('hidden');
-    } else {
+    } else if (phoneRow) {
         phoneRow.classList.add('hidden');
     }
 }
@@ -228,19 +248,96 @@ async function payTuition() {
 
     } catch (error) {
         console.error('Payment error:', error);
-        alert('Erro ao processar pagamento. Tente novamente.');
+        showToast('Erro ao processar pagamento.', 'error');
 
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-credit-card"></i> <span>Pagar Mensalidade</span>';
     }
 }
 
+// Logout
 function logout() {
-    if (confirm('Deseja sair do portal?')) {
+    showPortalConfirm('Encerrar Sessão', 'Deseja realmente sair do portal do aluno?', () => {
         localStorage.removeItem('studentData');
         window.location.href = 'aluno-login.html';
-    }
+    });
 }
+
+// Global UI Helpers (System Standard)
+window.closeModal = function () {
+    const modal = document.getElementById('ui-modal');
+    const panel = document.getElementById('modal-panel');
+    if (panel) {
+        panel.classList.remove('scale-100', 'opacity-100');
+        panel.classList.add('scale-95', 'opacity-0');
+    }
+    setTimeout(() => {
+        if (modal) modal.style.display = 'none';
+    }, 300);
+};
+
+window.showPortalConfirm = function (title, message, onConfirm) {
+    const modal = document.getElementById('ui-confirm-modal');
+    const panel = document.getElementById('confirm-panel');
+    const backdrop = document.getElementById('confirm-backdrop');
+    if (!modal) return;
+    document.getElementById('confirm-title').innerText = title;
+    document.getElementById('confirm-msg').innerText = message;
+    const yesBtn = document.getElementById('btn-confirm-yes');
+    yesBtn.onclick = () => {
+        closeConfirmModal();
+        if (onConfirm) onConfirm();
+    };
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
+    setTimeout(() => {
+        backdrop.classList.remove('opacity-0');
+        backdrop.classList.add('opacity-100');
+        panel.classList.remove('scale-95', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+    }, 10);
+};
+
+window.closeConfirmModal = function () {
+    const modal = document.getElementById('ui-confirm-modal');
+    const panel = document.getElementById('confirm-panel');
+    const backdrop = document.getElementById('confirm-backdrop');
+    if (panel) {
+        panel.classList.remove('scale-100', 'opacity-100');
+        panel.classList.add('scale-95', 'opacity-0');
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+    }
+    setTimeout(() => {
+        if (modal) modal.style.display = 'none';
+    }, 300);
+};
+
+window.showToast = function (message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+    const toastIcon = document.getElementById('toast-icon');
+
+    if (!toast || !toastMsg || !toastIcon) return;
+
+    toastMsg.textContent = message;
+
+    if (type === 'success') {
+        toastIcon.className = 'w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-lg';
+        toastIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+    } else {
+        toastIcon.className = 'w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white shadow-lg';
+        toastIcon.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    }
+
+    toast.classList.remove('opacity-0', 'translate-x-32');
+    toast.classList.add('opacity-100', 'translate-x-0');
+
+    setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-x-0');
+        toast.classList.add('opacity-0', 'translate-x-32');
+    }, 3000);
+};
 
 // --- WHITE LABEL / BRANDING ---
 function applyBranding(franchise) {
@@ -254,21 +351,31 @@ function applyBranding(franchise) {
     const styleEl = document.getElementById('branding-styles');
     if (styleEl) {
         styleEl.innerHTML = `
-            :root {
-                --brand-primary: ${primaryColor};
+            /* Sidebar & Menu Branding */
+            .sidebar-item-active {
+                background-color: ${primaryColor}15 !important;
+                color: ${primaryColor} !important;
+                border-left: 4px solid ${primaryColor} !important;
             }
-            .from-blue-500 { --tw-gradient-from: ${primaryColor} !important; }
-            .to-blue-600 { --tw-gradient-to: ${primaryColor}dd !important; }
-            .from-blue-50 { --tw-gradient-from: ${primaryColor}10 !important; }
-            .to-indigo-50 { --tw-gradient-to: ${primaryColor}05 !important; }
-            .text-blue-500 { color: ${primaryColor} !important; }
-            .text-blue-600 { color: ${primaryColor} !important; }
-            .bg-blue-500 { background-color: ${primaryColor} !important; }
+            .sidebar-item-active i {
+                color: ${primaryColor} !important;
+            }
+            .hover\\:text-blue-600:hover { color: ${primaryColor} !important; }
+            #profile-avatar-sidebar { background: ${primaryColor} !important; }
+
+            /* Check-in Card (Hero) Branding */
+            #checkin-card { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%) !important; }
+            #checkin-card h3, #checkin-card p { color: white !important; opacity: 0.9; }
+            #checkin-card .bg-white\\/10 { background-color: rgba(255,255,255, 0.15) !important; }
+            #btn-checkin div:first-child { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%) !important; }
+
+            /* Blue/Indigo Theme Overrides */
+            .text-blue-500, .text-blue-600 { color: ${primaryColor} !important; }
+            .bg-blue-50 { background-color: ${primaryColor}10 !important; }
+            .bg-blue-500, .bg-blue-600 { background-color: ${primaryColor} !important; }
             .border-blue-100 { border-color: ${primaryColor}30 !important; }
-            
-            /* Check-in Card Branding Override */
-            .from-orange-500 { --tw-gradient-from: ${primaryColor} !important; }
-            .to-red-600 { --tw-gradient-to: ${primaryColor}dd !important; }
+            .from-blue-600, .from-blue-500 { --tw-gradient-from: ${primaryColor} !important; }
+            .to-indigo-700, .to-indigo-600 { --tw-gradient-to: ${primaryColor}dd !important; }
 
             /* Dynamic Button Branding */
             .active-presence-btn { background-color: ${primaryColor} !important; }
@@ -354,14 +461,14 @@ async function performCheckIn(classId = null) {
 
             if (json.success) {
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-                alert('✅ Presença confirmada! Bom treino no tatame. Oss!');
+                showToast('✅ Presença confirmada! Bom treino no tatame. Oss!');
                 loadDashboard(); // Reload to update stats
             } else {
-                alert('❌ Check-in Negado: ' + json.message);
+                showToast('❌ Check-in Negado: ' + json.message, 'error');
             }
         } catch (e) {
             console.error(e);
-            alert('❌ Erro na conexão com o servidor.');
+            showToast('❌ Erro na conexão com o servidor.', 'error');
         } finally {
             resetCheckInBtn(btn);
         }
@@ -453,10 +560,10 @@ async function confirmClassPresence(classId) {
         const json = await res.json();
 
         if (json.success) {
-            alert('✅ Presença confirmada! Seu lugar está reservado.');
+            showToast('✅ Presença confirmada! Seu lugar está reservado.');
             loadDashboard(); // Refresh UI
         } else {
-            alert('❌ ' + json.message);
+            showToast('❌ ' + json.message, 'error');
             // Reset button
             if (btn) {
                 btn.disabled = false;
@@ -465,7 +572,7 @@ async function confirmClassPresence(classId) {
         }
     } catch (e) {
         console.error(e);
-        alert('❌ Erro de conexão.');
+        showToast('❌ Erro de conexão.', 'error');
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = originalText;
@@ -682,3 +789,123 @@ function renderGraduationHistoryTable(history) {
         `;
     }).join('');
 }
+
+// --- WEEKLY SCHEDULE LOGIC (Student) ---
+let currentStudentScheduleFilter = 'my'; // 'my' or 'all'
+let allStudentWeeklyClasses = [];
+let studentAttendedClassIds = []; // Track which classes student has attended
+
+async function loadStudentSchedule() {
+    try {
+        // Wait for dashboard data to be ready
+        if (!dashboardData || !dashboardData.franchise) {
+            console.warn('Dashboard data not ready yet, retrying in 500ms...');
+            setTimeout(loadStudentSchedule, 500);
+            return;
+        }
+
+        const franchiseId = dashboardData.franchise.id;
+        console.log('Loading schedule for franchise:', franchiseId);
+        
+        const response = await fetch(`${appConfig.apiBaseUrl}/classes/franchise/${franchiseId}?view=week`);
+        const result = await response.json();
+
+        console.log('Schedule API response:', result);
+
+        if (result.success) {
+            allStudentWeeklyClasses = result.data || [];
+            
+            // Get list of class IDs student has attended to highlight them
+            if (dashboardData.history) {
+                studentAttendedClassIds = dashboardData.history.map(h => {
+                    return h.classId && typeof h.classId === 'object' ? h.classId._id : h.classId;
+                }).filter(Boolean);
+            }
+            
+            console.log('Loaded', allStudentWeeklyClasses.length, 'classes');
+            console.log('Student attended', studentAttendedClassIds.length, 'classes');
+            
+            renderStudentSchedule();
+        } else {
+            console.error('Failed to load schedule:', result.message);
+            showToast('Erro ao carregar grade: ' + (result.message || 'Erro desconhecido'), 'error');
+        }
+    } catch (error) {
+        console.error('Error loading student schedule:', error);
+        showToast('Erro ao carregar grade de horários', 'error');
+    }
+}
+
+function renderStudentSchedule() {
+    // Apply filter
+    const classesToShow = currentStudentScheduleFilter === 'my' 
+        ? allStudentWeeklyClasses.filter(cls => {
+            // Show classes from student's attendance history
+            const classId = cls._id || cls.id;
+            return studentAttendedClassIds.includes(classId);
+        })
+        : allStudentWeeklyClasses;
+
+    // Clear all columns
+    for (let i = 0; i < 7; i++) {
+        const col = document.getElementById(`student-day-col-${i}`);
+        if (col) col.innerHTML = '';
+    }
+
+    // Group classes by day and render
+    classesToShow.forEach(cls => {
+        const col = document.getElementById(`student-day-col-${cls.dayOfWeek}`);
+        if (col) {
+            const teacherName = cls.teacherId?.name || 'Professor';
+            const categoryColor = getStudentScheduleCategoryColor(cls.category);
+            const classId = cls._id || cls.id;
+            const isMyClass = studentAttendedClassIds.includes(classId);
+
+            col.innerHTML += `
+                <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative ${isMyClass ? 'ring-2 ring-blue-200' : ''}">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-${categoryColor}-50 text-${categoryColor}-600 border border-${categoryColor}-100">
+                            ${cls.category || 'Geral'}
+                        </span>
+                        ${isMyClass ? '<span class="text-[8px] font-bold uppercase text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">Frequento</span>' : ''}
+                    </div>
+                    <h4 class="font-bold text-slate-700 text-xs mb-0.5 leading-tight">${cls.name}</h4>
+                    <p class="text-[10px] text-slate-400 mb-2 truncate">${teacherName}</p>
+                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
+                        <i class="fa-regular fa-clock text-slate-400"></i>
+                        ${cls.startTime} - ${cls.endTime}
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    // Show empty message if no classes
+    for (let i = 0; i < 7; i++) {
+        const col = document.getElementById(`student-day-col-${i}`);
+        if (col && col.innerHTML.trim() === '') {
+            col.innerHTML = `
+                <div class="text-center py-8 text-slate-300 text-[10px]">
+                    <i class="fa-regular fa-calendar-xmark mb-2 text-2xl block opacity-30"></i>
+                    <p>Sem aulas</p>
+                </div>
+            `;
+        }
+    }
+}
+
+function getStudentScheduleCategoryColor(category) {
+    const map = {
+        'BJJ': 'blue',
+        'No-Gi': 'red',
+        'Wrestling': 'orange',
+        'Kids': 'green',
+        'Fundamentals': 'slate'
+    };
+    return map[category] || 'slate';
+}
+
+window.filterStudentSchedule = function(filterValue) {
+    currentStudentScheduleFilter = filterValue;
+    renderStudentSchedule();
+};

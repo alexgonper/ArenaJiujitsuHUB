@@ -26,49 +26,75 @@ const app = express();
 // Connect to database
 connectDB();
 
-// Security middleware
-// app.use(helmet());
+// ===== SECURITY MIDDLEWARE =====
+// Helmet adiciona headers de segurança
+app.use(helmet({
+    contentSecurityPolicy: false, // Desabilitar se causar problemas com CORS
+    crossOriginEmbedderPolicy: false
+}));
 
 // CORS configuration
 const corsOptions = {
     origin: '*',
-    credentials: false, // Credentials cannot be true when origin is *
+    credentials: false,
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 
-// Rate limiting
-/*
-const limiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-    message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
-*/
+// ===== PERFORMANCE MIDDLEWARE =====
+
+// Compression - comprime respostas (economiza banda)
+app.use(compression({
+    level: 6, // Nível de compressão (1-9)
+    threshold: 1024, // Apenas para respostas > 1KB
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    }
+}));
 
 // Body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Compression
-// app.use(compression());
-
-// Logging (only in development)
+// ===== LOGGING MIDDLEWARE =====
+// Logging otimizado (apenas em desenvolvimento)
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
+} else {
+    // Em produção, log apenas erros
+    app.use(morgan('combined', {
+        skip: (req, res) => res.statusCode < 400
+    }));
 }
+
+// ===== CACHE MIDDLEWARE =====
+// Adiciona headers de cache para rotas estáticas e de leitura
+app.use((req, res, next) => {
+    // Cache para GET requests (exceto /health)
+    if (req.method === 'GET' && !req.path.includes('/health')) {
+        res.set('Cache-Control', 'public, max-age=300'); // 5 minutos
+    } else {
+        res.set('Cache-Control', 'no-store');
+    }
+    next();
+});
 
 // API prefix
 const API_PREFIX = process.env.API_PREFIX || '/api/v1';
 
-// Health check endpoint
+// Health check endpoint (sem cache)
 app.get('/health', (req, res) => {
+    res.set('Cache-Control', 'no-store');
     res.status(200).json({
         success: true,
         message: 'Arena Jiu-Jitsu Hub API is running',
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV
+        environment: process.env.NODE_ENV,
+        memory: process.memoryUsage(),
+        uptime: process.uptime()
     });
 });
 

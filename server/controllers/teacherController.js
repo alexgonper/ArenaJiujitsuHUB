@@ -3,6 +3,7 @@ const Franchise = require('../models/Franchise');
 const Class = require('../models/Class');
 const Student = require('../models/Student');
 const Attendance = require('../models/Attendance');
+const AttendanceService = require('../services/attendanceService');
 
 /**
  * @desc    Get all teachers or filter by franchise
@@ -208,8 +209,9 @@ exports.getDashboard = async (req, res, next) => {
             });
         }
 
-        // Get today's classes for this teacher
-        const today = new Date().getDay();
+        // Get today's classes for this teacher (Day of week normalized to SP)
+        const normalizedNow = AttendanceService.getNormalizedToday();
+        const today = normalizedNow.getDay();
         const classes = await Class.find({
             teacherId: teacher._id,
             dayOfWeek: today,
@@ -223,10 +225,8 @@ exports.getDashboard = async (req, res, next) => {
         const studentCount = distinctStudents.length;
 
         // Get today's attendance count (Only for the classes in today's agenda)
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date();
-        endOfDay.setHours(23, 59, 59, 999);
+        const startOfDay = AttendanceService.getNormalizedToday();
+        const endOfDay = AttendanceService.getNormalizedEndOfDay();
 
         const classIds = classes.map(c => c._id);
         const attendanceToday = await Attendance.countDocuments({
@@ -302,13 +302,12 @@ exports.markAttendance = async (req, res, next) => {
     try {
         const { studentId, classId, teacherId, franchiseId } = req.body;
 
-        const attendance = await Attendance.create({
+        const attendance = await AttendanceService.registerAttendance({
             studentId,
             classId,
-            checkedInBy: teacherId,
+            teacherId,
             tenantId: franchiseId,
-            date: new Date(),
-            status: 'Present'
+            checkInMethod: 'Professor'
         });
 
         res.status(201).json({
@@ -316,7 +315,10 @@ exports.markAttendance = async (req, res, next) => {
             data: attendance
         });
     } catch (error) {
-        next(error);
+        res.status(400).json({
+            success: false,
+            message: error.message || 'Erro ao registrar presença'
+        });
     }
 };
 
@@ -329,11 +331,9 @@ exports.getClassAttendance = async (req, res, next) => {
     try {
         const { classId } = req.params;
 
-        // Define today's range
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date();
-        endOfDay.setHours(23, 59, 59, 999);
+        // Define today's range (Normalized)
+        const startOfDay = AttendanceService.getNormalizedToday();
+        const endOfDay = AttendanceService.getNormalizedEndOfDay();
 
         const attendance = await Attendance.find({
             classId: classId,

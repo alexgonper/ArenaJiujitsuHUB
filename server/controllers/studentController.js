@@ -1,6 +1,7 @@
 const Student = require('../models/Student');
 const Franchise = require('../models/Franchise');
 const Attendance = require('../models/Attendance');
+const AttendanceService = require('../services/attendanceService');
 const mongoose = require('mongoose');
 
 const studentController = {
@@ -151,6 +152,9 @@ const studentController = {
 
             if (!student) return res.status(404).json({ message: 'Aluno não encontrado' });
 
+            // Normalize today for consistent counting
+            const startOfDay = AttendanceService.getNormalizedToday();
+
             // Calculate attendance stats
             // For MVP, we count ALL attendance since last graduation
             const attendanceCount = await Attendance.countDocuments({
@@ -190,8 +194,8 @@ const studentController = {
                 });
                 const uniqueDates = [...new Set(dates)].sort((a, b) => b - a);
 
-                const today = new Date();
-                const todayTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+                const today = AttendanceService.getNormalizedToday();
+                const todayTime = today.getTime();
                 const yesterdayTime = todayTime - (24 * 60 * 60 * 1000);
 
                 // Start streak calculation if the last training was today or yesterday
@@ -252,113 +256,57 @@ const studentController = {
      */
     checkIn: async (req, res) => {
         try {
-            const { studentId, location, classId } = req.body; // { lat, lng }
+            const { studentId, location, classId } = req.body;
 
             const student = await Student.findById(studentId);
-            if (!student) return res.status(404).json({ message: 'Aluno não encontrado' });
+            if (!student) return res.status(404).json({ success: false, message: 'Aluno não encontrado' });
 
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 59, 59, 999);
-
-            // 1. CLASS CAPACITY CHECK (If specific class)
-            if (classId) {
-                const Class = require('../models/Class');
-                const targetClass = await Class.findById(classId);
-
-                if (!targetClass) {
-                    return res.status(404).json({ success: false, message: 'Aula não encontrada' });
-                }
-
-                // Count current attendees
-                const currentAttendees = await Attendance.countDocuments({
-                    classId: classId,
-                    date: { $gte: startOfDay, $lte: endOfDay }
-                });
-
-                if (currentAttendees >= targetClass.capacity) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `A aula está cheia (${currentAttendees}/${targetClass.capacity}). Entre na lista de espera.`
-                    });
-                }
-            }
-
-            // 2. GEOFENCING VALIDATION (Only if NO classId selected - General Check-in)
-            // If classId is present, we allow remote check-in (booking) per user request
-            const franchise = await Franchise.findById(student.franchiseId);
-            if (!franchise) return res.status(404).json({ message: 'Unidade não encontrada' });
-
+            // 1. GEOFENCING VALIDATION (Frontend + Backend safety)
+            // If classId is NOT present, it's a general check-in (requires proximity)
             if (!classId) {
+                const franchise = await Franchise.findById(student.franchiseId);
+                if (!franchise) return res.status(404).json({ success: false, message: 'Unidade não encontrada' });
+
                 if (location && location.lat && location.lng) {
                     const unitLng = franchise.location.coordinates[0];
                     const unitLat = franchise.location.coordinates[1];
-
                     const distance = calculateDistance(location.lat, location.lng, unitLat, unitLng);
                     const MAX_DISTANCE_KM = 0.2; // 200 meters
 
                     if (distance > MAX_DISTANCE_KM) {
                         return res.status(403).json({
                             success: false,
-                            message: `Você está muito longe da academia (${(distance * 1000).toFixed(0)}m). Vá para o tatame!`
+                            message: `Você está muito longe da academia (${(distance * 1000).toFixed(0)}m).`
                         });
                     }
                 } else {
-                    return res.status(400).json({ success: false, message: 'Localização necessária para o check-in geral.' });
+                    return res.status(400).json({ success: false, message: 'Localização necessária para o check-in.' });
                 }
             }
 
-            // 3. DUPLICATE CHECK
-            // If a classId is provided, we check if they already checked into THAT class today
-            const duplicateFilter = {
-                studentId: studentId,
-                date: { $gte: startOfDay }
-            };
-            if (classId) {
-                duplicateFilter.classId = classId;
-            }
-
-            const existing = await Attendance.findOne(duplicateFilter);
-
-            if (existing) {
-                return res.status(400).json({
-                    success: false,
-                    message: classId ? 'Você já confirmou presença nesta aula!' : 'Você já fez check-in hoje! Bom treino. oss'
-                });
-            }
-
-            // 4. REGISTER ATTENDANCE
-            const finalClassId = classId || new mongoose.Types.ObjectId();
-
-            // Calculate distance only if location is provided
-            let dist = 0;
-            if (location && location.lat && location.lng) {
-                dist = calculateDistance(location.lat, location.lng, franchise.location.coordinates[1], franchise.location.coordinates[0]);
-            }
-
-            const newAttendance = await Attendance.create({
+            // 2. DELEGATE TO SERVICE (Handles Capacity, Duplicity, Financials and Atomic Transaction)
+            const attendance = await AttendanceService.registerAttendance({
+                studentId,
+                classId: classId || new mongoose.Types.ObjectId(), // If general check-in, create a phantom ID or handle it
                 tenantId: student.franchiseId,
-                studentId: student._id,
-                classId: finalClassId,
-                date: new Date(),
-                status: 'Present',
                 checkInMethod: classId ? 'Booking' : 'App',
                 metadata: {
-                    distance: dist,
-                    isClassSpecific: !!classId
+                    location: location
                 }
             });
 
             res.status(200).json({
                 success: true,
-                message: classId ? 'Presença confirmada! Bom treino.' : 'Check-in realizado com sucesso! Bom treino.',
-                data: newAttendance
+                message: 'Presença confirmada! Bom treino. oss',
+                data: attendance
             });
 
         } catch (error) {
             console.error('Check-in error:', error);
-            res.status(500).json({ success: false, message: 'Erro ao fazer check-in' });
+            res.status(400).json({ 
+                success: false, 
+                message: error.message || 'Erro ao processar check-in' 
+            });
         }
     },
 
@@ -371,9 +319,9 @@ const studentController = {
             const { franchiseId } = req.params;
             const { period = 'current_month' } = req.query;
 
-            // Calculate date filter based on period
+            // Calculate date filter based on period (normalized to SP Timezone)
             let dateFilter = {};
-            const now = new Date();
+            const now = AttendanceService.getNormalizedToday();
 
             switch (period) {
                 case 'current_month':

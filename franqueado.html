@@ -10,6 +10,7 @@
     <script src="tailwind.config.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -171,6 +172,11 @@
             class="bg-white/80 backdrop-blur-md sticky top-0 z-20 px-8 py-5 border-b border-slate-100 flex justify-between items-center">
             <h2 class="text-xl font-bold text-slate-800" id="page-title">Visão Geral</h2>
             <div class="flex items-center gap-4">
+                <button onclick="toggleTheme()"
+                    class="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-brand-500 shadow-sm transition-all"
+                    title="Alternar Tema">
+                    <i class="fa-solid fa-moon theme-toggle-icon"></i>
+                </button>
                 <button
                     class="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-brand-500 shadow-sm relative">
                     <i class="fa-solid fa-bell"></i>
@@ -429,7 +435,9 @@
     <!-- Global Config -->
     <script src="api-config.js?v=111"></script>
     <script src="config.js"></script>
+    <script src="theme-manager.js"></script>
     <script src="franchise-client.js?v=111"></script>
+    <script src="sensei-client.js"></script>
     <!-- Franchisee App Script -->
     <script src="franqueado-app.js"></script>
 </body>

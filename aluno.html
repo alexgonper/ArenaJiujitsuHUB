@@ -1,269 +1,617 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-pt">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Painel - Portal do Aluno</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>Arena Jiu-Jitsu Hub | Portal do Aluno</title>
+
+    <!-- Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Arena Aluno">
+    <meta name="theme-color" content="#3B82F6">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="tailwind.config.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="api-config.js?v=110"></script>
-    <script src="config.js?v=110"></script>
-    <script src="api-client.js?v=110"></script>
-    <script src="payment-api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        @font-face {
+            font-family: 'Eurostile Bold Extended';
+            src: local('Eurostile Bold Extended'), local('Eurostile-BoldExtended'), local('Arial Black');
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .brand-typography {
+            font-family: 'Eurostile Bold Extended', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .sidebar-item-active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            border-left: 4px solid #2563eb;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+
     <style id="branding-styles"></style>
 </head>
 
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen pb-8">
+<body class="h-screen flex overflow-hidden">
 
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div id="logo-container"
-                    class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center overflow-hidden">
-                    <i id="logo-icon" class="fa-solid fa-user-graduate text-white"></i>
-                    <img id="logo-img" class="hidden w-full h-full object-contain" src="" alt="Logo">
+    <!-- SIDEBAR -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-100 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300">
+        <!-- Logo -->
+        <div class="p-6 border-b border-slate-50">
+            <div id="logo-container" class="flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                    <img id="logo-img" class="hidden h-6 object-contain" src="" alt="Logo">
+                    <span id="logo-text"
+                        class="text-blue-600 font-black text-lg tracking-tighter brand-typography">ARENA</span>
                 </div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">PORTAL DO
+                    ALUNO</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
+            <button onclick="changeView('dashboard')" id="nav-dashboard"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-2xl sidebar-item-active transition-all group">
+                <i class="fa-solid fa-house w-5 transition-transform group-hover:scale-110"></i> Dashboard
+            </button>
+            <button onclick="changeView('evolution')" id="nav-evolution"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-blue-600 rounded-2xl transition-all group">
+                <i class="fa-solid fa-chart-line w-5 transition-transform group-hover:scale-110"></i> Minha Evolução
+            </button>
+            <button onclick="changeView('finance')" id="nav-finance"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-blue-600 rounded-2xl transition-all group">
+                <i class="fa-solid fa-wallet w-5 transition-transform group-hover:scale-110"></i> Financeiro
+            </button>
+            <button onclick="changeView('schedule')" id="nav-schedule"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-blue-600 rounded-2xl transition-all group">
+                <i class="fa-solid fa-calendar-days w-5 transition-transform group-hover:scale-110"></i> Grade Horária
+            </button>
+        </nav>
+
+        <!-- User Profile Bottom -->
+        <div class="p-4 border-t border-slate-50">
+            <div class="bg-slate-50 rounded-3xl p-4 flex items-center gap-3">
+                <div id="profile-avatar-sidebar"
+                    class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-black shadow-lg">
+                    ?</div>
+                <div class="flex-1 min-w-0">
+                    <p id="student-name-sidebar" class="text-xs font-bold text-slate-800 truncate">...</p>
+                    <p id="academy-name-sidebar" class="text-[9px] text-slate-400 font-bold uppercase truncate">...</p>
+                </div>
+                <button onclick="logout()" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTENT AREA -->
+    <main class="flex-1 flex flex-col relative overflow-hidden h-screen">
+
+        <!-- TOP HEADER -->
+        <header
+            class="h-16 md:h-20 glass-header border-b border-slate-100 flex items-center justify-between px-4 md:px-8 z-40 shrink-0">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()"
+                    class="lg:hidden w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-50 rounded-xl transition">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
                 <div>
-                    <h1 class="font-black text-slate-800 text-lg" id="student-name">Carregando...</h1>
-                    <p class="text-[10px] text-slate-400 uppercase tracking-wider" id="academy-name">Academia</p>
+                    <h1 id="student-name"
+                        class="text-base md:text-xl font-black text-slate-900 tracking-tight leading-none mb-1">Olá, ...
+                    </h1>
+                    <p id="academy-name"
+                        class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
+                        Bem-vindo à Arena</p>
                 </div>
             </div>
-            <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition">
-                <i class="fa-solid fa-right-from-bracket text-xl"></i>
-            </button>
-        </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8 max-w-6xl">
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left Column: Main Content -->
-            <div class="lg:col-span-2 space-y-6">
-
-                <!-- Check-in Section -->
-                <div id="checkin-card"
-                    class="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl shadow-xl p-8 text-white text-center transition-all duration-500">
-                    <div class="mb-6">
-                        <h3 class="text-sm font-bold uppercase tracking-wider opacity-90 mb-2">Confirmar Presença</h3>
-                        <p class="text-xs opacity-75">Registre seu treino de hoje</p>
-                    </div>
-
-                    <button onclick="performCheckIn()" id="btn-checkin"
-                        class="relative w-40 h-40 mx-auto bg-white rounded-full shadow-2xl flex flex-col items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-300 group">
-                        <div id="checkin-icon-bg"
-                            class="w-16 h-16 bg-gradient-to-tr from-orange-500 to-red-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg transition-all duration-500">
-                            <i class="fa-solid fa-location-dot"></i>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-lg font-black text-slate-800 tracking-tight">CHECK-IN</span>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase">Bater Ponto</span>
-                        </div>
-                    </button>
-
-                    <!-- Stats Row -->
-                    <div class="grid grid-cols-2 gap-4 mt-8">
-                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                            <p class="text-3xl font-black" id="stat-attended">0</p>
-                            <p class="text-xs font-bold uppercase tracking-wider opacity-75">Treinos</p>
-                        </div>
-                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                            <p class="text-3xl font-black text-yellow-300" id="stat-streak">0</p>
-                            <p class="text-xs font-bold uppercase tracking-wider opacity-75">Dias Seguidos 🔥</p>
-                        </div>
+            <div class="flex items-center gap-2 md:gap-4">
+                <div class="hidden sm:flex items-center gap-4 mr-4">
+                    <div class="text-right">
+                        <p class="text-[9px] text-slate-400 font-bold uppercase leading-none mb-1">Status</p>
+                        <p class="text-[11px] font-black text-green-600 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> ATIVO
+                        </p>
                     </div>
                 </div>
+                <button onclick="toggleTheme()"
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-blue-500 shadow-sm transition-all"
+                    title="Alternar Tema">
+                    <i class="fa-solid fa-moon text-xs md:text-base theme-toggle-icon"></i>
+                </button>
+                <button
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-blue-500 shadow-sm transition-all">
+                    <i class="fa-solid fa-bell text-xs md:text-base"></i>
+                </button>
+            </div>
+        </header>
 
-                <!-- Progress Card -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8">
-                    <div class="flex items-center gap-2 mb-6">
-                        <i class="fa-solid fa-chart-line text-blue-500"></i>
-                        <h2 class="text-xl font-black text-slate-800">Minha Evolução</h2>
+        <!-- MAIN SCROLLABLE CONTENT -->
+        <div id="content-scroll" class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar scroll-smooth bg-slate-50/30">
+            <div class="max-w-5xl mx-auto space-y-8 pb-20">
+
+                <!-- SECTION: DASHBOARD -->
+                <div id="section-dashboard" class="animate-in space-y-8">
+
+                    <!-- Check-in Hero -->
+                    <div id="checkin-card"
+                        class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] shadow-xl p-8 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div class="absolute top-0 right-0 p-8 opacity-10">
+                            <i class="fa-solid fa-location-dot text-9xl"></i>
+                        </div>
+
+                        <div class="relative z-10 text-center md:text-left">
+                            <h3 class="text-sm font-bold uppercase tracking-widest text-blue-200 mb-2">Check-in de Hoje
+                            </h3>
+                            <h2 class="text-2xl md:text-4xl font-black tracking-tight mb-4">Pronto para o Tatame?</h2>
+                            <p class="text-blue-100 text-sm max-w-xs opacity-80">Registre sua presença antes de começar
+                                o treino para contabilizar seus pontos.</p>
+
+                            <div class="flex gap-4 mt-8 justify-center md:justify-start">
+                                <div class="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/10">
+                                    <p class="text-2xl font-black" id="stat-attended">0</p>
+                                    <p class="text-[9px] font-bold uppercase tracking-widest text-blue-200">Treinos</p>
+                                </div>
+                                <div class="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/10">
+                                    <p class="text-2xl font-black text-yellow-300" id="stat-streak">0</p>
+                                    <p class="text-[9px] font-bold uppercase tracking-widest text-blue-200">Streak 🔥
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="performCheckIn()" id="btn-checkin"
+                            class="relative w-48 h-48 bg-white rounded-full shadow-2xl flex flex-col items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300 group shrink-0 border-8 border-white/20">
+                            <div
+                                class="w-16 h-16 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg transition-all duration-500">
+                                <i class="fa-solid fa-location-arrow"></i>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xl font-black text-slate-800 tracking-tight">PRESENÇA</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bater
+                                    Ponto</span>
+                            </div>
+                        </button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Belt Display -->
-                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-                            <p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest mb-3">Graduação Atual
-                            </p>
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 rounded-full flex items-center justify-center"
-                                    id="belt-icon-container">
-                                    <i class="fa-solid fa-medal text-4xl" id="belt-icon"></i>
+                    <!-- Main Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Progress Card -->
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-award"></i>
                                 </div>
                                 <div>
-                                    <h3 class="text-2xl font-black text-slate-800" id="current-belt">Branca</h3>
-                                    <p class="text-sm text-slate-500" id="current-degree">Nenhum grau</p>
+                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Minha Evolução</h2>
+                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Caminho
+                                        para a graduação</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div
+                                    class="flex items-center gap-4 p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
+                                    <div class="w-16 h-16 rounded-3xl flex items-center justify-center bg-white shadow-sm"
+                                        id="belt-icon-container">
+                                        <i class="fa-solid fa-user-ninja text-3xl" id="belt-icon"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-2xl font-black text-slate-800 leading-tight" id="current-belt">
+                                            Branca</h3>
+                                        <p class="text-sm font-semibold text-slate-500" id="current-degree">Nenhum grau
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="pt-2">
+                                    <div class="flex justify-between items-center mb-3 px-1">
+                                        <span class="text-xs font-black text-slate-700 uppercase"
+                                            id="progress-label">Faltam X aulas</span>
+                                        <span class="text-xs font-black text-blue-600" id="progress-percent">0%</span>
+                                    </div>
+                                    <div
+                                        class="w-full bg-slate-100 rounded-full h-4 overflow-hidden border border-slate-50 p-1">
+                                        <div id="progress-bar"
+                                            class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-1000"
+                                            style="width: 0%"></div>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 font-bold mt-3 ml-1">
+                                        <i class="fa-solid fa-circle-check text-blue-400 mr-1 mt-0.5"></i>
+                                        TOTAL DE <span id="total-classes" class="text-slate-700">0</span> AULAS NO
+                                        TATAME
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Progress Bar -->
-                        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">Próximo Grau
-                            </p>
-                            <div class="mb-3">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-xs font-bold text-slate-600" id="progress-label">Faltam X
-                                        aulas</span>
-                                    <span class="text-xs font-bold text-blue-500" id="progress-percent">0%</span>
+                        <!-- Finance Card -->
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex flex-col">
+                            <div class="flex justify-between items-start mb-8">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-xl">
+                                        <i class="fa-solid fa-wallet"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Financeiro</h2>
+                                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                            Status da mensalidade</p>
+                                    </div>
                                 </div>
-                                <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                                    <div id="progress-bar"
-                                        class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500"
-                                        style="width: 0%"></div>
+                                <div id="payment-status-badge"></div>
+                            </div>
+
+                            <div
+                                class="bg-slate-50 rounded-[2rem] p-6 mb-6 flex justify-between items-center border border-slate-100">
+                                <div>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                        VALOR MENSAL</p>
+                                    <p class="text-3xl font-black text-slate-800" id="monthly-amount">R$ --</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                        ÚLTIMO PGTO</p>
+                                    <p class="text-sm font-bold text-slate-600" id="last-payment">--</p>
                                 </div>
                             </div>
-                            <p class="text-[10px] text-slate-400">
-                                <i class="fa-solid fa-calendar-check mr-1"></i>
-                                <span id="total-classes">0</span> aulas frequentadas
-                            </p>
+
+                            <button onclick="payTuition()" id="pay-btn"
+                                class="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest">
+                                <i class="fa-solid fa-credit-card"></i>
+                                PAGAR MENSALIDADE
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Graduation History Table -->
-                    <div id="graduation-history-container" class="mt-6 pt-6 border-t border-slate-100 hidden">
-                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest mb-4">Histórico de
-                            Graduação</h3>
-                        <div class="overflow-x-auto rounded-xl border border-slate-100">
-                            <table class="w-full text-left text-xs bg-slate-50">
+                    <!-- Ranking & History Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Recent History -->
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Meus Treinos</h2>
+                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Histórico
+                                        de freqüência</p>
+                                </div>
+                            </div>
+                            <div id="history-list" class="space-y-4">
+                                <!-- Dynamic history -->
+                            </div>
+                        </div>
+
+                        <!-- Ranking -->
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <div class="flex justify-between items-center mb-8">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-2xl bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl">
+                                        <i class="fa-solid fa-trophy"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Hall da Fama</h2>
+                                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                            Ranking da academia</p>
+                                    </div>
+                                </div>
+                                <select onchange="changeRankingPeriod(this.value)"
+                                    class="text-[10px] font-black uppercase tracking-widest bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/20">
+                                    <option value="current_month">Mês Atual</option>
+                                    <option value="last_30_days">Últimos 30 Dias</option>
+                                    <option value="all_time">Geral</option>
+                                </select>
+                            </div>
+                            <div id="leaderboard-list" class="space-y-3">
+                                <!-- Dynamic leaderboard -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- OTHER SECTIONS (evolution, finance, schedule) -->
+                <!-- They are mapped via JS changeView -->
+                <div id="section-evolution" class="hidden animate-in space-y-8">
+                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                        <h2 class="text-2xl font-black text-slate-800 mb-6">Histórico de Graduações</h2>
+                        <div id="graduation-history-container"
+                            class="overflow-hidden rounded-3xl border border-slate-100">
+                            <table class="w-full text-left">
                                 <thead
-                                    class="bg-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                                    class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
                                     <tr>
-                                        <th class="px-4 py-3">Data</th>
-                                        <th class="px-4 py-3">Faixa</th>
-                                        <th class="px-4 py-3">Grau</th>
-                                        <th class="px-4 py-3">Mestre</th>
+                                        <th class="px-6 py-4">Data</th>
+                                        <th class="px-6 py-4">Faixa</th>
+                                        <th class="px-6 py-4">Grau</th>
+                                        <th class="px-6 py-4">Mestre</th>
                                     </tr>
                                 </thead>
-                                <tbody id="graduation-history-body" class="divide-y divide-slate-100 bg-white">
-                                    <!-- Dynamic Rows -->
+                                <tbody id="graduation-history-body"
+                                    class="divide-y divide-slate-50 text-sm font-medium text-slate-600">
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Payment Section -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-wallet text-green-500"></i>
-                            <h2 class="text-xl font-black text-slate-800">Financeiro</h2>
-                        </div>
-                        <div id="payment-status-badge" class="px-3 py-1 rounded-full text-xs font-bold">
-                            <!-- Dynamic status -->
-                        </div>
+                <div id="section-finance" class="hidden animate-in">
+                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                        <h2 class="text-2xl font-black text-slate-800 mb-6">Histórico de Mensalidades</h2>
+                        <div id="payment-history" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                     </div>
+                </div>
 
-                    <!-- Payment Info -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div class="bg-slate-50 rounded-xl p-4">
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                                Mensalidade
-                            </p>
-                            <p class="text-2xl font-black text-slate-800" id="monthly-amount">R$ --</p>
+                <div id="section-schedule" class="hidden animate-in space-y-8">
+                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Grade de Horários</h2>
+                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Grade Semanal de Aulas</p>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 items-center">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Exibir:</label>
+                                <select id="student-schedule-filter" onchange="window.filterStudentSchedule(this.value)"
+                                    class="bg-slate-50 border border-slate-100 rounded-2xl px-6 py-3 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500">
+                                    <option value="my">Minhas Aulas</option>
+                                    <option value="all">Todas as Aulas</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="bg-slate-50 rounded-xl p-4">
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Último
-                                Pagamento</p>
-                            <p class="text-sm text-slate-600" id="last-payment">--</p>
-                        </div>
-                    </div>
 
-                    <!-- Pay Button -->
-                    <button onclick="payTuition()" id="pay-btn"
-                        class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-credit-card"></i>
-                        <span>Pagar Mensalidade</span>
-                    </button>
-
-                    <!-- Payment History -->
-                    <div class="mt-6">
-                        <h3 class="text-sm font-bold text-slate-600 mb-3">Histórico de Pagamentos</h3>
-                        <div id="payment-history" class="space-y-2">
-                            <!-- Dynamic payment list -->
+                        <!-- Schedule Grid -->
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <div class="grid grid-cols-7 gap-4 min-w-[1000px]" id="student-schedule-grid">
+                                <div class="flex flex-col gap-2">
+                                    <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                        <span class="text-xs font-bold text-slate-500 uppercase">Dom</span>
+                                    </div>
+                                    <div id="student-day-col-0" class="space-y-2 flex-1 min-h-[200px]">
+                                        <div class="text-center py-8 text-slate-300 text-[10px]">
+                                            <i class="fa-solid fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                        <span class="text-xs font-bold text-slate-500 uppercase">Seg</span>
+                                    </div>
+                                    <div id="student-day-col-1" class="space-y-2 flex-1 min-h-[200px]">
+                                        <div class="text-center py-8 text-slate-300 text-[10px]">
+                                            <i class="fa-solid fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                        <span class="text-xs font-bold text-slate-500 uppercase">Ter</span>
+                                    </div>
+                                    <div id="student-day-col-2" class="space-y-2 flex-1 min-h-[200px]">
+                                        <div class="text-center py-8 text-slate-300 text-[10px]">
+                                            <i class="fa-solid fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                        <span class="text-xs font-bold text-slate-500 uppercase">Qua</span>
+                                    </div>
+                                    <div id="student-day-col-3" class="space-y-2 flex-1 min-h-[200px]">
+                                        <div class="text-center py-8 text-slate-300 text-[10px]">
+                                            <i class="fa-solid fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                        <span class="text-xs font-bold text-slate-500 uppercase">Qui</span>
+                                    </div>
+                                    <div id="student-day-col-4" class="space-y-2 flex-1 min-h-[200px]">
+                                        <div class="text-center py-8 text-slate-300 text-[10px]">
+                                            <i class="fa-solid fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                        <span class="text-xs font-bold text-slate-500 uppercase">Sex</span>
+                                    </div>
+                                    <div id="student-day-col-5" class="space-y-2 flex-1 min-h-[200px]">
+                                        <div class="text-center py-8 text-slate-300 text-[10px]">
+                                            <i class="fa-solid fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                        <span class="text-xs font-bold text-slate-500 uppercase">Sáb</span>
+                                    </div>
+                                    <div id="student-day-col-6" class="space-y-2 flex-1 min-h-[200px]">
+                                        <div class="text-center py-8 text-slate-300 text-[10px]">
+                                            <i class="fa-solid fa-spinner fa-spin"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent History -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8">
-                    <div class="flex items-center gap-2 mb-6">
-                        <i class="fa-solid fa-clock-rotate-left text-blue-500"></i>
-                        <h2 class="text-xl font-black text-slate-800">Histórico Recente</h2>
-                    </div>
-                    <div id="history-list" class="space-y-3">
-                        <!-- Dynamic history -->
-                    </div>
-                </div>
-
-                <!-- Schedule -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8">
-                    <div class="flex items-center gap-2 mb-6">
-                        <i class="fa-solid fa-calendar-days text-green-500"></i>
-                        <h2 class="text-xl font-black text-slate-800">Agenda do Dia</h2>
-                    </div>
-                    <p class="text-xs text-slate-500 mb-4" id="current-date-label">Carregando...</p>
-                    <div id="schedule-list" class="space-y-3">
-                        <!-- Dynamic schedule -->
-                    </div>
-                </div>
-
-                <!-- Ranking / Hall da Fama -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-trophy text-yellow-500"></i>
-                            <h2 class="text-xl font-black text-slate-800">Hall da Fama</h2>
-                        </div>
-                        <select id="ranking-period-filter" onchange="changeRankingPeriod(this.value)"
-                            class="text-xs font-bold px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="current_month">Mês Atual</option>
-                            <option value="last_30_days">Últimos 30 Dias</option>
-                            <option value="last_90_days">Últimos 90 Dias</option>
-                            <option value="all_time">Total Histórico</option>
-                        </select>
-                    </div>
-                    <div id="leaderboard-list" class="space-y-2">
-                        <!-- Dynamic leaderboard -->
-                    </div>
-                </div>
             </div>
+        </div>
+    </main>
 
-            <!-- Right Column: Academy Info (Sidebar) -->
-            <div class="lg:col-span-1">
-                <div class="bg-white rounded-3xl shadow-xl p-6 sticky top-24">
-                    <div class="flex items-center gap-2 mb-4">
-                        <i class="fa-solid fa-building text-orange-500"></i>
-                        <h2 class="text-xl font-black text-slate-800">Minha Academia</h2>
-                    </div>
-                    <div id="academy-contact-container" class="space-y-3 text-sm text-slate-600">
-                        <p><i class="fa-solid fa-location-dot text-slate-400 w-5"></i> <span
-                                id="academy-address">--</span></p>
-                        <p><i class="fa-solid fa-phone text-slate-400 w-5"></i> <span id="academy-phone">--</span>
-                        </p>
-                        <div id="support-info" class="pt-3 border-t border-slate-100 mt-3 space-y-2">
-                            <p id="support-email-row" class="hidden"><i
-                                    class="fa-solid fa-envelope text-slate-400 w-5"></i>
-                                <span id="support-email">--</span>
-                            </p>
-                            <p id="support-phone-row" class="hidden"><i
-                                    class="fa-brands fa-whatsapp text-green-500 w-5"></i>
-                                <span id="support-phone">--</span>
-                            </p>
+    <!-- UI COMPONENTS (System Standard) -->
+    <div id="ui-modal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-4 transition-all duration-300"
+        style="display: none;">
+        <div class="bg-white rounded-[2.5rem] p-6 md:p-10 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-100 no-scrollbar transform scale-95 opacity-0 transition-all duration-300"
+            id="modal-panel">
+            <button onclick="closeModal()"
+                class="absolute top-4 right-4 md:top-8 md:right-8 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all z-10">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <div id="toast"
+        class="fixed top-8 right-8 bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] text-xs font-bold shadow-2xl flex items-center gap-4 transform translate-x-32 opacity-0 transition-all duration-500 z-[3000]">
+        <div id="toast-icon"
+            class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-lg">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <span id="toast-msg">Mensagem</span>
+    </div>
+
+    <div id="ui-confirm-modal" class="fixed inset-0 z-[3000] hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true" style="display: none;">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0" id="confirm-backdrop">
+        </div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="confirm-panel"
+                    class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md scale-95 opacity-0 border border-slate-100">
+                    <div class="bg-white px-8 pb-8 pt-8 text-center">
+                        <div
+                            class="w-20 h-20 rounded-3xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-6">
+                            <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
                         </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3" id="confirm-title">Confirmar Ação</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed" id="confirm-msg">Deseja realmente prosseguir?
+                        </p>
+                    </div>
+                    <div class="bg-slate-50 px-8 py-6 flex flex-col gap-3">
+                        <button type="button" id="btn-confirm-yes"
+                            class="w-full py-4 bg-red-600 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-red-200">Confirmar</button>
+                        <button type="button" onclick="closeConfirmModal()"
+                            class="w-full py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold uppercase tracking-widest text-[10px]">Cancelar</button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-    </main>
+    <script src="api-config.js?v=200"></script>
+    <script src="api-client.js?v=200"></script>
+    <script src="config.js?v=200"></script>
+    <script src="theme-manager.js?v=200"></script>
+    <script src="payment-api.js?v=200"></script>
+    <script src="sensei-client.js?v=200"></script>
+    <script src="aluno-app.js?v=200"></script>
 
-    <script src="aluno-app.js?v=20260113b"></script>
+    <script>
+        // MOBILE SIDEBAR TOGGLE
+        window.toggleSidebar = function () {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        };
+
+        window.changeView = function (viewId) {
+            // Update Nav
+            document.querySelectorAll('#sidebar nav button').forEach(btn => {
+                btn.classList.remove('sidebar-item-active', 'font-bold');
+                if (!btn.classList.contains('text-slate-500')) {
+                    btn.classList.add('text-slate-500');
+                }
+                if (!btn.classList.contains('font-semibold')) {
+                    btn.classList.add('font-semibold');
+                }
+            });
+            const activeNav = document.getElementById(`nav-${viewId}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-500', 'font-semibold');
+                activeNav.classList.add('sidebar-item-active', 'font-bold');
+            }
+
+            // Update Sections
+            document.querySelectorAll('#content-scroll > div > div').forEach(div => {
+                if (div.id && div.id.startsWith('section-')) {
+                    div.classList.add('hidden');
+                }
+            });
+            const activeDiv = document.getElementById(`section-${viewId}`);
+            if (activeDiv) activeDiv.classList.remove('hidden');
+
+            // Load schedule data when opening schedule view
+            if (viewId === 'schedule' && typeof loadStudentSchedule === 'function') {
+                loadStudentSchedule();
+            }
+
+            // Close sidebar on mobile
+            if (window.innerWidth < 1024) toggleSidebar();
+        }
+    </script>
 </body>
 
 </html>

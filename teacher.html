@@ -1,266 +1,668 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-pt">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Professor - Arena Hub</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>Arena Jiu-Jitsu Hub | Painel do Professor</title>
+
+    <!-- Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Arena JJ Hub">
+    <meta name="theme-color" content="#FF6B00">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="tailwind.config.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="api-config.js?v=110"></script>
-    <script src="config.js?v=110"></script>
-    <script src="api-client.js?v=110"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        @font-face {
+            font-family: 'Eurostile Bold Extended';
+            src: local('Eurostile Bold Extended'), local('Eurostile-BoldExtended'), local('Arial Black');
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .orange-gradient {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8A00 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-item-active {
+            background-color: #fff7ed;
+            color: #ea580c;
+            border-left: 4px solid #ea580c;
+        }
+
+        .brand-typography {
+            font-family: 'Eurostile Bold Extended', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .input-field {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 0.875rem 1.25rem;
+            width: 100%;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #FF6B00;
+            box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: #FF6B00;
+            color: white;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 1rem;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 107, 0, 0.2);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+
     <style id="branding-styles"></style>
 </head>
 
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen pb-8">
+<body class="h-screen flex overflow-hidden">
 
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div id="logo-container"
-                    class="w-10 h-10 bg-gradient-to-br from-slate-800 to-black rounded-xl flex items-center justify-center overflow-hidden">
-                    <i id="logo-icon" class="fa-solid fa-chalkboard-user text-white"></i>
-                    <img id="logo-img" class="hidden w-full h-full object-contain" src="" alt="Logo">
+    <!-- SIDEBAR -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-100 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300">
+        <!-- Logo -->
+        <div class="p-6 border-b border-slate-50">
+            <div id="portal-logo-container" class="flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                    <img id="logo-img-sidebar" class="hidden h-6 object-contain" src="" alt="Logo">
+                    <span id="logo-text-sidebar"
+                        class="text-orange-600 font-black text-lg tracking-tighter brand-typography">ARENA</span>
                 </div>
-                <div>
-                    <h1 class="font-black text-slate-800 text-lg" id="teacher-name-header">Carregando...</h1>
-                    <p class="text-[10px] text-slate-400 uppercase tracking-wider">Professor</p>
-                </div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">PORTAL DO
+                    PROFESSOR</span>
             </div>
-            <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition">
-                <i class="fa-solid fa-right-from-bracket text-xl"></i>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
+            <button onclick="changeView('dashboard')" id="nav-dashboard"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-2xl sidebar-item-active transition-all group">
+                <i class="fa-solid fa-chart-pie w-5 transition-transform group-hover:scale-110"></i> Dashboard
             </button>
+            <button onclick="changeView('students')" id="nav-students"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-orange-600 rounded-2xl transition-all group">
+                <i class="fa-solid fa-users w-5 transition-transform group-hover:scale-110"></i> Meus Alunos
+            </button>
+            <button onclick="changeView('agenda')" id="nav-agenda"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-orange-600 rounded-2xl transition-all group">
+                <i class="fa-solid fa-calendar-days w-5 transition-transform group-hover:scale-110"></i> Minha Grade
+            </button>
+        </nav>
+
+        <!-- User Profile Bottom -->
+        <div class="p-4 border-t border-slate-50">
+            <div class="bg-slate-50 rounded-3xl p-4 flex items-center gap-3">
+                <div id="profile-avatar"
+                    class="w-10 h-10 rounded-full orange-gradient text-white flex items-center justify-center font-black shadow-lg">
+                    ?</div>
+                <div class="flex-1 min-w-0">
+                    <p id="teacher-name-sidebar" class="text-xs font-bold text-slate-800 truncate">...</p>
+                    <p class="text-[9px] text-green-600 font-bold uppercase flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Online
+                    </p>
+                </div>
+                <button onclick="logout()" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
         </div>
-    </header>
+    </aside>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- CONTENT AREA -->
+    <main class="flex-1 flex flex-col relative overflow-hidden h-screen">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left Column: Main Content -->
-            <div class="lg:col-span-2 space-y-6">
-
-                <!-- Active Class Section -->
-                <div id="active-class-card"
-                    class="bg-gradient-to-br from-slate-800 to-black rounded-3xl shadow-xl p-8 text-white relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-8 opacity-10">
-                        <i class="fa-solid fa-stopwatch text-9xl"></i>
-                    </div>
-
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 class="text-sm font-bold uppercase tracking-wider opacity-90 mb-1"
-                                    id="active-class-category">AULA ATUAL</h3>
-                                <p class="text-xs opacity-75">Status em tempo real</p>
-                            </div>
-                            <span
-                                class="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 px-2 py-1 rounded-full backdrop-blur-sm">
-                                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> AO VIVO
-                            </span>
-                        </div>
-
-                        <div class="py-4">
-                            <h2 class="text-3xl font-black mb-2" id="active-class-name">Nenhuma aula agora</h2>
-                            <p class="text-lg text-slate-300 flex items-center gap-2">
-                                <i class="fa-regular fa-clock"></i>
-                                <span id="active-class-time">--:--</span>
-                            </p>
-                        </div>
-
-                        <!-- Stats Row Inside Active Class -->
-                        <div class="grid grid-cols-2 gap-4 mt-6 border-t border-white/10 pt-6">
-                            <div>
-                                <p class="text-[10px] font-bold uppercase tracking-wider opacity-50">Total Alunos</p>
-                                <p class="text-2xl font-black" id="stat-total-students">0</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] font-bold uppercase tracking-wider opacity-50">Presenças Hoje</p>
-                                <p class="text-2xl font-black text-green-400" id="stat-attendance-today">0</p>
-                            </div>
-                        </div>
-                    </div>
+        <!-- TOP HEADER -->
+        <header
+            class="h-16 md:h-20 glass-header border-b border-slate-100 flex items-center justify-between px-4 md:px-8 z-40 shrink-0">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()"
+                    class="lg:hidden w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-50 rounded-xl transition">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <div>
+                    <h1 id="page-title"
+                        class="text-base md:text-xl font-black text-slate-900 tracking-tight leading-none mb-1">Painel
+                        do Professor</h1>
+                    <p id="page-subtitle"
+                        class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
+                        Visão Geral e Chamada</p>
                 </div>
-
-                <!-- Attendance Control (Chamada) -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 relative min-h-[400px]">
-                    <div id="attendance-header"
-                        class="hidden flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-clipboard-check text-blue-500"></i>
-                            <div>
-                                <h2 class="text-xl font-black text-slate-800">Lista de Presença</h2>
-                                <p id="attendance-class-name"
-                                    class="text-xs text-slate-400 font-bold uppercase tracking-wider">Selecione uma aula
-                                </p>
-                            </div>
-                        </div>
-                        <div class="relative">
-                            <input type="text" id="student-search" placeholder="Buscar na lista..."
-                                class="bg-slate-50 border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-sm w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
-                        </div>
-                    </div>
-
-                    <!-- Placeholder State -->
-                    <div id="attendance-placeholder"
-                        class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <div
-                            class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300 text-3xl">
-                            <i class="fa-solid fa-hand-pointer"></i>
-                        </div>
-                        <h3 class="text-lg font-black text-slate-400 mb-2">Nenhuma Aula Selecionada</h3>
-                        <p class="text-sm text-slate-400 max-w-xs mx-auto">Clique em uma aula na sua grade horária para
-                            visualizar a lista de alunos confirmados.</p>
-                    </div>
-
-                    <div class="hidden max-h-[400px] overflow-y-auto pr-2 custom-scrollbar space-y-2"
-                        id="students-attendance-list">
-                        <!-- Student list rendered here -->
-                        <div class="text-center py-8 text-slate-400">
-                            <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
-                            <p class="text-xs">Carregando lista de alunos...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8">
-                    <div class="flex items-center gap-2 mb-6">
-                        <i class="fa-solid fa-clock-rotate-left text-orange-500"></i>
-                        <h2 class="text-xl font-black text-slate-800">Atividade Recente</h2>
-                    </div>
-                    <div id="recent-attendance-list" class="space-y-3">
-                        <!-- Dynamic list -->
-                    </div>
-                </div>
-
-                <!-- Agenda -->
-                <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8">
-                    <div class="flex items-center gap-2 mb-6">
-                        <i class="fa-solid fa-calendar-days text-purple-500"></i>
-                        <h2 class="text-xl font-black text-slate-800">Sua Grade Horária</h2>
-                    </div>
-                    <div id="agenda-list" class="space-y-3">
-                        <!-- Dynamic schedule -->
-                    </div>
-                </div>
-
             </div>
 
-            <!-- Right Column: Teacher Profile (Sidebar) -->
-            <div class="lg:col-span-1">
-                <div class="bg-white rounded-3xl shadow-xl p-6 sticky top-24">
-                    <div class="text-center mb-6">
-                        <div id="profile-avatar"
-                            class="w-24 h-24 rounded-full bg-slate-100 mx-auto mb-4 flex items-center justify-center text-3xl font-black text-slate-400 border-4 border-slate-50">
-                            ?
-                        </div>
-                        <h2 id="profile-name" class="text-xl font-black text-slate-800">...</h2>
-                        <span id="profile-belt"
-                            class="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold mt-2">...</span>
-                    </div>
-
-                    <div class="space-y-4 text-sm">
-                        <div class="p-4 bg-slate-50 rounded-xl">
-                            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Unidade</p>
-                            <p id="profile-franchise" class="font-bold text-slate-700">...</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-xl">
-                            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Email</p>
-                            <p id="profile-email" class="font-bold text-slate-700 break-all">...</p>
-                        </div>
-                        <div class="p-4 bg-slate-50 rounded-xl">
-                            <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Desde</p>
-                            <p id="profile-hire-date" class="font-bold text-slate-700">...</p>
-                        </div>
-                    </div>
-
-                    <!-- Support Info -->
-                    <div id="teacher-support-section" class="hidden mt-6 pt-6 border-t border-slate-100">
-                        <p class="text-xs font-bold text-slate-400 text-center mb-4 uppercase">Suporte da Unidade</p>
-                        <div class="space-y-2">
-                            <div id="support-email-container"
-                                class="hidden flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
-                                    <i class="fa-solid fa-envelope"></i>
-                                </div>
-                                <span id="support-email" class="text-xs font-bold text-slate-600 truncate">...</span>
-                            </div>
-                            <div id="support-phone-container"
-                                class="hidden flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500">
-                                    <i class="fa-brands fa-whatsapp"></i>
-                                </div>
-                                <span id="support-phone" class="text-xs font-bold text-slate-600">...</span>
-                            </div>
+            <div class="flex items-center gap-2 md:gap-6">
+                <div class="flex items-center gap-2 md:gap-3">
+                    <button onclick="toggleTheme()"
+                        class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-orange-500 shadow-sm transition-all"
+                        title="Alternar Tema">
+                        <i class="fa-solid fa-moon text-xs md:text-base theme-toggle-icon"></i>
+                    </button>
+                    <button
+                        class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-orange-500 shadow-sm transition-all">
+                        <i class="fa-solid fa-bell text-xs md:text-base"></i>
+                    </button>
+                    <div class="hidden md:block w-px h-6 bg-slate-200 mx-1"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <p id="teacher-name-header" class="text-xs font-bold text-slate-800 leading-none">...</p>
+                            <p class="text-[9px] text-orange-500 font-bold uppercase mt-1">Instrutor</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
+        <!-- MAIN SCROLLABLE CONTENT -->
+        <div id="content-scroll" class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar scroll-smooth bg-slate-50/30">
+            <div class="max-w-7xl mx-auto space-y-8 pb-20">
+
+                <div id="app-content">
+
+                    <!-- SECTION: DASHBOARD -->
+                    <div id="section-dashboard" class="animate-in space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Active Class Card -->
+                            <div id="active-class-card"
+                                class="md:col-span-2 bg-slate-900 rounded-[2.5rem] shadow-xl p-8 text-white relative overflow-hidden min-h-[250px] flex flex-col justify-between">
+                                <div class="absolute top-0 right-0 p-8 opacity-10">
+                                    <i class="fa-solid fa-stopwatch text-9xl"></i>
+                                </div>
+                                <div class="relative z-10">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-1"
+                                                id="active-class-category">AULA ATUAL</p>
+                                            <h2 class="text-2xl md:text-4xl font-black tracking-tight"
+                                                id="active-class-name">Nenhuma aula agora</h2>
+                                        </div>
+                                        <span
+                                            class="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
+                                            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> AO VIVO
+                                        </span>
+                                    </div>
+                                    <div class="mt-4 flex items-center gap-2 text-slate-400">
+                                        <i class="fa-regular fa-clock"></i>
+                                        <span id="active-class-time" class="font-bold">--:--</span>
+                                    </div>
+                                </div>
+                                <div class="relative z-10 grid grid-cols-2 gap-4 pt-6 border-t border-white/10 mt-6">
+                                    <div>
+                                        <p class="text-[9px] font-bold uppercase tracking-wider opacity-40">Alunos
+                                            Totais</p>
+                                        <p class="text-2xl font-black" id="stat-total-students">0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-bold uppercase tracking-wider opacity-40">Presenças
+                                            Hoje</p>
+                                        <p class="text-2xl font-black text-green-400" id="stat-attendance-today">0</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Profile Card -->
+                            <div
+                                class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex flex-col items-center text-center">
+                                <div id="profile-avatar-large"
+                                    class="w-24 h-24 rounded-full orange-gradient text-white flex items-center justify-center text-3xl font-black shadow-2xl mb-4 border-4 border-white">
+                                    ?</div>
+                                <h3 id="profile-name" class="text-xl font-black text-slate-800">...</h3>
+                                <span id="profile-belt" class="mt-2">...</span>
+
+                                <div class="w-full mt-6 space-y-3 pt-6 border-t border-slate-50">
+                                    <div class="flex justify-between text-left p-3 bg-slate-50 rounded-2xl">
+                                        <span class="text-[9px] font-black uppercase text-slate-400">Unidade</span>
+                                        <span id="profile-franchise"
+                                            class="text-[11px] font-bold text-slate-700">...</span>
+                                    </div>
+                                    <div class="flex justify-between text-left p-3 bg-slate-50 rounded-2xl">
+                                        <span class="text-[9px] font-black uppercase text-slate-400">Desde</span>
+                                        <span id="profile-hire-date"
+                                            class="text-[11px] font-bold text-slate-700">...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attendance Control -->
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 min-h-[500px]">
+                            <div id="attendance-header"
+                                class="hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
+                                        <i class="fa-solid fa-clipboard-check"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Lista de Presença
+                                        </h2>
+                                        <p id="attendance-class-name"
+                                            class="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                            Selecione uma aula</p>
+                                    </div>
+                                </div>
+                                <div class="relative w-full md:w-80">
+                                    <i
+                                        class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input type="text" id="student-search" placeholder="Buscar aluno na aula..."
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                                </div>
+                            </div>
+
+                            <div id="attendance-placeholder"
+                                class="py-20 flex flex-col items-center justify-center text-center opacity-40">
+                                <i class="fa-solid fa-hand-pointer text-6xl mb-6"></i>
+                                <h3 class="text-xl font-bold text-slate-400">Nenhuma Aula Selecionada</h3>
+                                <p class="text-sm max-w-xs mx-auto mt-2 italic">Clique em uma aula na sua grade abaixo
+                                    para ver os alunos confirmados.</p>
+                            </div>
+
+                            <div class="hidden grid grid-cols-1 md:grid-cols-2 gap-4" id="students-attendance-list">
+                                <!-- Student list -->
+                            </div>
+                        </div>
+
+                        <!-- Schedule (Agenda) -->
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-calendar-alt"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Sua Grade de Hoje</h2>
+                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Selecione
+                                        para fazer a chamada</p>
+                                </div>
+                            </div>
+                            <div id="agenda-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Agenda -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MY STUDENTS SECTION -->
+                    <div id="section-students" class="hidden animate-in space-y-8">
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <div
+                                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                                        <i class="fa-solid fa-users"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Meus Alunos</h2>
+                                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Base
+                                            Geral da Unidade</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                                    <div class="relative flex-1 sm:w-64">
+                                        <i
+                                            class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                        <input type="text" id="all-students-search" placeholder="Buscar aluno..."
+                                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all">
+                                    </div>
+                                    <select id="all-students-belt-filter"
+                                        class="bg-slate-50 border border-slate-100 rounded-2xl px-6 py-3 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500">
+                                        <option value="Todas">Todas as Faixas</option>
+                                        <option value="Branca">Branca</option>
+                                        <option value="Cinza">Cinza</option>
+                                        <option value="Amarela">Amarela</option>
+                                        <option value="Laranja">Laranja</option>
+                                        <option value="Verde">Verde</option>
+                                        <option value="Azul">Azul</option>
+                                        <option value="Roxa">Roxa</option>
+                                        <option value="Marrom">Marrom</option>
+                                        <option value="Preta">Preta</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Students Table/Grid -->
+                            <div id="all-students-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Will be populated via JS -->
+                                <div
+                                    class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-40">
+                                    <i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i>
+                                    <p class="text-sm font-bold uppercase">Carregando Alunos...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION: MINHA GRADE (Weekly Schedule) -->
+                    <div id="section-agenda" class="hidden animate-in space-y-8">
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                                        <i class="fa-solid fa-calendar-days"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Minha Grade de Horários</h2>
+                                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Grade Semanal de Aulas</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 items-center">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase">Exibir:</label>
+                                    <select id="schedule-filter" onchange="window.filterSchedule(this.value)"
+                                        class="bg-slate-50 border border-slate-100 rounded-2xl px-6 py-3 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500">
+                                        <option value="my">Minhas Aulas</option>
+                                        <option value="all">Todas as Aulas</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Schedule Grid -->
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <div class="grid grid-cols-7 gap-4 min-w-[1000px]" id="teacher-schedule-grid">
+                                    <div class="flex flex-col gap-2">
+                                        <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Dom</span>
+                                        </div>
+                                        <div id="teacher-day-col-0" class="space-y-2 flex-1 min-h-[200px]">
+                                            <div class="text-center py-8 text-slate-300 text-[10px]">
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Seg</span>
+                                        </div>
+                                        <div id="teacher-day-col-1" class="space-y-2 flex-1 min-h-[200px]">
+                                            <div class="text-center py-8 text-slate-300 text-[10px]">
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Ter</span>
+                                        </div>
+                                        <div id="teacher-day-col-2" class="space-y-2 flex-1 min-h-[200px]">
+                                            <div class="text-center py-8 text-slate-300 text-[10px]">
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Qua</span>
+                                        </div>
+                                        <div id="teacher-day-col-3" class="space-y-2 flex-1 min-h-[200px]">
+                                            <div class="text-center py-8 text-slate-300 text-[10px]">
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Qui</span>
+                                        </div>
+                                        <div id="teacher-day-col-4" class="space-y-2 flex-1 min-h-[200px]">
+                                            <div class="text-center py-8 text-slate-300 text-[10px]">
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Sex</span>
+                                        </div>
+                                        <div id="teacher-day-col-5" class="space-y-2 flex-1 min-h-[200px]">
+                                            <div class="text-center py-8 text-slate-300 text-[10px]">
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Sáb</span>
+                                        </div>
+                                        <div id="teacher-day-col-6" class="space-y-2 flex-1 min-h-[200px]">
+                                            <div class="text-center py-8 text-slate-300 text-[10px]">
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- Modal: Confirm Attendance -->
-    <div id="attendance-modal" class="fixed inset-0 z-[2000] hidden flex items-center justify-center p-6">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeAttendanceModal()">
-        </div>
-        <div
-            class="bg-white w-full max-w-sm relative z-10 rounded-2xl shadow-2xl p-6 transform transition-all scale-100">
-            <div class="text-center mb-6">
-                <div
-                    class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl">
-                    <i class="fa-solid fa-user-check"></i>
-                </div>
-                <h3 class="text-lg font-black text-slate-800">Confirmar Presença</h3>
-                <p id="attendance-student-name" class="text-slate-500 text-sm mt-1">Nome do Aluno</p>
-            </div>
-
-            <!-- Warning Banner for Overdue Students -->
-            <div id="attendance-warning-banner"
-                class="hidden mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
-                <i class="fa-solid fa-circle-exclamation text-red-500 mt-1"></i>
-                <div class="text-left">
-                    <h4 class="font-bold text-red-700 text-sm">Mensalidade Atrasada</h4>
-                    <p class="text-xs text-red-600 mt-1">Não é possível confirmar presença para alunos com pendências
-                        financeiras.</p>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Selecionar Aula</label>
-                <select id="attendance-class-select"
-                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                    <!-- Dynamic classes for current day -->
-                </select>
-            </div>
-
-            <div class="flex gap-3">
-                <button onclick="closeAttendanceModal()"
-                    class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold text-xs uppercase hover:bg-slate-200 transition-colors">Cancelar</button>
-                <button id="confirm-attendance-btn"
-                    class="flex-1 py-3 rounded-xl bg-green-500 text-white font-bold text-xs uppercase shadow-lg hover:bg-green-600 hover:shadow-green-500/30 transition-all">Confirmar</button>
-            </div>
+    <!-- UI COMPONENTS (System Standard) -->
+    <div id="ui-modal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-4 transition-all duration-300"
+        style="display: none;">
+        <div class="bg-white rounded-[2.5rem] p-6 md:p-10 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-100 no-scrollbar transform scale-95 opacity-0 transition-all duration-300"
+            id="modal-panel">
+            <button onclick="closeModal()"
+                class="absolute top-4 right-4 md:top-8 md:right-8 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all z-10">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="modal-content"></div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast"
-        class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-slate-900/90 text-white px-6 py-4 rounded-full text-xs font-bold shadow-2xl flex items-center gap-3 transition-all duration-300 z-[3000] opacity-0 translate-y-[-20px] backdrop-blur-md">
+        class="fixed top-8 right-8 bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] text-xs font-bold shadow-2xl flex items-center gap-4 transform translate-x-32 opacity-0 transition-all duration-500 z-[3000]">
         <div id="toast-icon"
-            class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+            class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white shadow-lg">
             <i class="fa-solid fa-check"></i>
         </div>
         <span id="toast-msg">Mensagem</span>
     </div>
 
-    <script src="teacher-app.js?v=123"></script>
+    <div id="ui-confirm-modal" class="fixed inset-0 z-[3000] hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true" style="display: none;">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0" id="confirm-backdrop">
+        </div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="confirm-panel"
+                    class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md scale-95 opacity-0 border border-slate-100">
+                    <div class="bg-white px-8 pb-8 pt-8 text-center">
+                        <div
+                            class="w-20 h-20 rounded-3xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-6">
+                            <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3" id="confirm-title">Confirmar Ação</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed" id="confirm-msg">Deseja realmente prosseguir?
+                        </p>
+                    </div>
+                    <div class="bg-slate-50 px-8 py-6 flex flex-col gap-3">
+                        <button type="button" id="btn-confirm-yes"
+                            class="w-full py-4 bg-red-600 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-red-200">Confirmar</button>
+                        <button type="button" onclick="closeConfirmModal()"
+                            class="w-full py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold uppercase tracking-widest text-[10px]">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Modal (Custom for Teacher) -->
+    <div id="attendance-modal" class="fixed inset-0 z-[1500] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeAttendanceModal()"></div>
+        <div id="attendance-panel"
+            class="relative z-10 bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl scale-95 opacity-0 transition-all duration-300">
+            <div class="text-center mb-6">
+                <div
+                    class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+                <h3 class="text-xl font-black text-slate-800" id="attendance-student-name">...</h3>
+                <p class="text-xs text-slate-400 mt-1">Registrar presença manual para este aluno</p>
+            </div>
+
+            <div id="attendance-warning-banner" class="hidden p-4 bg-red-50 rounded-2xl border border-red-100 mb-6">
+                <div class="flex gap-3">
+                    <i class="fa-solid fa-circle-exclamation text-red-500 text-lg"></i>
+                    <div>
+                        <p class="text-[10px] font-black uppercase text-red-600 leading-none mb-1">Atenção: Financeiro
+                            Pendente</p>
+                        <p class="text-[10px] text-red-500 leading-tight">Este aluno possui mensalidade em atraso. A
+                            presença deve ser autorizada pela recepção.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label
+                        class="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-1 block">Aula</label>
+                    <select id="attendance-class-select" class="input-field"></select>
+                </div>
+                <button id="confirm-attendance-btn" class="w-full btn-primary py-4">Confirmar Presença</button>
+                <button onclick="closeAttendanceModal()"
+                    class="w-full py-4 text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="api-config.js?v=111"></script>
+    <script src="api-client.js?v=111"></script>
+    <script src="config.js?v=111"></script>
+    <script src="theme-manager.js?v=111"></script>
+    <script src="sensei-client.js?v=111"></script>
+    <script src="teacher-app.js?v=111"></script>
+
+    <script>
+        // MOBILE SIDEBAR TOGGLE
+        window.toggleSidebar = function () {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+
+            if (isHidden) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        };
+
+        window.changeView = function (viewId) {
+            // Update Nav
+            document.querySelectorAll('#sidebar nav button').forEach(btn => {
+                btn.classList.remove('sidebar-item-active');
+                btn.classList.add('text-slate-500', 'font-semibold');
+            });
+            const activeNav = document.getElementById(`nav-${viewId}`);
+            if (activeNav) activeNav.classList.add('sidebar-item-active');
+
+            // Update Sections
+            document.querySelectorAll('#app-content > div').forEach(div => div.classList.add('hidden'));
+            const activeDiv = document.getElementById(`section-${viewId}`);
+            if (activeDiv) activeDiv.classList.remove('hidden');
+
+            // Specific logic per view
+            if (viewId === 'students') {
+                if (typeof fetchStudents === 'function') {
+                    fetchStudents().then(() => renderAllStudentsList());
+                }
+            }
+            
+            if (viewId === 'agenda') {
+                if (typeof loadTeacherSchedule === 'function') {
+                    loadTeacherSchedule();
+                }
+            }
+
+            // Close sidebar on mobile
+            if (window.innerWidth < 1024) toggleSidebar();
+        }
+    </script>
 </body>
 
 </html>
