@@ -3,7 +3,7 @@
 
 const API_CONFIG = {
     // Backend API URL
-    baseURL: window.API_URL || 'http://localhost:5000/api/v1',
+    baseURL: window.API_URL || (typeof appConfig !== 'undefined' ? appConfig.apiBaseUrl : 'http://localhost:5000/api/v1'),
 
     // API Endpoints
     endpoints: {

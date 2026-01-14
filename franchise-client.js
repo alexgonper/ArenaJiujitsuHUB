@@ -9,7 +9,9 @@ var API_URL = window.API_URL;
 
 // If window.API_URL is missing, use a sensible default based on current environment
 if (!API_URL) {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (typeof appConfig !== 'undefined' && appConfig.apiBaseUrl) {
+        API_URL = appConfig.apiBaseUrl;
+    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         API_URL = 'http://localhost:5000/api/v1';
     } else {
         API_URL = RENDER_API_URL;
