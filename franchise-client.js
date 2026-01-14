@@ -33,6 +33,159 @@ function formatCurrency(value) {
     return `R$ ${numValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+// ===== UI HELPER FUNCTIONS =====
+
+/**
+ * Shows a high-fidelity modal window
+ * @param {string} title Modal title
+ * @param {string} message Modal body text
+ * @param {string} type 'info', 'success', 'error', 'confirm'
+ */
+window.showPortalModal = function (title, message, type = 'info') {
+    const modal = document.getElementById('ui-modal');
+    if (!modal) {
+        console.warn('UI Modal container not found');
+        return;
+    }
+
+    const content = document.getElementById('modal-content');
+    const panel = document.getElementById('modal-panel');
+
+    // Icon Configuration
+    let iconHTML = '';
+    let iconClass = 'w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm';
+
+    if (type === 'success') {
+        iconHTML = '<i class="fa-solid fa-circle-check"></i>';
+        iconClass += ' bg-emerald-50 text-emerald-500';
+    } else if (type === 'error') {
+        iconHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        iconClass += ' bg-red-50 text-red-500';
+    } else if (type === 'confirm' || type === 'warning') {
+        iconHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        iconClass += ' bg-amber-50 text-amber-500';
+    } else {
+        iconHTML = '<i class="fa-solid fa-circle-info"></i>';
+        iconClass += ' bg-blue-50 text-blue-500';
+    }
+
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="${iconClass}">${iconHTML}</div>
+            <h3 class="text-2xl font-black text-slate-900 mb-2 tracking-tight">${title}</h3>
+            <p class="text-sm text-slate-500 leading-relaxed mb-8">${message}</p>
+            <button onclick="closeModal()" 
+                class="w-full py-4 orange-gradient text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] shadow-lg transition-transform active:scale-95">
+                Entendido
+            </button>
+        </div>
+    `;
+
+    // Show with animation
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        panel.classList.remove('scale-95', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+    }, 10);
+};
+
+/**
+ * Shows a confirmation dialog
+ * @param {string} title Title
+ * @param {string} message Message
+ * @param {function} onConfirm Callback on YES
+ */
+window.showPortalConfirm = function (title, message, onConfirm) {
+    const modal = document.getElementById('ui-confirm-modal');
+    const panel = document.getElementById('confirm-panel');
+    const backdrop = document.getElementById('confirm-backdrop');
+
+    if (!modal) return;
+
+    document.getElementById('confirm-title').innerText = title;
+    document.getElementById('confirm-msg').innerText = message;
+
+    const yesBtn = document.getElementById('btn-confirm-yes');
+    yesBtn.onclick = () => {
+        closeConfirmModal();
+        if (onConfirm) onConfirm();
+    };
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
+    setTimeout(() => {
+        backdrop.classList.remove('opacity-0');
+        backdrop.classList.add('opacity-100');
+        panel.classList.remove('scale-95', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+    }, 10);
+};
+
+window.closeModal = function () {
+    const modal = document.getElementById('ui-modal');
+    const panel = document.getElementById('modal-panel');
+    if (!modal) return;
+
+    panel.classList.remove('scale-100', 'opacity-100');
+    panel.classList.add('scale-95', 'opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }, 300);
+};
+
+window.closeConfirmModal = function () {
+    const modal = document.getElementById('ui-confirm-modal');
+    const panel = document.getElementById('confirm-panel');
+    const backdrop = document.getElementById('confirm-backdrop');
+
+    if (!modal) return;
+
+    panel.classList.remove('scale-100', 'opacity-100');
+    panel.classList.add('scale-95', 'opacity-0');
+    backdrop.classList.remove('opacity-100');
+    backdrop.classList.add('opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }, 300);
+};
+
+/**
+ * Show a transient notification
+ */
+window.showToast = function (message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+
+    if (!toast) return;
+
+    toastMsg.innerText = message;
+
+    // Change icon if error
+    const iconContainer = toast.querySelector('div');
+    if (type === 'error') {
+        iconContainer.classList.remove('bg-orange-500');
+        iconContainer.classList.add('bg-red-500');
+        iconContainer.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    } else {
+        iconContainer.classList.remove('bg-red-500');
+        iconContainer.classList.add('bg-orange-500');
+        iconContainer.innerHTML = '<i class="fa-solid fa-check"></i>';
+    }
+
+    toast.classList.remove('translate-x-32', 'opacity-0');
+    toast.classList.add('translate-x-0', 'opacity-100');
+
+    setTimeout(() => {
+        toast.classList.remove('translate-x-0', 'opacity-100');
+        toast.classList.add('translate-x-32', 'opacity-0');
+    }, 3000);
+};
+
 // Shared Style Config (Matches Matrix Portal)
 const beltColors = {
     'Branca': { bg: '#F8FAFC', text: '#334155', border: '#CBD5E1' },
