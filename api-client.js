@@ -295,5 +295,11 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 } else {
     // Make it available globally if not in a module environment
+    window.API_CONFIG = API_CONFIG;
+    window.API = API;
+    window.FranchiseAPI = FranchiseAPI;
+    window.DirectiveAPI = DirectiveAPI;
+    window.StudentAPI = StudentAPI;
+    window.TeacherAPI = TeacherAPI;
     window.GraduationAPI = GraduationAPI;
 }
