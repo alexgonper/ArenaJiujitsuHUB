@@ -405,6 +405,48 @@ exports.markAttendance = async (req, res, next) => {
 };
 
 /**
+ * @desc    Remove/Revoke Attendance
+ * @route   DELETE /api/v1/teachers/attendance
+ * @access  Public
+ */
+exports.removeAttendance = async (req, res, next) => {
+    try {
+        const { studentId, classId } = req.body;
+
+        await AttendanceService.revokeAttendance({
+            studentId,
+            classId
+        });
+
+        // Revert booking status to 'reserved' if exists
+        const startOfDay = new Date();
+        startOfDay.setHours(0,0,0,0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23,59,59,999);
+
+        await ClassBooking.findOneAndUpdate(
+            {
+                studentId,
+                classId,
+                date: { $gte: startOfDay, $lte: endOfDay },
+                status: 'confirmed'
+            },
+            { status: 'reserved' }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'Presença removida com sucesso'
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message || 'Erro ao remover presença'
+        });
+    }
+};
+
+/**
  * @desc    Get Class Attendance
  * @route   GET /api/v1/teachers/classes/:classId/attendance
  * @access  Public
@@ -431,7 +473,14 @@ exports.getClassAttendance = async (req, res, next) => {
 
         // Merge lists
         const mixedList = [
-            ...attendance.map(a => a.toObject()), 
+            ...attendance.map(a => {
+                const obj = a.toObject();
+                return {
+                    ...obj,
+                    checkInTime: obj.date, // Frontend expects checkInTime
+                    status: 'confirmed' // Normalize status for frontend
+                };
+            }), 
             ...bookings.map(b => ({
                 ...b.toObject(),
                 isReservation: true,

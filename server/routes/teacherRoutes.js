@@ -10,7 +10,8 @@ const {
     getDashboard,
     getStudentsForAttendance,
     markAttendance,
-    getClassAttendance
+    getClassAttendance,
+    removeAttendance
 } = require('../controllers/teacherController');
 
 router
@@ -28,6 +29,7 @@ router.post('/login', login);
 router.get('/:id/dashboard', getDashboard);
 router.get('/:id/students', getStudentsForAttendance);
 router.post('/attendance', markAttendance);
+router.delete('/attendance', removeAttendance);
 router.get('/classes/:classId/attendance', getClassAttendance);
 
 module.exports = router;

@@ -220,7 +220,7 @@ function renderLiveClassMode(cls, isLive = true) {
     // Reset classes first if needed, but we used utility classes so we can just swap colors or backgrounds?
     // For now we keep the dark glass look.
     
-    const tag = wrapper.querySelector('.fa-tower-broadcast').parentElement;
+    const tag = document.getElementById('live-status-badge');
     if(isLive) {
         tag.innerHTML = '<i class="fa-solid fa-tower-broadcast mr-1"></i> No Ar';
         tag.className = "px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] font-black uppercase tracking-widest";
@@ -485,32 +485,92 @@ window.quickConfirm = async function(studentId, classId, btn) {
     btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
     btn.classList.add('pointer-events-none');
     
+    // Resolve Franchise ID safely
+    let franchiseId = null;
+    if(currentTeacher && currentTeacher.franchiseId) {
+        if(typeof currentTeacher.franchiseId === 'object') {
+            franchiseId = currentTeacher.franchiseId._id;
+        } else {
+             franchiseId = currentTeacher.franchiseId;
+        }
+    }
+    
+    // Fallback if still null (should not happen if data loaded)
+    if(!franchiseId && dashboardData && dashboardData.franchise) {
+        franchiseId = dashboardData.franchise._id;
+    }
+
+    // Determine Action (Add or Remove)
+    const studentIdx = filteredStudents.findIndex(s => (s.studentId && s.studentId._id === studentId) || s._id === studentId);
+    let isRemoving = false;
+    if(studentIdx !== -1) {
+        const s = filteredStudents[studentIdx];
+        if(s.status === 'confirmed' || !!s.checkInTime) {
+            isRemoving = true;
+        }
+    }
+
     try {
         const response = await fetch(`${window.API_BASE_URL}/teachers/attendance`, {
-            method: 'POST',
+            method: isRemoving ? 'DELETE' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 studentId: studentId,
                 classId: classId,
                 teacherId: currentTeacher._id,
-                franchiseId: currentTeacher.franchiseId._id || currentTeacher.franchiseId
+                franchiseId: franchiseId
             })
         });
         
         const result = await response.json();
         
         if(result.success) {
-            // Success animation
-            btn.className = "w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg transform scale-110 transition-all";
-            btn.innerHTML = '<i class="fa-solid fa-check"></i>';
             
-            // Update Data & Refresh List (slight delay to show animation)
+            if(studentIdx !== -1) {
+                // Optimistic Update
+                if (isRemoving) {
+                    filteredStudents[studentIdx].status = 'active'; // reserved/active
+                    filteredStudents[studentIdx].checkInTime = null;
+                    
+                    // Visual Reset
+                     btn.className = "w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center border border-orange-100 shadow-sm hover:bg-orange-500 hover:text-white transition-all active:scale-95";
+                     btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                     
+                     // Decrement Count
+                    const countEl = document.getElementById('live-count-present');
+                    if(countEl) {
+                        const current = parseInt(countEl.textContent) || 0;
+                        countEl.textContent = Math.max(0, current - 1);
+                    }
+
+                } else {
+                    filteredStudents[studentIdx].status = 'confirmed';
+                    filteredStudents[studentIdx].checkInTime = new Date().toISOString();
+                    
+                    // Visual Success
+                    btn.className = "w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg transform scale-110 transition-all";
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    
+                    // Increment Count
+                    const countEl = document.getElementById('live-count-present');
+                    if(countEl) {
+                        const current = parseInt(countEl.textContent) || 0;
+                        countEl.textContent = current + 1;
+                    }
+                }
+                
+                // Re-render list
+                renderInlineStudentsList();
+            }
+
+            // Background Refresh 
             setTimeout(() => {
-                loadClassAttendance(classId); // Refresh list to get updated status and times
-                fetchDashboardData(); // Refresh top stats
-            }, 500);
+                fetchDashboardData(); 
+            }, 1000);
         } else {
-            showToast('Erro ao confirmar', 'error');
+            const errorMsg = result.message || result.error || 'Erro na operação';
+            console.error('Attendance Error:', result);
+            showToast(errorMsg, 'error');
             btn.innerHTML = originalContent;
             btn.classList.remove('pointer-events-none');
         }
@@ -536,12 +596,22 @@ window.confirmAllAttendance = async function() {
     }
 
     showPortalConfirm('Confirmar Todos', `Deseja marcar presença para ${toConfirm.length} alunos?`, async () => {
-        // Loop calls or batch API if available. Since we don't have batch API doc, we loop logic or modify backend later.
-        // For safety/speed now, we do parallel requests.
         
         showToast(`Processando ${toConfirm.length} alunos...`, 'success');
         
-        // This is a "hack". Ideal would be /batch-attendance endpoint.
+        // Resolve Franchise ID safely
+        let franchiseId = null;
+        if(currentTeacher && currentTeacher.franchiseId) {
+            if(typeof currentTeacher.franchiseId === 'object') {
+                franchiseId = currentTeacher.franchiseId._id;
+            } else {
+                 franchiseId = currentTeacher.franchiseId;
+            }
+        }
+        if(!franchiseId && dashboardData && dashboardData.franchise) {
+            franchiseId = dashboardData.franchise._id;
+        }
+
         const promises = toConfirm.map(sid => 
              fetch(`${window.API_BASE_URL}/teachers/attendance`, {
                 method: 'POST',
@@ -550,14 +620,27 @@ window.confirmAllAttendance = async function() {
                     studentId: sid,
                     classId: currentAttendanceClassId,
                     teacherId: currentTeacher._id,
-                    franchiseId: currentTeacher.franchiseId._id || currentTeacher.franchiseId
+                    franchiseId: franchiseId
                 })
             })
         );
         
         await Promise.all(promises);
+        
+        // Optimistic Update All
+        toConfirm.forEach(sid => {
+            const idx = filteredStudents.findIndex(s => (s.studentId && s.studentId._id === sid) || s._id === sid);
+            if(idx !== -1) {
+                filteredStudents[idx].status = 'confirmed';
+                filteredStudents[idx].checkInTime = new Date().toISOString();
+            }
+        });
+        renderInlineStudentsList();
+        
         showToast('Todos confirmados!', 'success');
-        loadClassAttendance(currentAttendanceClassId);
+        
+        // Background sync
+        setTimeout(() => loadClassAttendance(currentAttendanceClassId), 1000);
     });
 };
 
