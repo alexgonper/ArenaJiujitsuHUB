@@ -128,6 +128,40 @@
             background: #cbd5e1;
             border-radius: 10px;
         }
+        /* Glassmorphism & Pro UI */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-glass {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .timeline-scroll {
+            mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+        }
+        
+        .stat-card-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        /* Hide scrollbar for timeline */
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 
     <style id="branding-styles"></style>
@@ -237,124 +271,156 @@
 
                 <div id="app-content">
 
-                    <!-- SECTION: DASHBOARD -->
-                    <div id="section-dashboard" class="animate-in space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Active Class Card -->
-                            <div id="active-class-card"
-                                class="md:col-span-2 bg-slate-900 rounded-[2.5rem] shadow-xl p-8 text-white relative overflow-hidden min-h-[250px] flex flex-col justify-between">
-                                <div class="absolute top-0 right-0 p-8 opacity-10">
-                                    <i class="fa-solid fa-stopwatch text-9xl"></i>
+                    <!-- SECTION: DASHBOARD (COMMAND CENTER) -->
+                    <div id="section-dashboard" class="animate-in pb-20">
+                        
+                        <!-- 1. TIMELINE HORIZONTAL (Agenda Rápida) -->
+                        <div class="mb-8">
+                            <div class="flex items-center justify-between mb-4 px-2">
+                                <h3 class="text-sm font-black uppercase text-slate-400 tracking-widest">Linha do Tempo</h3>
+                                <div class="flex gap-2">
+                                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                     <span class="text-[10px] font-bold text-slate-400">AGORA</span>
                                 </div>
-                                <div class="relative z-10">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <p class="text-[10px] font-bold uppercase tracking-widest text-orange-500 mb-1"
-                                                id="active-class-category">AULA ATUAL</p>
-                                            <h2 class="text-2xl md:text-4xl font-black tracking-tight"
-                                                id="active-class-name">Nenhuma aula agora</h2>
+                            </div>
+                            <div id="timeline-container" class="flex gap-4 overflow-x-auto hide-scroll pb-4 snap-x px-4 -mx-4 timeline-scroll">
+                                <!-- Cards Injetados via JS -->
+                                <div class="min-w-[140px] h-[100px] bg-slate-100 rounded-2xl animate-pulse"></div>
+                                <div class="min-w-[140px] h-[100px] bg-slate-100 rounded-2xl animate-pulse"></div>
+                                <div class="min-w-[140px] h-[100px] bg-slate-100 rounded-2xl animate-pulse"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            
+                            <!-- 2. MAIN COLUMN: LIVE FEED & ATTENDANCE -->
+                            <div class="lg:col-span-2 space-y-6">
+                                
+                                <!-- Live Class Card (The "Brain") -->
+                                <div id="live-class-card" class="dark-glass rounded-[2rem] p-6 relative overflow-hidden shadow-2xl transition-all duration-500">
+                                    <div class="absolute top-0 right-0 w-64 h-64 bg-orange-500 blur-[100px] opacity-20 pointer-events-none rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
+                                    
+                                    <div id="live-wrapper" class="relative z-10">
+                                        <!-- Header -->
+                                        <div class="flex justify-between items-start mb-6">
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <span class="px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] font-black uppercase tracking-widest">
+                                                        <i class="fa-solid fa-tower-broadcast mr-1"></i> No Ar
+                                                    </span>
+                                                    <span id="live-class-category" class="text-[10px] font-bold text-slate-400 uppercase">Detectando...</span>
+                                                </div>
+                                                <h1 id="live-class-title" class="text-3xl md:text-4xl font-black tracking-tight text-white mb-1">
+                                                    Preparando...
+                                                </h1>
+                                                <p id="live-class-time" class="text-lg font-medium text-slate-400 flex items-center gap-2">
+                                                    <i class="fa-regular fa-clock"></i> --:--
+                                                </p>
+                                            </div>
+                                            
+                                            <!-- Quick Stats Mini -->
+                                            <div class="text-right hidden sm:block">
+                                                <p class="text-[10px] text-slate-500 uppercase font-black">Presentes</p>
+                                                <p id="live-count-present" class="text-3xl font-black text-white">0</p>
+                                            </div>
                                         </div>
-                                        <span
-                                            class="flex items-center gap-1.5 text-[10px] font-bold bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
-                                            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> AO VIVO
-                                        </span>
-                                    </div>
-                                    <div class="mt-4 flex items-center gap-2 text-slate-400">
-                                        <i class="fa-regular fa-clock"></i>
-                                        <span id="active-class-time" class="font-bold">--:--</span>
-                                    </div>
-                                </div>
-                                <div class="relative z-10 grid grid-cols-2 gap-4 pt-6 border-t border-white/10 mt-6">
-                                    <div>
-                                        <p class="text-[9px] font-bold uppercase tracking-wider opacity-40">Alunos
-                                            Totais</p>
-                                        <p class="text-2xl font-black" id="stat-total-students">0</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[9px] font-bold uppercase tracking-wider opacity-40">Presenças
-                                            Hoje</p>
-                                        <p class="text-2xl font-black text-green-400" id="stat-attendance-today">0</p>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Profile Card -->
-                            <div
-                                class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex flex-col items-center text-center">
-                                <div id="profile-avatar-large"
-                                    class="w-24 h-24 rounded-full orange-gradient text-white flex items-center justify-center text-3xl font-black shadow-2xl mb-4 border-4 border-white">
-                                    ?</div>
-                                <h3 id="profile-name" class="text-xl font-black text-slate-800">...</h3>
-                                <span id="profile-belt" class="mt-2">...</span>
-
-                                <div class="w-full mt-6 space-y-3 pt-6 border-t border-slate-50">
-                                    <div class="flex justify-between text-left p-3 bg-slate-50 rounded-2xl">
-                                        <span class="text-[9px] font-black uppercase text-slate-400">Unidade</span>
-                                        <span id="profile-franchise"
-                                            class="text-[11px] font-bold text-slate-700">...</span>
+                                        <!-- Action Bar -->
+                                        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-white/10">
+                                            <div class="flex-1 relative">
+                                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                                <input type="text" id="live-search" placeholder="Buscar aluno na aula..." 
+                                                    class="w-full bg-slate-800/50 border border-slate-700/50 text-white placeholder-slate-500 text-sm rounded-xl py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all">
+                                            </div>
+                                            <button onclick="confirmAllAttendance()" id="btn-confirm-all" class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-2 justify-center backdrop-blur-sm border border-white/5">
+                                                <i class="fa-solid fa-check-double text-green-400"></i> Confirmar Todos
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="flex justify-between text-left p-3 bg-slate-50 rounded-2xl">
-                                        <span class="text-[9px] font-black uppercase text-slate-400">Desde</span>
-                                        <span id="profile-hire-date"
-                                            class="text-[11px] font-bold text-slate-700">...</span>
+
+                                    <!-- Empty State (When no class is live) -->
+                                    <div id="no-live-class" class="hidden absolute inset-0 flex flex-col items-center justify-center z-20 bg-slate-900/90 backdrop-blur-md text-center p-6">
+                                        <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
+                                            <i class="fa-solid fa-moon text-slate-600 text-2xl"></i>
+                                        </div>
+                                        <h3 class="text-xl font-bold text-white mb-1">Modo de Espera</h3>
+                                        <p class="text-sm text-slate-400 mb-6 max-w-xs">Nenhuma aula ativa neste momento. Selecione uma aula na linha do tempo acima.</p>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <!-- Schedule (Agenda) -->
-                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
-                            <div class="flex items-center gap-4 mb-8">
-                                <div
-                                    class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
-                                    <i class="fa-solid fa-calendar-alt"></i>
-                                </div>
+                                <!-- Attendance List (Inline Stream) -->
                                 <div>
-                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Sua Grade de Hoje</h2>
-                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Selecione
-                                        para fazer a chamada</p>
-                                </div>
-                            </div>
-                            <div id="agenda-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <!-- Agenda -->
-                            </div>
-                        </div>
-
-                        <!-- Attendance Control -->
-                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 min-h-[500px]">
-                            <div id="attendance-header"
-                                class="hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                                <div class="flex items-center gap-4">
-                                    <div
-                                        class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
-                                        <i class="fa-solid fa-clipboard-check"></i>
+                                    <div class="flex items-center justify-between mb-4 px-2">
+                                        <h3 class="text-sm font-black uppercase text-slate-800 tracking-widest">Lista de Chamada</h3>
+                                        <span id="attendance-status-label" class="text-[10px] font-bold text-slate-400 uppercase">Aguardando...</span>
                                     </div>
-                                    <div>
-                                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Lista de Presença
-                                        </h2>
-                                        <p id="attendance-class-name"
-                                            class="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                                            Selecione uma aula</p>
+                                    
+                                    <div id="live-attendance-list" class="space-y-3">
+                                        <!-- Cards de Alunos serão injetados aqui -->
+                                        <div class="py-12 text-center opacity-50">
+                                            <p class="text-sm font-bold text-slate-400">Selecione uma aula para ver a lista.</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="relative w-full md:w-80">
-                                    <i
-                                        class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input type="text" id="student-search" placeholder="Buscar aluno na aula..."
-                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+
+                            </div>
+
+                            <!-- 3. SIDEBAR: PERFORMANCE HUB -->
+                            <div class="space-y-6">
+                                
+                                <!-- Performance Widget -->
+                                <div class="glass-card rounded-[2rem] p-6">
+                                    <div class="flex items-center gap-3 mb-6">
+                                        <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-lg shadow-sm">
+                                            <i class="fa-solid fa-chart-simple"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg font-black text-slate-800 leading-none">Performance</h3>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase">Métricas Semanais</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <!-- Metric 1 -->
+                                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                            <div class="flex justify-between items-end mb-2">
+                                                <span class="text-[10px] font-black text-slate-400 uppercase">Alunos Atendidos</span>
+                                                <span class="text-2xl font-black text-slate-800" id="stat-total-week">0</span>
+                                            </div>
+                                            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                                <div id="bar-students" class="bg-orange-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Metric 2 -->
+                                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                            <div class="flex justify-between items-end mb-2">
+                                                <span class="text-[10px] font-black text-slate-400 uppercase">Taxa de Presença</span>
+                                                <span class="text-2xl font-black text-green-500" id="stat-rate-week">0%</span>
+                                            </div>
+                                            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                                <div id="bar-rate" class="bg-green-500 h-1.5 rounded-full" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-6 pt-6 border-t border-slate-100">
+                                         <p class="text-[10px] text-center text-slate-400 font-bold uppercase">
+                                            <i class="fa-solid fa-fire text-orange-500 mr-1"></i> 
+                                            <span id="stat-streak">0 aulas consecutivas</span>
+                                         </p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div id="attendance-placeholder"
-                                class="py-20 flex flex-col items-center justify-center text-center opacity-40">
-                                <i class="fa-solid fa-hand-pointer text-6xl mb-6"></i>
-                                <h3 class="text-xl font-bold text-slate-400">Nenhuma Aula Selecionada</h3>
-                                <p class="text-sm max-w-xs mx-auto mt-2 italic">Clique em uma aula na sua grade acima
-                                    para ver os alunos confirmados.</p>
-                            </div>
+                                <!-- Mini Calendar / Next Classes -->
+                                <div class="glass-card rounded-[2rem] p-6">
+                                    <h3 class="text-sm font-black text-slate-800 mb-4 uppercase tracking-widest">Próximas Aulas</h3>
+                                    <div id="next-classes-list" class="space-y-3">
+                                        <!-- Next classes compact list -->
+                                        <p class="text-xs text-slate-400 text-center py-4">Sem mais aulas hoje.</p>
+                                    </div>
+                                </div>
 
-                            <div class="hidden grid grid-cols-1 md:grid-cols-2 gap-4" id="students-attendance-list">
-                                <!-- Student list -->
                             </div>
                         </div>
                     </div>

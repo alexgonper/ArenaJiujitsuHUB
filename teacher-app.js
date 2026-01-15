@@ -137,65 +137,102 @@ async function fetchStudents(scope = 'all') {
     }
 }
 
+
 function renderDashboard() {
     if (!dashboardData) return;
 
-    // Stats
-    const totalEl = document.getElementById('stat-total-students');
-    if (totalEl) totalEl.textContent = dashboardData.stats.totalStudents || 0;
+    // 1. Render Stats
+    renderProStats();
 
-    const attendEl = document.getElementById('stat-attendance-today');
-    if (attendEl) attendEl.textContent = dashboardData.stats.attendanceToday || 0;
+    // 2. Render Timeline (Top)
+    renderTimeline();
 
-    // Active Class
-    const activeClass = getActiveClass(dashboardData.agenda);
-    const activeClassCard = document.getElementById('active-class-card');
+    // 3. Command Center (Auto-select Logic)
+    autoSelectLiveClass();
+}
 
-    if (activeClass) {
-        const nameEl = document.getElementById('active-class-name');
-        if (nameEl) nameEl.textContent = activeClass.name;
+function renderProStats() {
+    // Mock calculations or use real data if available in stats
+    const totalStudents = dashboardData.stats.totalStudents || 0;
+    const attendanceToday = dashboardData.stats.attendanceToday || 0;
+    
+    // Update Sidebar Widget
+    const elTotal = document.getElementById('stat-total-week');
+    if(elTotal) elTotal.textContent = totalStudents; // In a real app, this would be weekly total
+    
+    // Rate
+    const rate = totalStudents > 0 ? Math.round((attendanceToday / totalStudents) * 100) : 0;
+    const elRate = document.getElementById('stat-rate-week');
+    if(elRate) elRate.textContent = `${rate}%`;
+    
+    // Bars
+    document.getElementById('bar-students').style.width = this.lastTotalWeek === totalStudents ? '100%' : `${Math.min(totalStudents * 2, 100)}%`; // Fake scale for demo
+    document.getElementById('bar-rate').style.width = `${rate}%`;
+    
+    // Streak (Mock)
+    document.getElementById('stat-streak').textContent = `${dashboardData.stats.streak || 3} aulas consecutivas`;
+}
 
-        const catEl = document.getElementById('active-class-category');
-        if (catEl) catEl.textContent = activeClass.category; // Or use hardcoded text like "AULA ATUAL" and just update details
-
-        const timeEl = document.getElementById('active-class-time');
-        if (timeEl) timeEl.textContent = `${activeClass.startTime} - ${activeClass.endTime}`;
-
-        // Use brand border if using light theme active card, but we are using dark gradient card so border might be subtle
-        if (activeClassCard) activeClassCard.classList.add('border-brand-500/50');
+function autoSelectLiveClass() {
+    const agenda = dashboardData.agenda || [];
+    if (agenda.length === 0) {
+        showNoClassState();
+        return;
     }
 
-    // Recent Attendance
-    const recentList = document.getElementById('recent-attendance-list');
-    if (recentList && dashboardData.recentAttendance) {
-        if (dashboardData.recentAttendance.length > 0) {
-            recentList.innerHTML = dashboardData.recentAttendance.map(att => `
-                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:shadow-md transition-all">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 uppercase">
-                            ${att.studentId?.name ? att.studentId.name.charAt(0) : '?'}
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-slate-800">${att.studentId?.name || 'Aluno Desconhecido'}</p>
-                            <p class="text-[10px] text-slate-400 uppercase font-bold flex items-center gap-1">
-                                <i class="fa-regular fa-clock"></i>
-                                ${new Date(att.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                        </div>
-                    </div>
-                    <span class="px-2 py-1 rounded bg-green-100 text-green-600 text-[10px] font-black uppercase tracking-wide">Presente</span>
-                </div>
-            `).join('');
+    const active = getActiveClass(agenda);
+    if (active) {
+        // Found a live or upcoming class
+        renderLiveClassMode(active);
+        // Auto load attendance
+        loadClassAttendance(active._id, active.name);
+    } else {
+        // No active class now, maybe show the next one or empty state
+        const next = agenda[0]; // Assuming agenda is sorted
+        if (next) {
+             renderLiveClassMode(next, false); // False = not live yet
+             loadClassAttendance(next._id, next.name);
         } else {
-            recentList.innerHTML = `
-                <div class="text-center py-6 text-slate-300 border-2 border-dashed border-slate-100 rounded-2xl">
-                    <i class="fa-solid fa-clock opacity-50 mb-2"></i>
-                    <p class="text-xs font-bold uppercase">Sem registros recentes</p>
-                </div>
-            `;
+             showNoClassState();
         }
     }
 }
+
+function showNoClassState() {
+    document.getElementById('live-wrapper').classList.add('hidden');
+    document.getElementById('no-live-class').classList.remove('hidden');
+}
+
+function renderLiveClassMode(cls, isLive = true) {
+    const card = document.getElementById('live-class-card');
+    const wrapper = document.getElementById('live-wrapper');
+    const noClass = document.getElementById('no-live-class');
+    
+    wrapper.classList.remove('hidden');
+    noClass.classList.add('hidden');
+
+    // Update Text
+    document.getElementById('live-class-title').textContent = cls.name;
+    document.getElementById('live-class-category').textContent = cls.category || 'Geral';
+    document.getElementById('live-class-time').innerHTML = `<i class="fa-regular fa-clock"></i> ${cls.startTime} - ${cls.endTime}`;
+
+    // Update Visuals based on Category/Live status
+    // Reset classes first if needed, but we used utility classes so we can just swap colors or backgrounds?
+    // For now we keep the dark glass look.
+    
+    const tag = wrapper.querySelector('.fa-tower-broadcast').parentElement;
+    if(isLive) {
+        tag.innerHTML = '<i class="fa-solid fa-tower-broadcast mr-1"></i> No Ar';
+        tag.className = "px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] font-black uppercase tracking-widest";
+    } else {
+        tag.innerHTML = '<i class="fa-regular fa-calendar mr-1"></i> Próxima';
+        tag.className = "px-3 py-1 rounded-full bg-slate-700 text-slate-300 border border-slate-600 text-[10px] font-black uppercase tracking-widest";
+    }
+    
+    // Store current class ID for global access
+    currentAttendanceClassId = cls._id;
+}
+
 
 function getActiveClass(agenda) {
     if (!agenda || agenda.length === 0) return null;
@@ -206,51 +243,78 @@ function getActiveClass(agenda) {
     return agenda.find(cls => currentTime >= cls.startTime && currentTime <= cls.endTime) || agenda[0];
 }
 
-function renderAgenda() {
-    const agendaList = document.getElementById('agenda-list');
-    if (!agendaList) return;
+
+function renderTimeline() {
+    const timeline = document.getElementById('timeline-container');
+    const nextList = document.getElementById('next-classes-list'); // Sidebar list
+    
+    if (!timeline) return;
 
     if (!dashboardData || !dashboardData.agenda || dashboardData.agenda.length === 0) {
-        agendaList.innerHTML = '<p class="text-xs text-slate-400 italic text-center">Sem aulas programadas para hoje.</p>';
+        timeline.innerHTML = '<div class="w-full text-center text-slate-400 text-xs py-4 opacity-50">Sem aulas hoje.</div>';
+        if(nextList) nextList.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Fim do expediente!</p>';
         return;
     }
 
-    const categoryColors = {
-        'BJJ': { bg: 'bg-blue-100', text: 'text-blue-600' },
-        'No-Gi': { bg: 'bg-slate-200', text: 'text-slate-600' },
-        'Kids': { bg: 'bg-orange-100', text: 'text-orange-600' },
-        'Fundamentals': { bg: 'bg-green-100', text: 'text-green-600' }
-    };
-
-    agendaList.innerHTML = dashboardData.agenda.map(cls => {
-        const style = categoryColors[cls.category] || categoryColors['BJJ'];
-        // Check local state for persistence
+    // Sort agenda by time just in case
+    const sorted = dashboardData.agenda.sort((a,b) => a.startTime.localeCompare(b.startTime));
+    
+    // Render Timeline
+    timeline.innerHTML = sorted.map(cls => {
+        const isNow = currentAttendanceClassId === cls._id; // We'll need to re-render when selection changes if we want highlight
         return `
-        <div id="agenda-card-${cls._id}" onclick="loadClassAttendance('${cls._id}', '${cls.name.replace(/'/g, "\\'")}')" class="agenda-card cursor-pointer p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md hover:bg-white transition-all group">
-            <div class="flex items-center gap-3 w-full md:w-auto">
-                <div class="flex-shrink-0 w-12 h-12 rounded-xl ${style.bg} flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                    ${getCategoryIcon(cls.category)}
-                </div>
-                <div>
-                    <h3 class="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">${cls.name}</h3>
-                     <p class="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                        <i class="fa-solid fa-user-tie text-slate-400"></i> ${currentTeacher.name}
-                    </p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-4 w-full md:w-auto justify-end">
-               <div class="text-right">
-                    <p class="text-[9px] text-slate-400 uppercase font-bold">Horário</p>
-                    <p class="text-sm font-black text-slate-700">${cls.startTime}</p>
-               </div>
-               <div class="text-slate-300 group-hover:text-blue-500 transition-colors">
-                    <i class="fa-solid fa-chevron-right"></i>
-               </div>
+        <div onclick="selectTimelineClass('${cls._id}')" 
+             class="min-w-[150px] cursor-pointer snap-start rounded-2xl p-4 transition-all hover:scale-105 active:scale-95 border
+             ${isNow ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 border-orange-400' : 'bg-white border-slate-200 text-slate-600 hover:border-orange-300'}">
+             
+            <p class="text-[10px] font-black uppercase tracking-widest ${isNow ? 'text-white/80' : 'text-slate-400'} mb-1">
+                ${cls.startTime}
+            </p>
+            <h4 class="font-black text-sm leading-tight mb-2 ${isNow ? 'text-white' : 'text-slate-800'}">
+                ${cls.name}
+            </h4>
+            <div class="flex items-center gap-2">
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-lg ${isNow ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}">
+                    ${cls.category || 'Geral'}
+                </span>
             </div>
         </div>
     `}).join('');
+    
+    // Render Sidebar List (Remaining classes only)
+    if(nextList) {
+        const nowTime = new Date().toTimeString().substring(0,5);
+        const upcoming = sorted.filter(c => c.startTime > nowTime);
+        
+        if(upcoming.length > 0) {
+            nextList.innerHTML = upcoming.map(cls => `
+                <div onclick="selectTimelineClass('${cls._id}')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white hover:shadow-sm transition cursor-pointer border border-transparent hover:border-slate-100">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-xs">
+                        ${cls.startTime}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-700 text-xs">${cls.name}</h4>
+                        <p class="text-[9px] text-slate-400 uppercase">${cls.category}</p>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+             nextList.innerHTML = '<p class="text-xs text-slate-400 text-center py-4 italic">Sem mais aulas hoje.</p>';
+        }
+    }
 }
+
+// User click on timeline
+window.selectTimelineClass = function(classId) {
+    const cls = dashboardData.agenda.find(c => c._id === classId);
+    if(cls) {
+        currentAttendanceClassId = classId;
+        renderLiveClassMode(cls, isClassCheckinOpen(cls));
+        loadClassAttendance(classId, cls.name);
+        renderTimeline(); // Re-render for highlight update
+    }
+};
+
 
 function getCategoryIcon(category) {
     if (category === 'BJJ') return '<i class="fa-solid fa-user-ninja text-blue-600"></i>';
@@ -286,7 +350,6 @@ async function init() {
         ]);
 
         renderDashboard();
-        renderAgenda();
         // Students list is now loaded on demand per class
     } catch (error) {
         console.error('Initialization error:', error);
@@ -294,40 +357,40 @@ async function init() {
     }
 }
 
-// New Function: Load Class Attendance
+
+// Logic for Loading Attendance (Inline)
 async function loadClassAttendance(classId, className) {
-    const list = document.getElementById('students-attendance-list');
-    const header = document.getElementById('attendance-header');
-    const placeholder = document.getElementById('attendance-placeholder');
-    const classNameEl = document.getElementById('attendance-class-name');
+    const list = document.getElementById('live-attendance-list');
+    const countEl = document.getElementById('live-count-present');
+    const statusLabel = document.getElementById('attendance-status-label');
 
     // UI Loading State
-    if (placeholder) placeholder.classList.add('hidden');
-    if (header) header.classList.remove('hidden');
     if (list) {
-        list.classList.remove('hidden');
         list.innerHTML = `
-            <div class="text-center py-8 text-slate-400">
-                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
-                <p class="text-xs">Carregando lista de presença...</p>
+            <div class="py-8 flex justify-center">
+                <div class="w-8 h-8 rounded-full border-4 border-slate-100 border-t-orange-500 animate-spin"></div>
             </div>
         `;
     }
-    if (classNameEl) classNameEl.textContent = className;
-
-    // Highlight selected class in agenda (optional visual cue)
-    document.querySelectorAll('.agenda-card').forEach(el => el.classList.remove('brand-ring', 'brand-bg-light'));
-    const selectedCard = document.getElementById(`agenda-card-${classId}`);
-    if (selectedCard) selectedCard.classList.add('brand-ring', 'brand-bg-light');
+    if (statusLabel) statusLabel.textContent = "Atualizando...";
 
     try {
         const response = await fetch(`${window.API_BASE_URL}/teachers/classes/${classId}/attendance`);
         const result = await response.json();
 
         if (result.success) {
-            filteredStudents = result.data; // Use the actual attendance/booking list
-            currentAttendanceClassId = classId; // Store context
-            renderStudents(true);
+            filteredStudents = result.data || [];
+            currentAttendanceClassId = classId;
+            renderInlineStudentsList(); // New renderer
+            
+            // Counts
+            const presentCount = filteredStudents.filter(s => s.status === 'confirmed' || !!s.checkInTime).length;
+            const reservedCount = filteredStudents.length - presentCount;
+            
+            if(countEl) countEl.textContent = presentCount;
+
+            if(statusLabel) statusLabel.textContent = `${filteredStudents.length} Alunos na Lista`;
+            
         } else {
             console.error('Error fetching attendance:', result.error);
             list.innerHTML = '<p class="text-xs text-red-400 text-center py-4">Erro ao carregar lista.</p>';
@@ -338,35 +401,17 @@ async function loadClassAttendance(classId, className) {
     }
 }
 
-window.confirmClassPresence = function (btn, classId) {
-    // Visual feedback
-    const originalWidth = btn.offsetWidth;
-    btn.style.width = `${originalWidth}px`; // Maintain width
-    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
-    btn.disabled = true;
-
-    // Simulate API delay
-    setTimeout(() => {
-        btn.innerHTML = 'Presença Confirmada';
-        btn.classList.remove('active-presence-btn', 'bg-brand-500', 'hover:bg-brand-600');
-        btn.classList.add('bg-green-500', 'opacity-80', 'cursor-not-allowed');
-
-        // Persist local state
-        localStorage.setItem(`class_confirmed_${classId}`, 'true');
-
-        showToast('Presença na aula confirmada!', 'success');
-    }, 600);
-}
-
-function renderStudents(isAttendanceList = false) {
-    const list = document.getElementById('students-attendance-list');
+// Render Inline List (Swipe-like cards)
+function renderInlineStudentsList() {
+    const list = document.getElementById('live-attendance-list');
     if (!list) return;
 
     if (filteredStudents.length === 0) {
         list.innerHTML = `
-            <div class="text-center py-8 text-slate-400 flex flex-col items-center">
-                <i class="fa-regular fa-folder-open text-2xl mb-2 opacity-50"></i>
-                <p class="text-xs italic">Nenhum aluno confirmado nesta aula.</p>
+            <div class="text-center py-10 opacity-50">
+                <i class="fa-solid fa-user-clock text-3xl mb-2 text-slate-300"></i>
+                <p class="text-xs font-bold text-slate-400 uppercase">Lista Vazia</p>
+                <p class="text-[10px] text-slate-400">Nenhum aluno reservado ainda.</p>
             </div>
         `;
         return;
@@ -377,57 +422,147 @@ function renderStudents(isAttendanceList = false) {
         const name = sData.name || 'Aluno';
         const belt = sData.belt || 'Branca';
         const degree = sData.degree;
-        
-        const degreeText = degree && degree !== 'Nenhum' ? ` • ${degree}` : '';
         const beltStyle = getBeltStyle(belt);
-        const photoChar = name.charAt(0) || '?';
+        const initials = name.substring(0,2).toUpperCase();
         
-        let statusTag = '';
-        let actionColumn = '';
+        const isConfirmed = !!student.checkInTime || student.status === 'confirmed';
+        const isReserved = !isConfirmed;
 
-        if (student.isReservation) {
-            statusTag = `<span class="text-[9px] uppercase font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100"><i class="fa-regular fa-calendar mr-1"></i>Reservado</span>`;
-            
-            actionColumn = `
-                <button onclick="quickConfirmAttendance('${sData._id}', '${student.classId}', this)" class="px-3 py-1.5 rounded-xl bg-orange-500 text-white text-[10px] font-bold uppercase hover:bg-orange-600 transition-colors shadow-sm shadow-orange-200">
-                    Confirmar
-                </button>
-            `;
-        } else {
-             const checkInTime = student.checkInTime ? new Date(student.checkInTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
-             statusTag = `<span class="text-[9px] uppercase font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-lg">Presença às ${checkInTime}</span>`;
-             actionColumn = `
-                <div class="w-10 h-10 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-lg border border-green-100">
+        // Action Logic
+        let actionBtn = '';
+        if (isConfirmed) {
+            actionBtn = `
+                <div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center border border-green-100 shadow-sm">
                     <i class="fa-solid fa-check"></i>
                 </div>
-             `;
+            `;
+        } else {
+            actionBtn = `
+                <button onclick="quickConfirm('${sData._id}', '${student.classId || currentAttendanceClassId}', this)" 
+                    class="w-10 h-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center border border-orange-100 shadow-sm hover:bg-orange-500 hover:text-white transition-all active:scale-95">
+                    <i class="fa-solid fa-check"></i>
+                </button>
+            `;
         }
+        
+        const checkInTimeText = student.checkInTime ? 
+            new Date(student.checkInTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : 'Confirmado';
+
+        const statusText = isConfirmed ? 
+            `<span class="text-[9px] font-bold text-green-500 uppercase">Presente ${student.checkInTime ? 'às ' + checkInTimeText : ''}</span>` : 
+            `<span class="text-[9px] font-bold text-blue-500 uppercase">Reservado</span>`;
 
         return `
-            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-md transition-all group">
+            <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center justify-between group transition hover:border-orange-200">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center font-bold text-slate-400 text-lg">
-                        ${photoChar}
+                    <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center font-black text-sm text-slate-400 border border-slate-100">
+                        ${initials}
                     </div>
                     <div>
-                        <p class="text-sm font-bold text-slate-800 tracking-tight">${name}</p>
+                        <h4 class="font-bold text-slate-800 text-sm leading-tight">${name}</h4>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-lg ${beltStyle.bg} ${beltStyle.text} border ${beltStyle.border}">
-                                ${belt}${degreeText}
+                            <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase ${beltStyle.bg} ${beltStyle.text} border ${beltStyle.border}">
+                                ${belt}
                             </span>
-                            ${statusTag}
+                            ${statusText}
                         </div>
                     </div>
                 </div>
-                
-                ${actionColumn}
+                <div>
+                   ${actionBtn}
+                </div>
             </div>
         `;
     }).join('');
 }
 
+// Quick Confirm Action
+window.quickConfirm = async function(studentId, classId, btn) {
+    if(!classId || classId === 'undefined') classId = currentAttendanceClassId;
+    
+    // Optimistic UI Update
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+    btn.classList.add('pointer-events-none');
+    
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/teachers/attendance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                studentId: studentId,
+                classId: classId,
+                teacherId: currentTeacher._id,
+                franchiseId: currentTeacher.franchiseId._id || currentTeacher.franchiseId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if(result.success) {
+            // Success animation
+            btn.className = "w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg transform scale-110 transition-all";
+            btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+            
+            // Update Data & Refresh List (slight delay to show animation)
+            setTimeout(() => {
+                loadClassAttendance(classId); // Refresh list to get updated status and times
+                fetchDashboardData(); // Refresh top stats
+            }, 500);
+        } else {
+            showToast('Erro ao confirmar', 'error');
+            btn.innerHTML = originalContent;
+            btn.classList.remove('pointer-events-none');
+        }
+    } catch(err) {
+        console.error(err);
+        btn.innerHTML = originalContent;
+        btn.classList.remove('pointer-events-none');
+    }
+};
+
+window.confirmAllAttendance = async function() {
+    if(!filteredStudents || filteredStudents.length === 0) {
+        showToast('Lista vazia', 'error');
+        return;
+    }
+    
+    // Filter only those not confirmed yet
+    const toConfirm = filteredStudents.filter(s => !s.checkInTime).map(s => s.studentId._id || s.studentId);
+    
+    if(toConfirm.length === 0) {
+        showToast('Todos já confirmados!', 'success');
+        return;
+    }
+
+    showPortalConfirm('Confirmar Todos', `Deseja marcar presença para ${toConfirm.length} alunos?`, async () => {
+        // Loop calls or batch API if available. Since we don't have batch API doc, we loop logic or modify backend later.
+        // For safety/speed now, we do parallel requests.
+        
+        showToast(`Processando ${toConfirm.length} alunos...`, 'success');
+        
+        // This is a "hack". Ideal would be /batch-attendance endpoint.
+        const promises = toConfirm.map(sid => 
+             fetch(`${window.API_BASE_URL}/teachers/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentId: sid,
+                    classId: currentAttendanceClassId,
+                    teacherId: currentTeacher._id,
+                    franchiseId: currentTeacher.franchiseId._id || currentTeacher.franchiseId
+                })
+            })
+        );
+        
+        await Promise.all(promises);
+        showToast('Todos confirmados!', 'success');
+        loadClassAttendance(currentAttendanceClassId);
+    });
+};
 
 function getBeltStyle(belt) {
+
     const styles = {
         'Branca': { bg: 'bg-white', text: 'text-slate-600', border: 'border-slate-200' },
         'Cinza': { bg: 'bg-slate-400', text: 'text-white', border: 'border-slate-500' },

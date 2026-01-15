@@ -247,15 +247,55 @@ exports.getDashboard = async (req, res, next) => {
         // Fetch franchise details for branding
         const franchise = await Franchise.findById(teacher.franchiseId);
 
+        // Advanced Stats: Weekly & Streak
+        const weekStart = new Date(normalizedNow);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Sunday
+        weekStart.setHours(0,0,0,0);
+        
+        const attendancesThisWeek = await Attendance.countDocuments({
+            checkedInBy: teacher._id,
+            date: { $gte: weekStart }
+        });
+
+        // Streak Calculation
+        let streak = 0;
+        let checkDate = new Date(normalizedNow);
+        checkDate.setDate(checkDate.getDate() - 1); // Start from yesterday
+        
+        // Loop back 30 days max to find streak
+        // Optimize: verify streak only for last 14 days to be fast
+        for(let i=0; i<30; i++) {
+            const dayStart = new Date(checkDate);
+            dayStart.setHours(0,0,0,0);
+            const dayEnd = new Date(checkDate);
+            dayEnd.setHours(23,59,59,999);
+            
+            const hasClass = await Attendance.exists({
+                checkedInBy: teacher._id,
+                date: { $gte: dayStart, $lte: dayEnd }
+            });
+            
+            if(hasClass) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+                break; 
+            }
+        }
+        
+        if(attendanceToday > 0) streak++;
+
         res.status(200).json({
             success: true,
             data: {
                 teacher,
-                franchise, // Include full franchise for branding
+                franchise,
                 agenda: classes,
                 stats: {
                     totalStudents: studentCount,
-                    attendanceToday: attendanceToday
+                    attendanceToday: attendanceToday,
+                    weekTotal: attendancesThisWeek,
+                    streak: streak
                 },
                 recentAttendance
             }
