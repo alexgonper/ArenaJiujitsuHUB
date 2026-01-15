@@ -10,6 +10,7 @@ const authController = {
     studentLogin: async (req, res) => {
         try {
             const { email, phone, franchiseId } = req.body;
+            console.log(`🔑 Login Attempt: Email=${email}, Franchise=${franchiseId}`);
 
             if (!franchiseId) {
                 return res.status(400).json({

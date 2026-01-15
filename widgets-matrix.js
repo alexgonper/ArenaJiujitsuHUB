@@ -31,7 +31,7 @@ registerWidget({
                         <i class="fa-solid fa-wallet text-sm"></i>
                     </div>
                     <p class="text-[9px] font-bold text-blue-600 uppercase tracking-wider">Faturamento Est.</p>
-                    <h3 id="widget-stat-total-revenue" class="text-2xl font-black mt-1">R$ --</h3>
+                    <h3 id="widget-stat-total-revenue" class="text-lg xl:text-xl font-black mt-1 tracking-tight whitespace-nowrap">R$ --</h3>
                 </div>
                 
                 <div class="bg-green-50 p-4 rounded-2xl border border-green-100">
@@ -56,7 +56,7 @@ registerWidget({
                         <i class="fa-solid fa-hand-holding-dollar text-sm"></i>
                     </div>
                     <p class="text-[9px] font-bold text-orange-600 uppercase tracking-wider relative z-10">Repasses à Matriz</p>
-                    <h3 id="widget-stat-total-royalties" class="text-2xl font-black mt-1 text-orange-600 relative z-10">R$ --</h3>
+                    <h3 id="widget-stat-total-royalties" class="text-lg xl:text-xl font-black mt-1 text-orange-600 relative z-10 tracking-tight whitespace-nowrap">R$ --</h3>
                 </div>
             </div>
         `;
@@ -1552,8 +1552,48 @@ window.submitNewUnitClass = async () => {
     }
 };
 
-window.deleteUnitClass = async (id) => {
-    if (!confirm('Tem certeza que deseja remover esta aula?')) return;
+window.deleteUnitClass = (id) => {
+    // Custom Modal Logic to replace native confirm
+    const html = `
+        <div class="text-left">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <i class="fa-solid fa-triangle-exclamation text-red-600"></i>
+                </div>
+                <div>
+                   <h3 class="text-lg font-bold text-slate-800">Remover Aula</h3>
+                   <p class="text-xs text-slate-500">Tem certeza que deseja remover esta aula da grade?</p>
+                </div>
+            </div>
+
+            <div class="mt-2 text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 mb-6">
+                <p>Esta ação não pode ser desfeita e a aula deixará de aparecer no cronograma dos alunos.</p>
+            </div>
+
+            <div class="flex flex-row-reverse gap-2">
+                <button type="button" onclick="executeDeleteUnitClass('${id}')"
+                    class="inline-flex w-full justify-center items-center rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-red-500 sm:w-auto transition-all">
+                    Sim, Remover
+                </button>
+                <button type="button" onclick="closeModal()"
+                    class="inline-flex w-full justify-center items-center rounded-xl bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 sm:w-auto transition-all">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    `;
+
+    openModal(html);
+};
+
+window.executeDeleteUnitClass = async (id) => {
+    // Show loading state on the delete button
+    const deleteBtn = document.querySelector('button[onclick^="executeDeleteUnitClass"]');
+    if (deleteBtn) {
+        deleteBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Removendo...';
+        deleteBtn.disabled = true;
+    }
+
     const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
 
     try {
@@ -1564,13 +1604,23 @@ window.deleteUnitClass = async (id) => {
         const json = await res.json();
 
         if (json.success) {
+            closeModal();
+            showNotification('✅ Aula removida com sucesso!', 'success');
             loadUnitSchedule();
         } else {
-            alert('Erro ao remover');
+            showNotification('❌ Erro ao remover aula: ' + (json.message || 'Erro desconhecido'), 'error');
+            if (deleteBtn) {
+                 deleteBtn.innerHTML = 'Tentar Novamente';
+                 deleteBtn.disabled = false;
+            }
         }
     } catch (e) {
         console.error(e);
-        alert('Erro de conexão');
+        showNotification('❌ Erro de conexão ao tentar remover aula', 'error');
+        if (deleteBtn) {
+             deleteBtn.innerHTML = 'Tentar Novamente';
+             deleteBtn.disabled = false;
+        }
     }
 };
 

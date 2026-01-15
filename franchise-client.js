@@ -2083,6 +2083,9 @@ function applyBranding(unit) {
     const secondaryColor = b.secondaryColor || '#000000';
     const brandName = b.brandName || unit.name;
 
+    // Set Global CSS Variable for Sensei & Systems
+    document.documentElement.style.setProperty('--brand-primary', primaryColor);
+
     // 1. CSS Variables / Dynamic Styles
     const styleEl = document.getElementById('branding-styles');
     if (styleEl) {

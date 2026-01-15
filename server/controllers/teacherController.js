@@ -3,6 +3,7 @@ const Franchise = require('../models/Franchise');
 const Class = require('../models/Class');
 const Student = require('../models/Student');
 const Attendance = require('../models/Attendance');
+const ClassBooking = require('../models/ClassBooking');
 const AttendanceService = require('../services/attendanceService');
 
 /**
@@ -279,9 +280,32 @@ exports.getStudentsForAttendance = async (req, res, next) => {
             });
         }
 
-        const students = await Student.find({
-            franchiseId: teacher.franchiseId
-        }).select('name belt degree paymentStatus');
+        const { scope } = req.query;
+        let query = { franchiseId: teacher.franchiseId };
+
+        if (scope === 'my') {
+            // 1. Get all classes taught by this teacher
+            const teacherClasses = await Class.find({ teacherId: teacher._id });
+            const teacherClassIds = teacherClasses.map(c => c._id);
+
+            // 2. Find unique student IDs from active bookings in these classes
+            const studentIdsWithBookings = await ClassBooking.distinct('studentId', {
+                classId: { $in: teacherClassIds },
+                status: { $in: ['reserved', 'confirmed'] }
+            });
+
+            // 3. Find unique student IDs from attendance records for this teacher
+            const studentIdsWithAttendance = await Attendance.distinct('studentId', {
+                checkedInBy: teacher._id
+            });
+
+            // Merge unique IDs
+            const allMyStudentIds = [...new Set([...studentIdsWithBookings, ...studentIdsWithAttendance])];
+            
+            query._id = { $in: allMyStudentIds };
+        }
+
+        const students = await Student.find(query).select('name belt degree paymentStatus phone gender birthDate');
 
         res.status(200).json({
             success: true,
@@ -309,6 +333,24 @@ exports.markAttendance = async (req, res, next) => {
             tenantId: franchiseId,
             checkInMethod: 'Professor'
         });
+
+        // Update booking status if exists
+        // We look for a booking for today/this class
+        // Use normalized date from Service if possible, or just Today range
+        const startOfDay = new Date();
+        startOfDay.setHours(0,0,0,0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23,59,59,999);
+
+        await ClassBooking.findOneAndUpdate(
+            {
+                studentId,
+                classId,
+                date: { $gte: startOfDay, $lte: endOfDay },
+                status: 'reserved'
+            },
+            { status: 'confirmed' }
+        );
 
         res.status(201).json({
             success: true,
@@ -340,10 +382,27 @@ exports.getClassAttendance = async (req, res, next) => {
             date: { $gte: startOfDay, $lte: endOfDay }
         }).populate('studentId', 'name belt degree paymentStatus');
 
+        // Fetch active reservations for today
+        const bookings = await ClassBooking.find({
+            classId: classId,
+            date: { $gte: startOfDay, $lte: endOfDay },
+            status: 'reserved'
+        }).populate('studentId', 'name belt degree paymentStatus');
+
+        // Merge lists
+        const mixedList = [
+            ...attendance.map(a => a.toObject()), 
+            ...bookings.map(b => ({
+                ...b.toObject(),
+                isReservation: true,
+                checkInTime: null // Explicit null to indicate pending
+            }))
+        ];
+
         res.status(200).json({
             success: true,
-            count: attendance.length,
-            data: attendance
+            count: mixedList.length,
+            data: mixedList
         });
     } catch (error) {
         next(error);

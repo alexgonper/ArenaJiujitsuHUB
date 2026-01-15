@@ -35,6 +35,70 @@ const SenseiClient = {
             .sensei-message { animation: fadeIn 0.3s ease-out; }
             @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
             @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            
+            /* Dynamic Branding Variables Default */
+            :root {
+                --brand-primary: #FF6B00;
+                --brand-hover: #e66000;
+            }
+            
+            /* Copy Button Styles */
+            .sensei-copy-btn {
+                opacity: 0;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 6px;
+                background: rgba(0,0,0,0.05);
+            }
+            
+            .sensei-message-wrapper:hover .sensei-copy-btn {
+                opacity: 1;
+            }
+            
+            .sensei-copy-btn:hover {
+                background: rgba(0,0,0,0.1);
+                transform: scale(1.1);
+            }
+            
+            .sensei-copy-btn:active {
+                transform: scale(0.95);
+            }
+            
+            .sensei-copy-btn.copied {
+                opacity: 1 !important;
+                background: rgba(34, 197, 94, 0.2);
+                color: #22c55e;
+            }
+            
+            /* Copy Notification Toast */
+            .copy-notification {
+                position: fixed;
+                bottom: 100px;
+                right: 24px;
+                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                font-size: 12px;
+                font-weight: 600;
+                z-index: 9999;
+                animation: slideInUp 0.3s ease-out, slideOutDown 0.3s ease-in 2.7s;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            @keyframes slideInUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            @keyframes slideOutDown {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(20px); }
+            }
         `;
         document.head.appendChild(style);
     },
@@ -43,11 +107,13 @@ const SenseiClient = {
         // Only render if not already present
         if (document.getElementById('sensei-window')) return;
 
+        // Use inline styles for dynamic branding support via CSS variables
         const uiHTML = `
             <!-- Sensei Window -->
             <div id="sensei-window"
                 class="fixed bottom-6 right-6 w-[calc(100%-3rem)] md:w-96 bg-white rounded-3xl shadow-2xl z-[9000] border border-slate-100 hidden flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right font-sans">
-                <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-5 text-white flex justify-between items-center shadow-md">
+                <div style="background: linear-gradient(135deg, var(--brand-primary, #FF6B00) 0%, color-mix(in srgb, var(--brand-primary, #FF6B00), black 10%) 100%);" 
+                     class="p-5 text-white flex justify-between items-center shadow-md">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
                             <i class="fa-solid fa-brain text-white text-sm"></i>
@@ -64,21 +130,30 @@ const SenseiClient = {
                 
                 <div id="chat-messages" class="h-80 overflow-y-auto p-4 space-y-4 bg-slate-50 relative">
                     <!-- Intro Message -->
-                    <div class="bg-white p-4 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100 text-slate-600 text-xs leading-relaxed sensei-message">
-                        <p class="font-bold text-orange-600 mb-1 flex items-center gap-2">
-                            <i class="fa-solid fa-robot"></i> Sensei
-                        </p>
-                        Oss! Sou seu assistente inteligente. Analiso seus dados em tempo real. Como posso ajudar hoje?
+                    <div class="sensei-message-wrapper flex items-start gap-2">
+                        <div class="bg-white p-4 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100 text-slate-600 text-xs leading-relaxed sensei-message flex-1">
+                            <p class="font-bold mb-1 flex items-center gap-2" style="color: var(--brand-primary, #FF6B00)">
+                                <i class="fa-solid fa-robot"></i> Sensei
+                            </p>
+                            Oss! Sou seu assistente inteligente. Analiso seus dados em tempo real. Como posso ajudar hoje?
+                        </div>
+                        <button class="sensei-copy-btn flex-shrink-0" 
+                                title="Copiar resposta"
+                                onclick="SenseiClient.copyToClipboard('Oss! Sou seu assistente inteligente. Analiso seus dados em tempo real. Como posso ajudar hoje?', this)">
+                            <i class="fa-solid fa-copy text-xs"></i>
+                        </button>
                     </div>
                 </div>
 
                 <div class="p-4 border-t border-slate-100 bg-white flex gap-2 items-center">
                     <input type="text" id="chat-input" placeholder="Digite sua pergunta..."
-                        class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-slate-700 placeholder-slate-400"
+                        class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs outline-none focus:ring-2 focus:ring-opacity-50 transition-all text-slate-700 placeholder-slate-400"
+                        style="--tw-ring-color: var(--brand-primary, #FF6B00);"
                         onkeypress="if(event.key === 'Enter') askSensei()">
                     
                     <button onclick="askSensei()" id="btn-send-sensei"
-                        class="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-orange-600 active:scale-95 transition-all">
+                        style="background-color: var(--brand-primary, #FF6B00);"
+                        class="w-10 h-10 text-white rounded-xl flex items-center justify-center shadow-lg hover:opacity-90 active:scale-95 transition-all">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
                 </div>
@@ -86,7 +161,8 @@ const SenseiClient = {
 
             <!-- Floating Button -->
             <button onclick="toggleSensei()" id="sensei-float-btn"
-                class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl border-4 border-white transition-all hover:scale-110 active:scale-95 z-[8999] hover:rotate-6 group">
+                style="background: linear-gradient(135deg, var(--brand-primary, #FF6B00) 0%, color-mix(in srgb, var(--brand-primary, #FF6B00), black 10%) 100%);"
+                class="fixed bottom-6 right-6 w-14 h-14 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl border-4 border-white transition-all hover:scale-110 active:scale-95 z-[8999] hover:rotate-6 group">
                 <i class="fa-solid fa-brain group-hover:animate-pulse"></i>
                 <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full flex items-center justify-center text-[8px] font-bold">AI</span>
             </button>
@@ -227,19 +303,38 @@ const SenseiClient = {
 
     addMessage: function (text, sender) {
         const container = document.getElementById('chat-messages');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'sensei-message-wrapper flex items-start gap-2';
+        
         const div = document.createElement('div');
         
         const isUser = sender === 'user';
         
-        div.className = `p-3 rounded-2xl shadow-sm text-xs leading-relaxed max-w-[85%] sensei-message ${
+        div.className = `p-3 rounded-2xl shadow-sm text-xs leading-relaxed sensei-message ${
             isUser 
-                ? 'bg-orange-500 text-white ml-auto rounded-tr-sm' 
-                : 'bg-white border border-slate-100 text-slate-600 rounded-tl-sm'
+                ? 'text-white ml-auto rounded-tr-sm' 
+                : 'bg-white border border-slate-100 text-slate-600 rounded-tl-sm flex-1'
         }`;
 
-        div.innerHTML = isUser ? text : `<div class="font-bold text-orange-500 mb-1 text-[10px] uppercase">Sensei</div>${text}`;
+        if (isUser) {
+            div.style.backgroundColor = 'var(--brand-primary, #FF6B00)';
+            div.innerHTML = text;
+            wrapper.style.justifyContent = 'flex-end';
+            wrapper.appendChild(div);
+        } else {
+            div.innerHTML = `<div class="font-bold mb-1 text-[10px] uppercase" style="color: var(--brand-primary, #FF6B00)">Sensei</div>${text}`;
+            wrapper.appendChild(div);
+            
+            // Add copy button for Sensei messages
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'sensei-copy-btn flex-shrink-0';
+            copyBtn.title = 'Copiar resposta';
+            copyBtn.innerHTML = '<i class="fa-solid fa-copy text-xs"></i>';
+            copyBtn.onclick = () => this.copyToClipboard(text, copyBtn);
+            wrapper.appendChild(copyBtn);
+        }
         
-        container.appendChild(div);
+        container.appendChild(wrapper);
         container.scrollTop = container.scrollHeight;
     },
 
@@ -249,7 +344,7 @@ const SenseiClient = {
         const div = document.createElement('div');
         div.id = id;
         div.className = 'bg-slate-100 text-slate-400 p-3 rounded-2xl rounded-tl-sm text-xs border border-slate-50 flex items-center gap-2 max-w-[85%]';
-        div.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-orange-500"></i> Analisando...`;
+        div.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin" style="color: var(--brand-primary, #FF6B00)"></i> Analisando...`;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
         return id;
@@ -267,6 +362,55 @@ const SenseiClient = {
             btn.disabled = false;
             btn.classList.remove('opacity-70');
         }
+    },
+
+    copyToClipboard: async function (text, button) {
+        try {
+            // Remove the "Sensei" label from the text before copying
+            const cleanText = text.replace(/<div[^>]*>.*?<\/div>/i, '').trim();
+            
+            // Copy to clipboard
+            await navigator.clipboard.writeText(cleanText);
+            
+            // Update button icon to checkmark
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+            button.classList.add('copied');
+            
+            // Show notification
+            this.showCopyNotification();
+            
+            // Reset button after 2 seconds
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('copied');
+            }, 2000);
+            
+        } catch (err) {
+            console.error('Erro ao copiar:', err);
+            alert('Não foi possível copiar o texto. Por favor, tente novamente.');
+        }
+    },
+
+    showCopyNotification: function () {
+        // Remove any existing notification
+        const existing = document.querySelector('.copy-notification');
+        if (existing) existing.remove();
+        
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = 'copy-notification';
+        notification.innerHTML = `
+            <i class="fa-solid fa-check-circle"></i>
+            <span>Texto copiado!</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after animation completes
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }
 };
 

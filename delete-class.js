@@ -1,0 +1,33 @@
+const mongoose = require('mongoose');
+const Class = require('./server/models/Class');
+require('dotenv').config({ path: './server/.env' });
+
+async function deleteClass() {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/arena-matrix');
+        console.log('✅ Conectado ao MongoDB');
+
+        // Buscar a aula específica
+        const classToDelete = await Class.findOne({
+            name: 'No-Gi Competition',
+            startTime: '07:00',
+            endTime: '08:30'
+        });
+
+        if (classToDelete) {
+            console.log(`📌 Aula encontrada: ${classToDelete.name} (${classToDelete._id})`);
+            await Class.deleteOne({ _id: classToDelete._id });
+            console.log('🗑️ Aula removida com sucesso!');
+        } else {
+            console.log('❌ Aula não encontrada com esses critérios.');
+        }
+
+    } catch (error) {
+        console.error('Erro:', error);
+    } finally {
+        await mongoose.disconnect();
+        console.log('🔌 Desconectado');
+    }
+}
+
+deleteClass();

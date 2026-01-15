@@ -110,6 +110,7 @@ app.use(`${API_PREFIX}/payments`, paymentRoutes);
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/graduation`, graduationRoutes);
 app.use(`${API_PREFIX}/classes`, classRoutes);
+app.use(`${API_PREFIX}/bookings`, require('./routes/bookingRoutes'));
 
 
 // Welcome route

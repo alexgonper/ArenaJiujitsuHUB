@@ -302,6 +302,24 @@
                             </div>
                         </div>
 
+                        <!-- Schedule (Agenda) -->
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-calendar-alt"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Sua Grade de Hoje</h2>
+                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Selecione
+                                        para fazer a chamada</p>
+                                </div>
+                            </div>
+                            <div id="agenda-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Agenda -->
+                            </div>
+                        </div>
+
                         <!-- Attendance Control -->
                         <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 min-h-[500px]">
                             <div id="attendance-header"
@@ -331,30 +349,12 @@
                                 class="py-20 flex flex-col items-center justify-center text-center opacity-40">
                                 <i class="fa-solid fa-hand-pointer text-6xl mb-6"></i>
                                 <h3 class="text-xl font-bold text-slate-400">Nenhuma Aula Selecionada</h3>
-                                <p class="text-sm max-w-xs mx-auto mt-2 italic">Clique em uma aula na sua grade abaixo
+                                <p class="text-sm max-w-xs mx-auto mt-2 italic">Clique em uma aula na sua grade acima
                                     para ver os alunos confirmados.</p>
                             </div>
 
                             <div class="hidden grid grid-cols-1 md:grid-cols-2 gap-4" id="students-attendance-list">
                                 <!-- Student list -->
-                            </div>
-                        </div>
-
-                        <!-- Schedule (Agenda) -->
-                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
-                            <div class="flex items-center gap-4 mb-8">
-                                <div
-                                    class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
-                                    <i class="fa-solid fa-calendar-alt"></i>
-                                </div>
-                                <div>
-                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Sua Grade de Hoje</h2>
-                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Selecione
-                                        para fazer a chamada</p>
-                                </div>
-                            </div>
-                            <div id="agenda-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <!-- Agenda -->
                             </div>
                         </div>
                     </div>
@@ -383,6 +383,11 @@
                                         <input type="text" id="all-students-search" placeholder="Buscar aluno..."
                                             class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all">
                                     </div>
+                                    <select id="all-students-scope-filter"
+                                        class="bg-slate-50 border border-slate-100 rounded-2xl px-6 py-3 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500">
+                                        <option value="all">Todos os Alunos</option>
+                                        <option value="my">Meus Alunos</option>
+                                    </select>
                                     <select id="all-students-belt-filter"
                                         class="bg-slate-50 border border-slate-100 rounded-2xl px-6 py-3 text-[10px] font-bold uppercase text-slate-500 outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500">
                                         <option value="Todas">Todas as Faixas</option>
@@ -400,7 +405,7 @@
                             </div>
 
                             <!-- Students Table/Grid -->
-                            <div id="all-students-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div id="all-students-list" class="flex flex-col gap-3">
                                 <!-- Will be populated via JS -->
                                 <div
                                     class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-40">
@@ -609,12 +614,12 @@
         </div>
     </div>
 
-    <script src="api-config.js?v=111"></script>
-    <script src="api-client.js?v=111"></script>
-    <script src="config.js?v=111"></script>
-    <script src="theme-manager.js?v=111"></script>
-    <script src="sensei-client.js?v=111"></script>
-    <script src="teacher-app.js?v=111"></script>
+    <script src="api-config.js?v=203"></script>
+    <script src="api-client.js?v=203"></script>
+    <script src="config.js?v=203"></script>
+    <script src="theme-manager.js?v=203"></script>
+    <script src="sensei-client.js?v=203"></script>
+    <script src="teacher-app.js?v=203"></script>
 
     <script>
         // MOBILE SIDEBAR TOGGLE

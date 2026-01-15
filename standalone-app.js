@@ -1212,7 +1212,13 @@ function renderNetwork() {
         <div class="bg-white border border-slate-100 rounded-3xl p-5 md:p-6 card-shadow flex flex-col group hover:border-orange-200 transition-all hover-lift">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex-1 min-w-0">
-                    <h3 class="font-bold text-slate-900 group-hover:text-orange-600 transition truncate text-sm md:text-base">${f.name}</h3>
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-slate-900 group-hover:text-orange-600 transition truncate text-sm md:text-base">${f.name}</h3>
+                        <!-- Status Indicator -->
+                        <span class="w-2.5 h-2.5 flex-shrink-0 rounded-full ${ (f.isOnline || (localStorage.getItem('franqueado_franchise_id') === String(f.id)) || (f._id && localStorage.getItem('franqueado_franchise_id') === String(f._id))) ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse' : 'bg-red-500 shadow-sm' }" 
+                              title="${ (f.isOnline || (localStorage.getItem('franqueado_franchise_id') === String(f.id))) ? 'Online Agora' : 'Offline' }">
+                        </span>
+                    </div>
                     <p class="text-[9px] text-slate-400 font-bold uppercase truncate">${f.owner}</p>
                 </div>
                 <div class="flex gap-2">
@@ -3074,8 +3080,8 @@ window.runQuickAction = async (type) => {
         // 6. Render Result in Modal
         if (resultText && !resultText.startsWith('ERROR:')) {
             const resultHtml = `
-                <div class="space-y-6">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex flex-col h-full max-h-[calc(90vh-8rem)]">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6 flex-shrink-0 pr-12">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
                                 <i class="fa-solid fa-robot"></i>
@@ -3085,16 +3091,23 @@ window.runQuickAction = async (type) => {
                                 <p class="text-xs text-slate-500">Gerado via Gemini AI • ${new Date().toLocaleTimeString()}</p>
                             </div>
                         </div>
-                        <button onclick="runQuickAction('${type}')" class="text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1 bg-orange-50 px-3 py-1.5 rounded-lg transition-all hover:bg-orange-100">
-                            <i class="fa-solid fa-rotate"></i> Regenerar
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="copyQuickActionResult(this)" class="text-xs font-bold text-green-600 hover:text-green-700 flex items-center gap-1 bg-green-50 px-3 py-1.5 rounded-lg transition-all hover:bg-green-100" title="Copiar resposta">
+                                <i class="fa-solid fa-copy"></i> Copiar
+                            </button>
+                            <button onclick="runQuickAction('${type}')" class="text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1 bg-orange-50 px-3 py-1.5 rounded-lg transition-all hover:bg-orange-100">
+                                <i class="fa-solid fa-rotate"></i> Atualizar
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="prose prose-sm prose-slate max-w-none ai-html-content text-slate-600 leading-relaxed bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                        ${resultText}
+                    <div class="flex-1 overflow-y-auto pr-2 -mr-2">
+                        <div id="quick-action-result" class="prose prose-sm prose-slate max-w-none ai-html-content text-slate-600 leading-relaxed bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            ${resultText}
+                        </div>
                     </div>
 
-                    <div class="flex justify-end pt-2">
+                    <div class="flex justify-end pt-4 mt-4 border-t border-slate-100 flex-shrink-0">
                         <button onclick="closeModal()" class="px-6 py-2.5 orange-gradient text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                             Fechar Análise
                         </button>
@@ -3317,3 +3330,69 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+// ===== LIVE STATUS UPDATES =====
+(function() {
+    // 1. Listen for cross-tab login/logout events
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'franqueado_franchise_id' || event.key === 'franqueado_logged_in') {
+            console.log('🔄 Session change detected, updating network list...');
+            if (typeof renderNetwork === 'function') renderNetwork();
+        }
+    });
+
+    // 2. Poll for local changes (failsafe)
+    setInterval(() => {
+        // Re-render to update the "Online/Offline" indicator based on localStorage
+        if (typeof renderNetwork === 'function') {
+           // efficient re-render only if user is viewing the list
+           const grid = document.getElementById('units-list-view');
+           // Check visibility (offsetParent is null if hidden)
+           if (grid && grid.offsetParent !== null) { 
+               renderNetwork();
+           }
+        }
+    }, 2000); 
+})();
+
+// ===== COPY QUICK ACTION RESULT =====
+window.copyQuickActionResult = async function(button) {
+    try {
+        const resultDiv = document.getElementById('quick-action-result');
+        if (!resultDiv) {
+            throw new Error('Conteúdo não encontrado');
+        }
+        
+        // Get text content without HTML tags
+        const textContent = resultDiv.innerText || resultDiv.textContent;
+        
+        // Copy to clipboard
+        await navigator.clipboard.writeText(textContent);
+        
+        // Update button to show success
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+        button.classList.remove('text-green-600', 'hover:text-green-700', 'bg-green-50', 'hover:bg-green-100');
+        button.classList.add('text-white', 'bg-green-500');
+        
+        // Show notification
+        if (typeof showNotification === 'function') {
+            showNotification('✅ Texto copiado com sucesso!', 'success');
+        }
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('text-white', 'bg-green-500');
+            button.classList.add('text-green-600', 'hover:text-green-700', 'bg-green-50', 'hover:bg-green-100');
+        }, 2000);
+        
+    } catch (err) {
+        console.error('Erro ao copiar:', err);
+        if (typeof showNotification === 'function') {
+            showNotification('❌ Erro ao copiar texto', 'error');
+        } else {
+            alert('Não foi possível copiar o texto. Por favor, tente novamente.');
+        }
+    }
+};

@@ -7,8 +7,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadFranchises() {
     try {
+        console.log('Iniciando carregamento de franquias...');
         const response = await FranchiseAPI.getAll();
+        console.log('Resposta API:', response);
+        
         const franchises = response.data;
+
+        if (!franchises || franchises.length === 0) {
+            console.error('Nenhuma franquia retornada pela API');
+            showError('Nenhuma academia disponível no momento.');
+            return;
+        }
 
         const select = document.getElementById('franchise-select');
         select.innerHTML = '<option value="">Selecione sua academia...</option>';
@@ -19,6 +28,8 @@ async function loadFranchises() {
             option.textContent = f.name;
             select.appendChild(option);
         });
+        
+        console.log(`Carregadas ${franchises.length} franquias.`);
 
         // Apply branding when franchise is selected
         select.addEventListener('change', async (e) => {
@@ -116,7 +127,7 @@ function applyLoginBranding(franchise) {
     if (!franchise) return;
     const b = franchise.branding || {};
 
-    const primaryColor = b.primaryColor || '#3B82F6';
+    const primaryColor = b.primaryColor || '#FF6B00';
     const brandName = b.brandName || franchise.name;
 
     // 1. CSS Styles

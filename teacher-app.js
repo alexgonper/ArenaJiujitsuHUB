@@ -8,6 +8,7 @@ let currentTeacher = null;
 let dashboardData = null;
 let students = [];
 let filteredStudents = [];
+let currentAttendanceClassId = null;
 
 // Initialize Page (Clean)
 // (Logic was moved to bottom or integrated)
@@ -111,14 +112,25 @@ function updateSupportInfo(franchise) {
     }
 }
 
-async function fetchStudents() {
+async function fetchStudents(scope = 'all') {
     try {
-        const response = await fetch(`${window.API_BASE_URL}/teachers/${currentTeacher._id}/students`);
+        const list = document.getElementById('all-students-list');
+        if (list) {
+            list.innerHTML = `
+                <div class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-40">
+                    <i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i>
+                    <p class="text-sm font-bold uppercase">Carregando Alunos...</p>
+                </div>
+            `;
+        }
+
+        const response = await fetch(`${window.API_BASE_URL}/teachers/${currentTeacher._id}/students?scope=${scope}`);
         const result = await response.json();
 
         if (result.success) {
             students = result.data;
             filteredStudents = [...students];
+            renderAllStudentsList();
         }
     } catch (error) {
         console.error('Fetch students error:', error);
@@ -214,7 +226,7 @@ function renderAgenda() {
         const style = categoryColors[cls.category] || categoryColors['BJJ'];
         // Check local state for persistence
         return `
-        <div id="agenda-card-${cls._id}" onclick="loadClassAttendance('${cls._id}', '${cls.name.replace(/'/g, "\\'")}')" class="cursor-pointer p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md hover:bg-white transition-all group">
+        <div id="agenda-card-${cls._id}" onclick="loadClassAttendance('${cls._id}', '${cls.name.replace(/'/g, "\\'")}')" class="agenda-card cursor-pointer p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md hover:bg-white transition-all group">
             <div class="flex items-center gap-3 w-full md:w-auto">
                 <div class="flex-shrink-0 w-12 h-12 rounded-xl ${style.bg} flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                     ${getCategoryIcon(cls.category)}
@@ -304,16 +316,17 @@ async function loadClassAttendance(classId, className) {
     if (classNameEl) classNameEl.textContent = className;
 
     // Highlight selected class in agenda (optional visual cue)
-    document.querySelectorAll('.agenda-card').forEach(el => el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50'));
+    document.querySelectorAll('.agenda-card').forEach(el => el.classList.remove('brand-ring', 'brand-bg-light'));
     const selectedCard = document.getElementById(`agenda-card-${classId}`);
-    if (selectedCard) selectedCard.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50');
+    if (selectedCard) selectedCard.classList.add('brand-ring', 'brand-bg-light');
 
     try {
         const response = await fetch(`${window.API_BASE_URL}/teachers/classes/${classId}/attendance`);
         const result = await response.json();
 
         if (result.success) {
-            filteredStudents = [...students];
+            filteredStudents = result.data; // Use the actual attendance/booking list
+            currentAttendanceClassId = classId; // Store context
             renderStudents(true);
         } else {
             console.error('Error fetching attendance:', result.error);
@@ -360,36 +373,59 @@ function renderStudents(isAttendanceList = false) {
     }
 
     list.innerHTML = filteredStudents.map(student => {
-        const degreeText = student.degree && student.degree !== 'Nenhum' ? ` • ${student.degree}` : '';
-        const beltStyle = getBeltStyle(student.belt);
-        const checkInTime = student.checkInTime ? new Date(student.checkInTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+        const sData = student.studentId || student;
+        const name = sData.name || 'Aluno';
+        const belt = sData.belt || 'Branca';
+        const degree = sData.degree;
+        
+        const degreeText = degree && degree !== 'Nenhum' ? ` • ${degree}` : '';
+        const beltStyle = getBeltStyle(belt);
+        const photoChar = name.charAt(0) || '?';
+        
+        let statusTag = '';
+        let actionColumn = '';
+
+        if (student.isReservation) {
+            statusTag = `<span class="text-[9px] uppercase font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100"><i class="fa-regular fa-calendar mr-1"></i>Reservado</span>`;
+            
+            actionColumn = `
+                <button onclick="quickConfirmAttendance('${sData._id}', '${student.classId}', this)" class="px-3 py-1.5 rounded-xl bg-orange-500 text-white text-[10px] font-bold uppercase hover:bg-orange-600 transition-colors shadow-sm shadow-orange-200">
+                    Confirmar
+                </button>
+            `;
+        } else {
+             const checkInTime = student.checkInTime ? new Date(student.checkInTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+             statusTag = `<span class="text-[9px] uppercase font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-lg">Presença às ${checkInTime}</span>`;
+             actionColumn = `
+                <div class="w-10 h-10 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-lg border border-green-100">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+             `;
+        }
 
         return `
             <div class="flex items-center justify-between p-4 bg-slate-50 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-md transition-all group">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center font-bold text-slate-400 text-lg">
-                        ${student.name.charAt(0)}
+                        ${photoChar}
                     </div>
                     <div>
-                        <p class="text-sm font-bold text-slate-800 tracking-tight">${student.name}</p>
+                        <p class="text-sm font-bold text-slate-800 tracking-tight">${name}</p>
                         <div class="flex items-center gap-2 mt-1">
                             <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-lg ${beltStyle.bg} ${beltStyle.text} border ${beltStyle.border}">
-                                ${student.belt}${degreeText}
+                                ${belt}${degreeText}
                             </span>
-                            <span class="text-[9px] uppercase font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-lg">
-                                Presença às ${checkInTime}
-                            </span>
+                            ${statusTag}
                         </div>
                     </div>
                 </div>
                 
-                <div class="w-10 h-10 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-lg">
-                    <i class="fa-solid fa-check"></i>
-                </div>
+                ${actionColumn}
             </div>
         `;
     }).join('');
 }
+
 
 function getBeltStyle(belt) {
     const styles = {
@@ -447,36 +483,57 @@ function renderAllStudentsList() {
     }
 
     list.innerHTML = displayStudents.map(student => {
-        const degreeText = student.degree && student.degree !== 'Nenhum' ? ` • ${student.degree}` : '';
+        const rawDegree = String(student.degree || 0);
+        const degreeFormatted = rawDegree.toUpperCase().includes('GRAU') ? rawDegree : `${rawDegree}º Grau`;
+        const degreeText = student.degree && student.degree !== 'Nenhum' ? ` • ${degreeFormatted}` : '';
         const beltStyle = getBeltStyle(student.belt);
         const statusClass = student.paymentStatus === 'Paga' ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50';
         const statusText = student.paymentStatus === 'Paga' ? 'Em Dia' : 'Atrasada';
 
+        // Calculate age
+        let ageText = '';
+        if (student.birthDate) {
+            const birth = new Date(student.birthDate);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+            ageText = `${age} anos`;
+        }
+
         return `
-            <div class="bg-white rounded-[2rem] border border-slate-100 p-6 flex flex-col gap-4 hover:shadow-lg transition-all group overflow-hidden relative">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-bold text-slate-400 text-xl transition-all group-hover:bg-white group-hover:scale-110">
+            <div class="bg-white rounded-3xl border border-slate-100 p-5 flex items-center justify-between hover:border-orange-200 transition-all group">
+                <div class="flex items-center gap-6 flex-1 min-w-0">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-400 text-xl transition-all group-hover:scale-105 shadow-sm">
                         ${student.name.charAt(0)}
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-base font-black text-slate-800 tracking-tight truncate">${student.name}</p>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-lg ${beltStyle.bg} ${beltStyle.text} border ${beltStyle.border}">
+                        <h4 class="text-base font-black text-slate-800 tracking-tight mb-1 truncate">${student.name}</h4>
+                        <div class="flex items-center gap-2">
+                             <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg ${beltStyle.bg} ${beltStyle.text} border ${beltStyle.border} shadow-sm">
                                 ${student.belt}${degreeText}
                             </span>
                         </div>
                     </div>
                 </div>
-                
-                <div class="flex items-center justify-between pt-4 border-t border-slate-50">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] font-black uppercase text-slate-400">Financeiro</span>
-                        <span class="text-[10px] font-bold ${statusClass} px-2 py-0.5 rounded-lg mt-1 inline-block w-fit">
-                            ${statusText}
+
+                <div class="flex items-center gap-8 px-8 border-x border-slate-50 hidden lg:flex">
+                    <div class="text-right">
+                        <p class="text-[10px] font-black text-slate-800 uppercase tracking-wider mb-0.5">${student.phone || 'Sem Telefone'}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${student.gender || 'Não Inf.'} • ${ageText}</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-6 pl-8">
+                    <div class="text-center hidden sm:block">
+                        <span class="text-[8px] font-black uppercase text-slate-300 block mb-1">Financeiro</span>
+                        <span class="text-[9px] font-black ${statusClass} px-3 py-1 rounded-full border shadow-sm">
+                            ${statusText.toUpperCase()}
                         </span>
                     </div>
-                    <button onclick="openAttendanceModal('${student._id}', '${student.name.replace(/'/g, "\\'")}')" class="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all">
-                        <i class="fa-solid fa-user-check"></i>
+                    <button onclick="openAttendanceModal('${student._id}', '${student.name.replace(/'/g, "\\'")}')" 
+                        class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center hover:bg-brand-500 hover:text-white transition-all shadow-sm active:scale-95 group/btn">
+                        <i class="fa-solid fa-user-check text-lg group-hover/btn:animate-pulse"></i>
                     </button>
                 </div>
             </div>
@@ -494,6 +551,9 @@ document.addEventListener('input', (e) => {
 document.addEventListener('change', (e) => {
     if (e.target.id === 'all-students-belt-filter') {
         renderAllStudentsList();
+    }
+    if (e.target.id === 'all-students-scope-filter') {
+        fetchStudents(e.target.value);
     }
 });
 
@@ -744,6 +804,9 @@ function applyBranding(franchise) {
     const brandName = b.brandName || franchise.name;
     console.log(`🎨 Applying branding: ${brandName} -> ${primaryColor}`);
 
+    // Set Global CSS Variable for Sensei & Systems
+    document.documentElement.style.setProperty('--brand-primary', primaryColor);
+
     // 1. CSS Styles
     const styleEl = document.getElementById('branding-styles');
     if (styleEl) {
@@ -770,6 +833,12 @@ function applyBranding(franchise) {
             .active-presence-btn { background-color: ${primaryColor} !important; }
             .active-presence-btn:hover { filter: brightness(110%); }
             .bg-brand-500 { background-color: ${primaryColor} !important; }
+            .btn-primary { background-color: ${primaryColor} !important; }
+            .btn-primary:hover { box-shadow: 0 8px 16px ${primaryColor}33 !important; }
+
+            /* Selected Card Branding */
+            .brand-ring { box-shadow: 0 0 0 2px ${primaryColor} !important; }
+            .brand-bg-light { background-color: ${primaryColor}15 !important; }
         `;
     }
 
@@ -805,7 +874,12 @@ async function loadTeacherSchedule() {
         if (!currentTeacher || !currentTeacher.franchiseId) return;
 
         const franchiseId = currentTeacher.franchiseId._id || currentTeacher.franchiseId;
-        const response = await fetch(`${window.API_BASE_URL}/classes/franchise/${franchiseId}?view=week`);
+        const timestamp = new Date().getTime();
+        
+        // Refresh metrics too to keep everything in sync
+        if (typeof fetchDashboardData === 'function') fetchDashboardData().then(renderDashboard);
+
+        const response = await fetch(`${window.API_BASE_URL}/classes/franchise/${franchiseId}?view=week&_t=${timestamp}`);
         const result = await response.json();
 
         if (result.success) {
@@ -841,14 +915,28 @@ function renderTeacherSchedule() {
             const categoryColor = getScheduleCategoryColor(cls.category);
             const isMyClass = (cls.teacherId?._id || cls.teacherId) === currentTeacher._id;
 
+            // Booking Info (Capacity and Availability)
+            const booking = cls.bookingInfo || { availableSlots: 30, capacity: 30 };
+            const isFull = booking.availableSlots <= 0;
+            const slotsColor = isFull ? 'text-red-500' : (booking.availableSlots < 5 ? 'text-orange-500' : 'text-slate-400');
+            const targetDateStr = booking.nextDate || '';
+
             col.innerHTML += `
-                <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative ${isMyClass ? 'ring-2 ring-orange-200' : ''}">
-                    <div class="flex justify-between items-start mb-1">
+                <div onclick="openClassBookingsModal('${cls._id || cls.id}', '${cls.name}', '${targetDateStr}')" 
+                    class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative cursor-pointer active:scale-95 ${isMyClass ? 'ring-2 ring-orange-200' : ''}">
+                    <div class="flex justify-between items-start mb-0.5">
                         <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-${categoryColor}-50 text-${categoryColor}-600 border border-${categoryColor}-100">
                             ${cls.category || 'Geral'}
                         </span>
                         ${isMyClass ? '<span class="text-[8px] font-bold uppercase text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">Minha</span>' : ''}
                     </div>
+                    
+                    <div class="mb-1.5">
+                        <span class="text-[8px] font-black uppercase ${slotsColor} inline-block">
+                            ${booking.availableSlots}/${booking.capacity} VAGAS
+                        </span>
+                    </div>
+
                     <h4 class="font-bold text-slate-700 text-xs mb-0.5 leading-tight">${cls.name}</h4>
                     <p class="text-[10px] text-slate-400 mb-2 truncate">${teacherName}</p>
                     <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
@@ -888,4 +976,113 @@ function getScheduleCategoryColor(category) {
 window.filterSchedule = function(filterValue) {
     currentScheduleFilter = filterValue;
     renderTeacherSchedule();
+};
+
+// --- CLASS BOOKINGS LIST MODAL ---
+window.openClassBookingsModal = async function(classId, className, dateStrFromModel) {
+    if (!dateStrFromModel) {
+        showToast('⚠️ Data da aula não identificada.', 'error');
+        return;
+    }
+
+    const dateStr = new Date(dateStrFromModel).toISOString();
+
+    const modal = document.getElementById('ui-modal');
+    const panel = document.getElementById('modal-panel');
+    const content = document.getElementById('modal-content');
+
+    if (!modal || !panel || !content) {
+        console.error('Modal elements not found');
+        return;
+    }
+
+    // Initial Loading State
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <h2 class="text-2xl font-black text-slate-800 mb-1 leading-tight">${className}</h2>
+            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500 mb-8">Lista de Reservas</p>
+            
+            <div id="bookings-loader" class="flex flex-col items-center py-10">
+                <div class="w-12 h-12 border-4 border-orange-50 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Buscando alunos...</p>
+            </div>
+            
+            <div id="bookings-list-container" class="hidden text-left space-y-3 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+            </div>
+
+            <button onclick="closeModal()" class="w-full mt-8 py-4 orange-gradient text-white rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:brightness-110 transition-all shadow-lg active:scale-95">
+                Fechar Lista
+            </button>
+        </div>
+    `;
+
+    // Show Modal
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        panel.classList.remove('scale-95', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+    }, 10);
+
+    try {
+        const res = await fetch(`${window.API_BASE_URL}/bookings/list?classId=${classId}&date=${dateStr}`);
+        const result = await res.json();
+        
+        const loader = document.getElementById('bookings-loader');
+        const listContainer = document.getElementById('bookings-list-container');
+        
+        if (result.success && result.data && result.data.length > 0) {
+            let html = '';
+            result.data.forEach(booking => {
+                const student = booking.studentId;
+                if (!student) return;
+                
+                const initials = student.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                
+                const isConfirmed = booking.status === 'confirmed';
+                const statusLabel = isConfirmed ? 'Presente' : 'Reservado';
+                const statusColor = isConfirmed ? 'text-blue-500 border-blue-100' : 'text-green-500 border-green-100';
+                const statusIcon = isConfirmed ? 'fa-solid fa-user-check' : 'fa-solid fa-check-circle';
+
+                const rawDegree = String(student.degree || 0);
+                const degreeFormatted = rawDegree.toUpperCase().includes('GRAU') ? rawDegree : `${rawDegree}º Grau`;
+
+                html += `
+                    <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100 hover:border-orange-200 transition-all group">
+                        <div class="w-12 h-12 rounded-2xl bg-brand-500 text-white flex items-center justify-center font-black text-sm shadow-lg group-hover:scale-110 transition-transform">
+                            ${initials}
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <h4 class="font-bold text-slate-800 text-sm truncate">${student.name}</h4>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">${student.belt || 'Branca'}</span>
+                                <span class="w-1 h-1 rounded-full bg-slate-200"></span>
+                                <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">${degreeFormatted}</span>
+                            </div>
+                        </div>
+                        <div class="bg-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest ${statusColor} border shadow-sm flex items-center gap-2">
+                            <i class="${statusIcon}"></i>
+                            <span class="hidden sm:inline">${statusLabel}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+            loader.classList.add('hidden');
+            listContainer.classList.remove('hidden');
+        } else {
+            loader.innerHTML = `
+                <div class="opacity-30 flex flex-col items-center py-6">
+                    <i class="fa-solid fa-users-slash text-5xl mb-4 text-slate-400"></i>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Nenhum aluno reservado</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        if (document.getElementById('bookings-loader')) {
+            document.getElementById('bookings-loader').innerHTML = `
+                <div class="text-red-500 font-bold text-[10px] uppercase tracking-widest py-10">Erro ao carregar lista</div>
+            `;
+        }
+    }
 };

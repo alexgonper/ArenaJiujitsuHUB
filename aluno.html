@@ -80,10 +80,10 @@
 <body class="h-screen flex overflow-hidden">
 
     <!-- SIDEBAR -->
-    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
 
     <aside id="sidebar"
-        class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-100 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300">
+        class="sidebar-mobile-hidden fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-100 flex flex-col z-50 md:static transition-transform duration-300">
         <!-- Logo -->
         <div class="p-6 border-b border-slate-50">
             <div id="logo-container" class="flex flex-col gap-1">
@@ -142,7 +142,7 @@
             class="h-16 md:h-20 glass-header border-b border-slate-100 flex items-center justify-between px-4 md:px-8 z-40 shrink-0">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()"
-                    class="lg:hidden w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-50 rounded-xl transition">
+                    class="md:hidden w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-50 rounded-xl transition">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <div>
@@ -240,38 +240,77 @@
                                 </div>
                             </div>
 
-                            <div class="space-y-6">
-                                <div
-                                    class="flex items-center gap-4 p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
-                                    <div class="w-16 h-16 rounded-3xl flex items-center justify-center bg-white shadow-sm"
-                                        id="belt-icon-container">
-                                        <i class="fa-solid fa-user-ninja text-3xl" id="belt-icon"></i>
+                            <div class="space-y-8">
+                                <!-- Top Row: Journey -->
+                                <div class="flex items-center justify-between px-2 pt-2">
+                                    <!-- Current -->
+                                    <div class="flex flex-col gap-2">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Atual</span>
+                                        <div class="flex items-center gap-3">
+                                            <div id="dash-visual-curr-belt" class="h-10 w-16 rounded shadow-sm relative transition-transform hover:scale-105 duration-300"></div>
+                                            <div>
+                                                <h3 class="text-xl font-black text-slate-900 leading-none tracking-tight" id="dash-current-belt">--</h3>
+                                                <p class="text-[10px] font-bold text-slate-500 uppercase mt-1" id="dash-current-degree">--</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 class="text-2xl font-black text-slate-800 leading-tight" id="current-belt">
-                                            Branca</h3>
-                                        <p class="text-sm font-semibold text-slate-500" id="current-degree">Nenhum grau
-                                        </p>
+
+                                    <!-- Arrow Indicator -->
+                                    <div class="hidden md:flex flex-1 mx-8 items-center justify-center opacity-20">
+                                            <div class="h-0.5 w-full bg-slate-300 rounded-full"></div>
+                                            <i class="fa-solid fa-chevron-right text-slate-300 ml-[-4px]"></i>
+                                    </div>
+
+                                    <!-- Next -->
+                                    <div class="flex flex-col gap-2 items-end">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Próxima</span>
+                                        <div class="flex items-center gap-3 flex-row-reverse text-right opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 group cursor-help" title="Continue treinando para desbloquear!">
+                                            <div id="dash-visual-next-belt" class="h-10 w-16 rounded shadow-sm relative group-hover:scale-105 transition-transform"></div>
+                                            <div>
+                                                <h3 class="text-xl font-black text-slate-900 leading-none tracking-tight" id="dash-next-belt">--</h3>
+                                                <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">META</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="pt-2">
-                                    <div class="flex justify-between items-center mb-3 px-1">
-                                        <span class="text-xs font-black text-slate-700 uppercase"
-                                            id="progress-label">Faltam X aulas</span>
-                                        <span class="text-xs font-black text-blue-600" id="progress-percent">0%</span>
+                                <!-- Main Focus: Classes Left -->
+                                <div class="bg-gradient-to-br from-slate-50 to-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden text-center group">
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-20"></div>
+                                    
+                                    <div class="relative z-10">
+                                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">FALTAM APENAS</p>
+                                        <div class="flex items-center justify-center gap-2 mb-2 scale-100 group-hover:scale-110 transition-transform duration-300">
+                                            <span class="text-7xl md:text-8xl font-black text-slate-900 tracking-tighter" id="dash-classes-left-big">--</span>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">AULAS PARA O PRÓXIMO GRAU</p>
+
+                                        <!-- Progress Bar Integrated -->
+                                        <div class="w-full max-w-lg mx-auto relative">
+                                            <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">
+                                                <span>Progresso</span>
+                                                <span id="dash-percent-text-big" class="text-blue-600">--%</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 rounded-full h-5 p-1 overflow-hidden shadow-inner">
+                                                <div id="dash-progress-bar-big" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-1000 shadow-sm relative overflow-hidden" style="width: 0%">
+                                                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div
-                                        class="w-full bg-slate-100 rounded-full h-4 overflow-hidden border border-slate-50 p-1">
-                                        <div id="progress-bar"
-                                            class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-1000"
-                                            style="width: 0%"></div>
+                                </div>
+
+                                <!-- Footer Stats -->
+                                <div class="flex justify-center">
+                                    <div class="inline-flex items-center gap-3 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500">
+                                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Total no Tatame</p>
+                                            <p class="text-sm font-black text-slate-700"><span id="dash-total-classes-footer">--</span> Aulas</p>
+                                        </div>
                                     </div>
-                                    <p class="text-[10px] text-slate-400 font-bold mt-3 ml-1">
-                                        <i class="fa-solid fa-circle-check text-blue-400 mr-1 mt-0.5"></i>
-                                        TOTAL DE <span id="total-classes" class="text-slate-700">0</span> AULAS NO
-                                        TATAME
-                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -367,8 +406,100 @@
                 <!-- OTHER SECTIONS (evolution, finance, schedule) -->
                 <!-- They are mapped via JS changeView -->
                 <div id="section-evolution" class="hidden animate-in space-y-8">
+                     <!-- Detailed Progress/Stats Card -->
+                     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-award"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Minha Evolução</h2>
+                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Caminho
+                                        para a graduação</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-8">
+                                <!-- Top Row: Journey -->
+                                <div class="flex items-center justify-between px-2 pt-2">
+                                    <!-- Current -->
+                                    <div class="flex flex-col gap-2">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Atual</span>
+                                        <div class="flex items-center gap-3">
+                                            <div id="visual-curr-belt" class="h-10 w-16 rounded shadow-sm relative transition-transform hover:scale-105 duration-300"></div>
+                                            <div>
+                                                <h3 class="text-xl font-black text-slate-900 leading-none tracking-tight" id="evo-page-current-belt">--</h3>
+                                                <p class="text-[10px] font-bold text-slate-500 uppercase mt-1" id="evo-page-current-degree">--</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Arrow Indicator (Visual connection) -->
+                                    <div class="hidden md:flex flex-1 mx-8 items-center justify-center opacity-20">
+                                            <div class="h-0.5 w-full bg-slate-300 rounded-full"></div>
+                                            <i class="fa-solid fa-chevron-right text-slate-300 ml-[-4px]"></i>
+                                    </div>
+
+                                    <!-- Next -->
+                                    <div class="flex flex-col gap-2 items-end">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Próxima</span>
+                                        <div class="flex items-center gap-3 flex-row-reverse text-right opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 group cursor-help" title="Continue treinando para desbloquear!">
+                                            <div id="visual-next-belt" class="h-10 w-16 rounded shadow-sm relative group-hover:scale-105 transition-transform"></div>
+                                            <div>
+                                                <h3 class="text-xl font-black text-slate-900 leading-none tracking-tight" id="evo-page-next-belt">--</h3>
+                                                <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">META</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Main Focus: Classes Left -->
+                                <div class="bg-gradient-to-br from-slate-50 to-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden text-center group">
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-20"></div>
+                                    
+                                    <div class="relative z-10">
+                                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">FALTAM APENAS</p>
+                                        <div class="flex items-center justify-center gap-2 mb-2 scale-100 group-hover:scale-110 transition-transform duration-300">
+                                            <span class="text-7xl md:text-8xl font-black text-slate-900 tracking-tighter" id="big-classes-left">--</span>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">AULAS PARA O PRÓXIMO GRAU</p>
+
+                                        <!-- Progress Bar Integrated -->
+                                        <div class="w-full max-w-lg mx-auto relative">
+                                            <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">
+                                                <span>Progresso</span>
+                                                <span id="big-percent-text" class="text-blue-600">--%</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 rounded-full h-5 p-1 overflow-hidden shadow-inner">
+                                                <div id="evo-page-progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-1000 shadow-sm relative overflow-hidden" style="width: 0%">
+                                                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Footer Stats -->
+                                <div class="flex justify-center">
+                                    <div class="inline-flex items-center gap-3 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500">
+                                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Total no Tatame</p>
+                                            <p class="text-sm font-black text-slate-700"><span id="evo-page-total-classes">--</span> Aulas</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
-                        <h2 class="text-2xl font-black text-slate-800 mb-6">Histórico de Graduações</h2>
+                        <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                            <i class="fa-solid fa-list-ul text-blue-500"></i>
+                            Histórico de Graduações
+                        </h2>
                         <div id="graduation-history-container"
                             class="overflow-hidden rounded-3xl border border-slate-100">
                             <table class="w-full text-left">
@@ -389,9 +520,56 @@
                     </div>
                 </div>
 
-                <div id="section-finance" class="hidden animate-in">
+                <div id="section-finance" class="hidden animate-in space-y-8">
+                    <!-- Detailed Financial Status Card -->
+                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex flex-col items-center text-center md:text-left md:items-stretch md:flex-row justify-between relative overflow-hidden">
+                         <div class="relative z-10 w-full">
+                            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-2xl">
+                                        <i class="fa-solid fa-wallet"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Financeiro</h2>
+                                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                            Status da mensalidade
+                                        </p>
+                                    </div>
+                                </div>
+                                <div id="fin-page-status-badge"></div>
+                            </div>
+
+                            <div class="bg-slate-50 rounded-[2rem] p-8 mb-8 flex flex-col md:flex-row justify-between items-center gap-6 border border-slate-100">
+                                <div class="text-center md:text-left">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                        VALOR MENSAL
+                                    </p>
+                                    <p class="text-4xl font-black text-slate-800 tracking-tight" id="fin-page-monthly-amount">R$ --</p>
+                                </div>
+                                <div class="h-px w-full md:w-px md:h-12 bg-slate-200"></div>
+                                <div class="text-center md:text-right">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                        ÚLTIMO PAGAMENTO
+                                    </p>
+                                    <p class="text-lg font-bold text-slate-600" id="fin-page-last-payment">--</p>
+                                </div>
+                            </div>
+
+                            <button onclick="payTuition('fin-page-pay-btn')" id="fin-page-pay-btn"
+                                class="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest group">
+                                <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                     <i class="fa-solid fa-credit-card"></i>
+                                </span>
+                                PAGAR MENSALIDADE
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
-                        <h2 class="text-2xl font-black text-slate-800 mb-6">Histórico de Mensalidades</h2>
+                        <h2 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                            <i class="fa-solid fa-clock-rotate-left text-orange-500"></i>
+                            Histórico de Mensalidades
+                        </h2>
                         <div id="payment-history" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                     </div>
                 </div>
@@ -422,76 +600,48 @@
 
                         <!-- Schedule Grid -->
                         <div class="overflow-x-auto custom-scrollbar">
-                            <div class="grid grid-cols-7 gap-4 min-w-[1000px]" id="student-schedule-grid">
+                            <div class="grid grid-cols-7 gap-4 min-w-[900px] lg:min-w-0" id="student-schedule-grid">
                                 <div class="flex flex-col gap-2">
                                     <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
                                         <span class="text-xs font-bold text-slate-500 uppercase">Dom</span>
                                     </div>
-                                    <div id="student-day-col-0" class="space-y-2 flex-1 min-h-[200px]">
-                                        <div class="text-center py-8 text-slate-300 text-[10px]">
-                                            <i class="fa-solid fa-spinner fa-spin"></i>
-                                        </div>
-                                    </div>
+                                    <div id="student-day-col-0" class="space-y-2 flex-1 min-h-[200px]"></div>
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
                                         <span class="text-xs font-bold text-slate-500 uppercase">Seg</span>
                                     </div>
-                                    <div id="student-day-col-1" class="space-y-2 flex-1 min-h-[200px]">
-                                        <div class="text-center py-8 text-slate-300 text-[10px]">
-                                            <i class="fa-solid fa-spinner fa-spin"></i>
-                                        </div>
-                                    </div>
+                                    <div id="student-day-col-1" class="space-y-2 flex-1 min-h-[200px]"></div>
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
                                         <span class="text-xs font-bold text-slate-500 uppercase">Ter</span>
                                     </div>
-                                    <div id="student-day-col-2" class="space-y-2 flex-1 min-h-[200px]">
-                                        <div class="text-center py-8 text-slate-300 text-[10px]">
-                                            <i class="fa-solid fa-spinner fa-spin"></i>
-                                        </div>
-                                    </div>
+                                    <div id="student-day-col-2" class="space-y-2 flex-1 min-h-[200px]"></div>
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
                                         <span class="text-xs font-bold text-slate-500 uppercase">Qua</span>
                                     </div>
-                                    <div id="student-day-col-3" class="space-y-2 flex-1 min-h-[200px]">
-                                        <div class="text-center py-8 text-slate-300 text-[10px]">
-                                            <i class="fa-solid fa-spinner fa-spin"></i>
-                                        </div>
-                                    </div>
+                                    <div id="student-day-col-3" class="space-y-2 flex-1 min-h-[200px]"></div>
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
                                         <span class="text-xs font-bold text-slate-500 uppercase">Qui</span>
                                     </div>
-                                    <div id="student-day-col-4" class="space-y-2 flex-1 min-h-[200px]">
-                                        <div class="text-center py-8 text-slate-300 text-[10px]">
-                                            <i class="fa-solid fa-spinner fa-spin"></i>
-                                        </div>
-                                    </div>
+                                    <div id="student-day-col-4" class="space-y-2 flex-1 min-h-[200px]"></div>
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
                                         <span class="text-xs font-bold text-slate-500 uppercase">Sex</span>
                                     </div>
-                                    <div id="student-day-col-5" class="space-y-2 flex-1 min-h-[200px]">
-                                        <div class="text-center py-8 text-slate-300 text-[10px]">
-                                            <i class="fa-solid fa-spinner fa-spin"></i>
-                                        </div>
-                                    </div>
+                                    <div id="student-day-col-5" class="space-y-2 flex-1 min-h-[200px]"></div>
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
                                         <span class="text-xs font-bold text-slate-500 uppercase">Sáb</span>
                                     </div>
-                                    <div id="student-day-col-6" class="space-y-2 flex-1 min-h-[200px]">
-                                        <div class="text-center py-8 text-slate-300 text-[10px]">
-                                            <i class="fa-solid fa-spinner fa-spin"></i>
-                                        </div>
-                                    </div>
+                                    <div id="student-day-col-6" class="space-y-2 flex-1 min-h-[200px]"></div>
                                 </div>
                             </div>
                         </div>
@@ -506,7 +656,7 @@
     <div id="ui-modal"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-4 transition-all duration-300"
         style="display: none;">
-        <div class="bg-white rounded-[2.5rem] p-6 md:p-10 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-100 no-scrollbar transform scale-95 opacity-0 transition-all duration-300"
+        <div class="bg-white rounded-[2.5rem] p-6 md:p-10 max-w-2xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden shadow-2xl relative border border-slate-100 no-scrollbar transform scale-95 opacity-0 transition-all duration-300"
             id="modal-panel">
             <button onclick="closeModal()"
                 class="absolute top-4 right-4 md:top-8 md:right-8 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all z-10">
@@ -553,28 +703,23 @@
         </div>
     </div>
 
-    <script src="api-config.js?v=200"></script>
-    <script src="api-client.js?v=200"></script>
-    <script src="config.js?v=200"></script>
-    <script src="theme-manager.js?v=200"></script>
-    <script src="payment-api.js?v=200"></script>
-    <script src="sensei-client.js?v=200"></script>
-    <script src="aluno-app.js?v=200"></script>
+    <script src="api-config.js?v=202"></script>
+    <script src="api-client.js?v=202"></script>
+    <script src="config.js?v=202"></script>
+    <script src="theme-manager.js?v=202"></script>
+    <script src="payment-api.js?v=202"></script>
+    <script src="sensei-client.js?v=202"></script>
+    <script src="aluno-app.js?v=202"></script>
 
     <script>
         // MOBILE SIDEBAR TOGGLE
         window.toggleSidebar = function () {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            const isHidden = sidebar.classList.contains('-translate-x-full');
-
-            if (isHidden) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            }
+            
+            // Toggle classes
+            sidebar.classList.toggle('sidebar-open');
+            overlay.classList.toggle('hidden');
         };
 
         window.changeView = function (viewId) {
@@ -609,8 +754,62 @@
             }
 
             // Close sidebar on mobile
-            if (window.innerWidth < 1024) toggleSidebar();
+            if (window.innerWidth < 768) toggleSidebar();
         }
+
+        // CONFIRM MODAL FUNCTIONS
+        let confirmCallback = null;
+
+        window.showConfirmModal = function(title, message, onConfirm) {
+            const modal = document.getElementById('ui-confirm-modal');
+            const backdrop = document.getElementById('confirm-backdrop');
+            const panel = document.getElementById('confirm-panel');
+            const titleEl = document.getElementById('confirm-title');
+            const msgEl = document.getElementById('confirm-msg');
+            const btnYes = document.getElementById('btn-confirm-yes');
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+            confirmCallback = onConfirm;
+
+            // Show modal
+            modal.style.display = 'block';
+            modal.classList.remove('hidden');
+            
+            // Animate in
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                backdrop.classList.add('opacity-100');
+                panel.classList.remove('scale-95', 'opacity-0');
+                panel.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+
+        window.closeConfirmModal = function() {
+            const modal = document.getElementById('ui-confirm-modal');
+            const backdrop = document.getElementById('confirm-backdrop');
+            const panel = document.getElementById('confirm-panel');
+
+            // Animate out
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            panel.classList.remove('scale-100', 'opacity-100');
+            panel.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
+                confirmCallback = null;
+            }, 300);
+        };
+
+        // Confirm button handler
+        document.getElementById('btn-confirm-yes').addEventListener('click', function() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirmModal();
+        });
     </script>
 </body>
 

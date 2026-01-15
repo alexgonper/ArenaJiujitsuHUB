@@ -12,7 +12,9 @@ const firebaseConfig = {
 // ===== APP CONFIGURATION =====
 const appConfig = {
     appId: 'arena-matrix-v4-mobile',
-    apiBaseUrl: 'https://arenajiujitsuhub-2.onrender.com/api/v1', // Backend API URL
+    apiBaseUrl: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:5000/api/v1' 
+        : 'https://arenajiujitsuhub-2.onrender.com/api/v1', // Backend API URL
     enableFirebase: false, // Set to true when Firebase is configured
     useMockData: false // Use real API instead of mock data
 };

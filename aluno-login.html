@@ -8,10 +8,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <script src="api-config.js?v=110"></script>
-    <script src="config.js?v=110"></script>
-    <script src="api-client.js?v=110"></script>
-    <style id="branding-styles"></style>
+    <script src="api-config.js?v=202"></script>
+    <script src="config.js?v=202"></script>
+    <script src="api-client.js?v=202"></script>
+    <style id="branding-styles">
+        :root {
+            --brand-primary: #FF6B00;
+        }
+        .from-blue-500 { --tw-gradient-from: #FF6B00 !important; }
+        .to-blue-600 { --tw-gradient-to: #e66000 !important; }
+        .text-blue-500 { color: #FF6B00 !important; }
+        .bg-blue-500 { background-color: #FF6B00 !important; }
+        .focus\:ring-blue-500:focus { --tw-ring-color: #FF6B00 !important; }
+    </style>
 </head>
 
 <body id="login-screen"
@@ -95,7 +104,7 @@
         </div>
     </div>
 
-    <script src="aluno-login.js?v=110"></script>
+    <script src="aluno-login.js?v=202"></script>
 </body>
 
 </html>

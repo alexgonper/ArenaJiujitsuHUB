@@ -1,6 +1,7 @@
 const Class = require('../models/Class');
 const Teacher = require('../models/Teacher');
 const Attendance = require('../models/Attendance');
+const ClassBooking = require('../models/ClassBooking');
 
 const classController = {
     /**
@@ -28,9 +29,76 @@ const classController = {
             // In a real scenario, we would also check current occupations for each class
             // For MVP, we'll just return the schedule
 
+            // Process classes to add booking info
+            const processedClasses = await Promise.all(classes.map(async (cls) => {
+                const clsObj = cls.toObject();
+
+                // Calculate next occurrence date
+                // Simplest approach: "Upcoming Occurrence" logic
+                // If today is same day and time passed, maybe next week?
+                // For MVP, assuming "this week" view or "next upcoming".
+                
+                const now = new Date();
+                const todayDay = now.getDay();
+                let dayDiff = cls.dayOfWeek - todayDay;
+                if (dayDiff < 0) dayDiff += 7; // next week
+                // BUT if dayDiff is 0 and time passed?
+                // ignoring time specific complexity for now, assuming date provided in query or just nearest day.
+                
+                // Use provided date from query if specific view, else calc next occurrence
+                let targetDate = new Date();
+                if (date) {
+                    targetDate = new Date(date);
+                } else {
+                    targetDate.setDate(now.getDate() + dayDiff);
+                }
+                targetDate.setUTCHours(0,0,0,0); // Normalize to start of day (UTC) for accurate matching
+
+                // Count active bookings (reserved + confirmed)
+                const bookedCount = await ClassBooking.countDocuments({
+                    classId: cls._id,
+                    date: { 
+                        $gte: targetDate, 
+                        $lt: new Date(targetDate.getTime() + 24*60*60*1000) 
+                    },
+                    status: { $in: ['reserved', 'confirmed'] }
+                });
+
+                // Check if requested student booked
+                let isBookedByMe = false;
+                let myBooking = null;
+                if (req.query.studentId) {
+                    myBooking = await ClassBooking.findOne({
+                        classId: cls._id, 
+                        studentId: req.query.studentId,
+                        date: { 
+                            $gte: targetDate, 
+                            $lt: new Date(targetDate.getTime() + 24*60*60*1000) 
+                        },
+                        status: { $in: ['reserved', 'confirmed'] }
+                    });
+                    if (myBooking) {
+                        isBookedByMe = true;
+                    }
+                }
+                
+                clsObj.bookingInfo = {};
+                if (isBookedByMe && myBooking) {
+                     clsObj.bookingInfo.myBookingId = myBooking._id;
+                }
+
+                clsObj.bookingInfo.isBookedByMe = isBookedByMe;
+                clsObj.bookingInfo.availableSlots = Math.max(0, cls.capacity - bookedCount);
+                clsObj.bookingInfo.totalBooked = bookedCount;
+                clsObj.bookingInfo.capacity = cls.capacity;
+                clsObj.bookingInfo.nextDate = targetDate;
+
+                return clsObj;
+            }));
+
             res.status(200).json({
                 success: true,
-                data: classes
+                data: processedClasses
             });
         } catch (error) {
             console.error('Error fetching schedule:', error);
