@@ -283,7 +283,7 @@ const studentController = {
                     const unitLng = franchise.location.coordinates[0];
                     const unitLat = franchise.location.coordinates[1];
                     const distance = calculateDistance(location.lat, location.lng, unitLat, unitLng);
-                    const MAX_DISTANCE_KM = 0.2; // 200 meters
+                    const MAX_DISTANCE_KM = 0.1; // 100 meters
 
                     if (distance > MAX_DISTANCE_KM) {
                         return res.status(403).json({
