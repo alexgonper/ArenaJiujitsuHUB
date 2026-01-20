@@ -55,7 +55,12 @@ const graduationController = {
             const attendanceCount = attendanceStats.length > 0 ? attendanceStats[0].totalClasses : 0;
             const daysSinceGraduation = Math.floor((new Date().getTime() - lastGradDate.getTime()) / (1000 * 60 * 60 * 24));
 
-            const isEligible = attendanceCount >= rule.classesRequired && daysSinceGraduation >= rule.minDaysRequired;
+            const studentAge = student.age || 0;
+            const minAgeRequired = rule.minAge || 0;
+
+            const isEligible = attendanceCount >= rule.classesRequired && 
+                               daysSinceGraduation >= rule.minDaysRequired &&
+                               studentAge >= minAgeRequired;
 
             res.status(200).json({
                 success: true,
@@ -69,7 +74,11 @@ const graduationController = {
                         classesRequired: rule.classesRequired,
                         classesAttended: attendanceCount,
                         daysRequired: rule.minDaysRequired,
-                        daysPassed: daysSinceGraduation
+                        classesAttended: attendanceCount,
+                        daysRequired: rule.minDaysRequired,
+                        daysPassed: daysSinceGraduation,
+                        minAge: rule.minAge || 0,
+                        currentAge: studentAge
                     },
                     nextLevel: {
                         belt: rule.toBelt,
@@ -191,7 +200,12 @@ const graduationController = {
                     const attendanceCount = attendanceStats.length > 0 ? attendanceStats[0].totalClasses : 0;
                     const daysSince = Math.floor((new Date().getTime() - lastGradDate.getTime()) / (1000 * 60 * 60 * 24));
 
-                    if (attendanceCount >= rule.classesRequired && daysSince >= rule.minDaysRequired) {
+                    const studentAge = student.age || 0;
+                    const minAgeRequired = rule.minAge || 0;
+
+                    if (attendanceCount >= rule.classesRequired && 
+                        daysSince >= rule.minDaysRequired &&
+                        studentAge >= minAgeRequired) {
                         results.push({
                             id: student._id,
                             name: student.name,

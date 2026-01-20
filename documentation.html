@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sspecificação Sistema - Arena Jiu-Jitsu Hub</title>
+    <!-- TailwindCSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        .sidebar-link { transition: all 0.2s; }
+        .sidebar-link:hover { color: #f97316; transform: translateX(2px); }
+        .sidebar-link.active { color: #f97316; font-weight: 600; border-right: 3px solid #f97316; }
+        h1, h2, h3 { color: #0f172a; }
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        code { background-color: #f1f5f9; color: #ef4444; padding: 2px 5px; border-radius: 4px; font-size: 0.9em; font-family: monospace; }
+        .doc-section { scroll-margin-top: 100px; }
+        .table-custom th { background-color: #f8fafc; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: #64748b; letter-spacing: 0.05em; padding: 12px; }
+        .table-custom td { padding: 12px; border-bottom: 1px solid #f1f5f9; color: #475569; font-size: 0.875rem; }
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge-green { background-color: #dcfce7; color: #166534; }
+        .badge-blue { background-color: #dbeafe; color: #1e40af; }
+        .badge-orange { background-color: #ffedd5; color: #9a3412; }
+        .badge-red { background-color: #fee2e2; color: #991b1b; }
+        .badge-purple { background-color: #f3e8ff; color: #6b21a8; }
+        
+        /* Diagrams */
+        .diagram-box { background: #fff; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; font-size: 0.8rem; color: #64748b; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 fixed w-full top-0 z-50 h-16">
+        <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white font-bold shadow-lg shadow-orange-200">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-black uppercase text-slate-800 tracking-wider">Arena Jiu-Jitsu Hub</h1>
+                    <p class="text-[10px] text-slate-400 font-medium">Especificação Técnica & Funcional</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                    v2.0 Release Candidate
+                </span>
+                <button onclick="window.print()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-print"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content Layout -->
+    <div class="flex pt-16 max-w-7xl mx-auto w-full flex-1">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 fixed h-full overflow-y-auto bg-slate-50 border-r border-slate-200 hidden lg:block pb-24">
+            <div class="p-6">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Índice</h3>
+                <nav class="space-y-1">
+                    <a href="#intro" class="sidebar-link block px-2 py-1.5 text-sm text-slate-600">1. Visão Executiva</a>
+                    <a href="#business-core" class="sidebar-link block px-2 py-1.5 text-sm text-slate-600">2. Regras de Negócio</a>
+                    <div class="pl-4 space-y-1 border-l-2 border-slate-100 ml-2">
+                        <a href="#grading-engine" class="sidebar-link block px-2 py-1 text-xs text-slate-500">2.1. Motor de Graduação (IBJJF)</a>
+                        <a href="#booking-engine" class="sidebar-link block px-2 py-1 text-xs text-slate-500">2.2. Booking & Concorrência</a>
+                        <a href="#financial-engine" class="sidebar-link block px-2 py-1 text-xs text-slate-500">2.3. Inteligência Financeira</a>
+                    </div>
+                    <a href="#modules" class="sidebar-link block px-2 py-1.5 text-sm text-slate-600 mt-2">3. Módulos do Sistema</a>
+                    <div class="pl-4 space-y-1 border-l-2 border-slate-100 ml-2">
+                        <a href="#module-hq" class="sidebar-link block px-2 py-1 text-xs text-slate-500">3.1. Painel Matriz</a>
+                        <a href="#module-franchise" class="sidebar-link block px-2 py-1 text-xs text-slate-500">3.2. Portal Franqueado</a>
+                        <a href="#module-teacher" class="sidebar-link block px-2 py-1 text-xs text-slate-500">3.3. Portal Professor</a>
+                        <a href="#module-student" class="sidebar-link block px-2 py-1 text-xs text-slate-500">3.4. App Aluno</a>
+                    </div>
+                    <a href="#tech-specs" class="sidebar-link block px-2 py-1.5 text-sm text-slate-600 mt-2">4. Arquitetura Técnica</a>
+                    <div class="pl-4 space-y-1 border-l-2 border-slate-100 ml-2">
+                         <a href="#database-schema" class="sidebar-link block px-2 py-1 text-xs text-slate-500">4.1. Schema & Database</a>
+                         <a href="#security" class="sidebar-link block px-2 py-1 text-xs text-slate-500">4.2. Segurança</a>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="lg:ml-64 w-full p-8 lg:p-12 pb-32">
+            
+            <!-- 1. INTRO -->
+            <section id="intro" class="doc-section mb-16">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <span class="text-orange-500 font-bold uppercase text-xs tracking-wider mb-2 block">Capítulo 1</span>
+                    <h2 class="text-3xl font-black text-slate-900">Visão Executiva & Propósito</h2>
+                </div>
+                <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed">
+                    <p class="mb-4">
+                        O <strong>Arena Jiu-Jitsu Hub v2.0</strong> não é apenas um sistema de gestão; é um ecossistema digital integrado, desenvolvido sob medida para redes de ensino de alta performance. Diferente de soluções genéricas de mercado (CRMs adaptados), nossa plataforma foi arquitetada com <span class="font-bold text-slate-800">Domain-Driven Design (DDD)</span> focado especificamente nas nuances das artes marciais.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+                        <div class="glass-card p-6 rounded-2xl">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4"><i class="fa-solid fa-server"></i></div>
+                            <h4 class="font-bold text-sm text-slate-800 mb-2">Multi-Tenant Architecture</h4>
+                            <p class="text-xs text-slate-500">Isolamento lógico de dados por franquia, permitindo que cada unidade opere com autonomia enquanto a Matriz mantém visão unificada.</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-2xl">
+                            <div class="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mb-4"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                            <h4 class="font-bold text-sm text-slate-800 mb-2">Split Financeiro Nativo</h4>
+                            <p class="text-xs text-slate-500">Distribuição automática de royalties no momento da transação, eliminando planilhas de conciliação e bitributação.</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-2xl">
+                            <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4"><i class="fa-solid fa-medal"></i></div>
+                            <h4 class="font-bold text-sm text-slate-800 mb-2">Compliance IBJJF</h4>
+                            <p class="text-xs text-slate-500">Motor de regras inalterável que garante a integridade das faixas e certificados emitidos pela rede.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. BUSINESS LOGIC -->
+            <section id="business-core" class="doc-section mb-16">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <span class="text-orange-500 font-bold uppercase text-xs tracking-wider mb-2 block">Capítulo 2</span>
+                    <h2 class="text-3xl font-black text-slate-900">Regras de Negócio Críticas</h2>
+                </div>
+
+                <!-- 2.1 Grading Engine -->
+                <div id="grading-engine" class="mb-12">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-slate-300"></i> 2.1. Motor de Graduação (Graduation Engine)
+                    </h3>
+                    <p class="text-slate-600 text-sm mb-6">
+                        O sistema utiliza um validador estrito para impedir promoções indevidas ("McDojo effect"). O motor cruza três vetores de dados antes de habilitar o botão de graduação para o professor: <strong>Idade Biológica</strong>, <strong>Tempo de Carência (Min Days)</strong> e <strong>Frequência Técnica</strong>.
+                    </p>
+                    
+                    <div class="bg-white border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm mb-8">
+                        <h4 class="font-bold text-red-600 text-sm mb-2 uppercase tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-lock"></i> Protocolo de Bloqueio Etário (Age Gate)
+                        </h4>
+                        <p class="text-xs text-slate-600 mb-4">
+                            Em conformidade com o <em>Artigo 3.2 do Regulamento Geral IBJJF</em>, o sistema bloqueia rigidamente a promoção se o aluno não completar a idade mínima no ano corrente.
+                        </p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Faixa</th>
+                                        <th>Idade Mínima</th>
+                                        <th>Permanência (IBJJF)</th>
+                                        <th>Status do Sistema</th>
+                                        <th>Ação de Bloqueio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                     <tr>
+                                        <td><span class="badge badge-purple uppercase">Cinza / Amarela / Laranja / Verde</span></td>
+                                        <td>04 - 15 Anos</td>
+                                        <td><span class="text-slate-400">-</span></td>
+                                        <td><span class="text-green-600 font-bold text-xs">Ativo</span></td>
+                                        <td>Bloqueia se idade < 4, < 7, < 10, < 13 respectivamente.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-blue uppercase">Azul</span></td>
+                                        <td>16 Anos</td>
+                                        <td><strong>2 Anos</strong> <span class="text-[9px] text-slate-400 block">(Para Roxa)</span></td>
+                                        <td><span class="text-red-600 font-bold text-xs">Crítico</span></td>
+                                        <td><strong>Bloqueio Total.</strong> Impossível graduar antes de 16 anos.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-purple uppercase">Roxa</span></td>
+                                        <td>16 Anos</td>
+                                        <td><strong>1.5 Anos</strong> <span class="text-[9px] text-slate-400 block">(Para Marrom)</span></td>
+                                        <td><span class="text-red-600 font-bold text-xs">Crítico</span></td>
+                                        <td>Mínimo 2 anos de Azul + >= 16 anos.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge badge-orange uppercase">Marrom</span></td>
+                                        <td>18 Anos</td>
+                                        <td><strong>1 Ano</strong> <span class="text-[9px] text-slate-400 block">(Para Preta)</span></td>
+                                        <td><span class="text-red-600 font-bold text-xs">Crítico</span></td>
+                                        <td><strong>Bloqueio Total.</strong> Requer maioridade legal.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge text-slate-100 bg-slate-900 uppercase">Preta</span></td>
+                                        <td>19 Anos</td>
+                                        <td><strong>3 a 5 Anos</strong> <span class="text-[9px] text-slate-400 block">(Por Grau)</span></td>
+                                        <td><span class="text-red-600 font-bold text-xs">Crítico</span></td>
+                                        <td>Requer 19 anos + 1 ano de Marrom.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge uppercase" style="background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #0f172a 10px, #0f172a 20px); color: white; text-shadow: 0 1px 2px black;">Coral (7º Grau)</span></td>
+                                        <td>50 Anos</td>
+                                        <td><strong>7 Anos</strong> <span class="text-[9px] text-slate-400 block">(Para 8º Grau)</span></td>
+                                        <td><span class="text-red-600 font-bold text-xs">Crítico</span></td>
+                                        <td>Requer 31 anos de Faixa Preta.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge uppercase" style="background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #f8fafc 10px, #f8fafc 20px); color: #0f172a; border: 1px solid #cbd5e1;">Coral (8º Grau)</span></td>
+                                        <td>57 Anos</td>
+                                        <td><strong>10 Anos</strong> <span class="text-[9px] text-slate-400 block">(Para 9º Grau)</span></td>
+                                        <td><span class="text-red-600 font-bold text-xs">Crítico</span></td>
+                                        <td>Requer 7 anos como 7º Grau.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge uppercase" style="background: #ef4444; color: white;">Vermelha (9º Grau)</span></td>
+                                        <td>67 Anos</td>
+                                        <td><strong>Indefinido</strong> <span class="text-[9px] text-slate-100 block">(Grande Mestre)</span></td>
+                                        <td><span class="text-red-600 font-bold text-xs">Crítico</span></td>
+                                        <td>Requer 10 anos como 8º Grau.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-slate-700 text-sm mt-8 mb-3">Interstícios Temporais (Time-in-Grade)</h4>
+                    <p class="text-slate-600 text-sm mb-4">
+                        O sistema calcula internamente o tempo decorrido usando timestamps UTC para evitar erros de fuso horário. A contagem de dias é absoluta.
+                    </p>
+                    <ul class="list-disc pl-5 space-y-2 text-slate-600 text-sm mb-6">
+                        <li><strong>Azul → Roxa:</strong> Mínimo de 2 anos (730 dias).</li>
+                        <li><strong>Roxa → Marrom:</strong> Mínimo de 1 ano e meio (547 dias).</li>
+                        <li><strong>Marrom → Preta:</strong> Mínimo de 1 ano (365 dias).</li>
+                    </ul>
+                </div>
+
+                <!-- 2.2 Booking Engine -->
+                <div id="booking-engine" class="mb-12 pt-8 border-t border-slate-100">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-slate-300"></i> 2.2. Booking & Concorrência
+                    </h3>
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="flex-1">
+                            <p class="text-slate-600 text-sm mb-4">
+                                Para evitar overbooking em horários nobres, implementamos um controle de concorrência no nível do banco de dados (MongoDB Atomic Operations). Não existe "check-in provisório"; a vaga só é garantida se a transação atômica for bem-sucedida.
+                            </p>
+                            <div class="bg-slate-900 text-slate-300 p-4 rounded-lg text-xs font-mono overflow-x-auto mb-4">
+                                <span class="text-purple-400">await</span> ClassSession.findOneAndUpdate(<br>
+                                &nbsp;&nbsp;{ <br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;_id: sessionId, <br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-green-400">$expr</span>: { <span class="text-green-400">$lt</span>: ["$bookedCount", "$capacity"] } <span class="text-slate-500">// Guard Condition</span><br>
+                                &nbsp;&nbsp;},<br>
+                                &nbsp;&nbsp;{ <span class="text-orange-400">$inc</span>: { bookedCount: 1 } } <span class="text-slate-500">// Atomic Increment</span><br>
+                                );
+                            </div>
+                            <p class="text-[11px] text-slate-400 italic">
+                                *Se 100 alunos tentarem clicar no exato milissegundo para a última vaga, apenas 1 request passará pela condição de guarda (Guard Condition). Os outros 99 receberão erro de "Classe Cheia".
+                            </p>
+                        </div>
+                        <div class="w-full md:w-1/3">
+                            <div class="diagram-box h-full flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                <div class="text-xs font-bold text-slate-500 mb-2 uppercase">Fluxo de Reserva</div>
+                                <div class="space-y-2 w-full text-center">
+                                    <div class="bg-white border border-slate-300 p-2 rounded text-[10px] shadow-sm">Request do Aluno</div>
+                                    <div class="text-slate-300"><i class="fa-solid fa-arrow-down"></i></div>
+                                    <div class="bg-white border border-slate-300 p-2 rounded text-[10px] shadow-sm">Verifica Duplicidade</div>
+                                    <div class="text-slate-300"><i class="fa-solid fa-arrow-down"></i></div>
+                                    <div class="bg-orange-50 border border-orange-200 p-2 rounded text-[10px] shadow-sm text-orange-700 font-bold">Reserva Vaga Atômica</div>
+                                    <div class="text-slate-300"><i class="fa-solid fa-arrow-down"></i></div>
+                                    <div class="bg-green-50 border border-green-200 p-2 rounded text-[10px] shadow-sm text-green-700 font-bold">Confirma Presença</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. MODULES -->
+            <section id="modules" class="doc-section mb-16">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <span class="text-orange-500 font-bold uppercase text-xs tracking-wider mb-2 block">Capítulo 3</span>
+                    <h2 class="text-3xl font-black text-slate-900">Módulos do Ecossistema</h2>
+                </div>
+
+                <div class="grid grid-cols-1 gap-8">
+                    <!-- HQ -->
+                    <div id="module-hq" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6">
+                        <div class="md:w-1/4 flex flex-col items-center justify-center bg-slate-50 rounded-xl p-4 text-center">
+                            <i class="fa-solid fa-building-columns text-4xl text-slate-300 mb-3"></i>
+                            <h3 class="font-bold text-slate-700">Painel Matriz</h3>
+                            <span class="text-[10px] uppercase text-slate-400 tracking-wider">Super Admin</span>
+                        </div>
+                        <div class="flex-1 space-y-4">
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-800">Principais Funcionalidades</h4>
+                                <ul class="list-disc pl-5 mt-2 space-y-1 text-xs text-slate-600">
+                                    <li><strong>Dashboard Global:</strong> Visão consolidada de todas as franquias (ARR, MRR, Active Users).</li>
+                                    <li><strong>Diretrizes de Rede:</strong> Sistema de broadcast de mensagens que aparece obrigatoriamente no dashboard dos franqueados.</li>
+                                    <li><strong>Gestão de Royalties:</strong> Configuração da % de retenção por franquia.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Franchisee -->
+                    <div id="module-franchise" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6">
+                        <div class="md:w-1/4 flex flex-col items-center justify-center bg-slate-50 rounded-xl p-4 text-center">
+                            <i class="fa-solid fa-store text-4xl text-slate-300 mb-3"></i>
+                            <h3 class="font-bold text-slate-700">Franqueado</h3>
+                            <span class="text-[10px] uppercase text-slate-400 tracking-wider">Manager</span>
+                        </div>
+                        <div class="flex-1 space-y-4">
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-800">Principais Funcionalidades</h4>
+                                <ul class="list-disc pl-5 mt-2 space-y-1 text-xs text-slate-600">
+                                    <li><strong>Configuração Acadêmica:</strong> Definição da grade de horários, professores e capacidades.</li>
+                                    <li><strong>Auditor IA:</strong> Widget proprietário que analisa padrões de cancelamento e sugere melhorias na grade.</li>
+                                    <li><strong>White Label:</strong> Personalização de cores e logos da unidade.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher -->
+                    <div id="module-teacher" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6">
+                         <div class="md:w-1/4 flex flex-col items-center justify-center bg-slate-50 rounded-xl p-4 text-center">
+                            <i class="fa-solid fa-user-ninja text-4xl text-slate-300 mb-3"></i>
+                            <h3 class="font-bold text-slate-700">Professor</h3>
+                            <span class="text-[10px] uppercase text-slate-400 tracking-wider">Instructor</span>
+                        </div>
+                        <div class="flex-1 space-y-4">
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-800">Check-in Controlado</h4>
+                                <p class="text-xs text-slate-600 mb-2">
+                                    Para evitar fraudes de presença, o botão de "Confirmar Presença" na chamada digital possui uma <strong>Time Window</strong> estrita: só é habilitado 15 minutos antes do início da aula.
+                                </p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-800">Radar de Graduação</h4>
+                                <p class="text-xs text-slate-600">
+                                    Lista filtrada automaticamente mostrando apenas alunos que já cumpriram 100% dos requisitos (Idade, Tempo e Aulas).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                     <!-- Student -->
+                     <div id="module-student" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6">
+                        <div class="md:w-1/4 flex flex-col items-center justify-center bg-slate-50 rounded-xl p-4 text-center">
+                           <i class="fa-solid fa-user text-4xl text-slate-300 mb-3"></i>
+                           <h3 class="font-bold text-slate-700">Aluno</h3>
+                           <span class="text-[10px] uppercase text-slate-400 tracking-wider">User PWA</span>
+                       </div>
+                       <div class="flex-1 space-y-4">
+                           <div>
+                               <h4 class="font-bold text-sm text-slate-800">Experiência Digital</h4>
+                               <ul class="list-disc pl-5 mt-2 space-y-1 text-xs text-slate-600">
+                                   <li><strong>Smart Booking:</strong> Reserva de aulas com validação instantânea de plano ativo.</li>
+                                   <li><strong>Financeiro Integrado:</strong> Pagamento de recorrência via cartão/Gateway sem sair do app.</li>
+                               </ul>
+                           </div>
+                       </div>
+                   </div>
+
+                </div>
+            </section>
+
+            <!-- 4. TECH SPECS -->
+            <section id="tech-specs" class="doc-section">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <span class="text-orange-500 font-bold uppercase text-xs tracking-wider mb-2 block">Capítulo 4</span>
+                    <h2 class="text-3xl font-black text-slate-900">Arquitetura Técnica (Deep Dive)</h2>
+                </div>
+
+                <div id="database-schema" class="mb-10">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">4.1. Modelagem de Dados (MongoDB Bucketing Pattern)</h3>
+                    <p class="text-sm text-slate-600 mb-4">
+                        Para resolver o problema de escala de registros de presença (Big Data), não utilizamos um documento por presença. Utilizamos o padrão <strong>Bucket</strong>, onde cada documento armazena um mês inteiro de registros de um aluno.
+                    </p>
+
+                    <div class="bg-slate-900 text-slate-300 p-6 rounded-xl text-xs font-mono overflow-x-auto shadow-lg">
+<pre class="bg-transparent border-none p-0 m-0">
+<span class="text-slate-500">// Collection: Attendances</span>
+{
+  <span class="text-purple-400">"_id"</span>: ObjectId("..."),
+  <span class="text-purple-400">"studentId"</span>: ObjectId("..."),
+  <span class="text-purple-400">"month"</span>: "2024-01", <span class="text-slate-500">// Bucket Key</span>
+  <span class="text-purple-400">"totalPresent"</span>: 12, <span class="text-slate-500">// Aggregated Counter (Fast Read)</span>
+  <span class="text-purple-400">"records"</span>: [
+    {
+      <span class="text-blue-400">"date"</span>: ISODate("2024-01-02T19:00:00Z"),
+      <span class="text-blue-400">"status"</span>: "Present",
+      <span class="text-blue-400">"snapshot"</span>: {
+        <span class="text-orange-300">"teacherName"</span>: "Mestre Carlos", <span class="text-slate-500">// Immutable History</span>
+        <span class="text-orange-300">"beltAtTime"</span>: "Branca"
+      }
+    },
+    <span class="text-slate-500">... (up to 31 entries)</span>
+  ]
+}
+</pre>
+                    </div>
+                </div>
+
+                <div id="security" class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">4.2. Segurança e LGPD</h3>
+                        <ul class="space-y-3">
+                            <li class="flex gap-3">
+                                <div class="w-6 h-6 rounded bg-green-50 text-green-600 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-check"></i></div>
+                                <p class="text-xs text-slate-600"><strong>Data Minimization:</strong> Apenas dados essenciais para o contrato são retidos.</p>
+                            </li>
+                            <li class="flex gap-3">
+                                <div class="w-6 h-6 rounded bg-green-50 text-green-600 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-check"></i></div>
+                                <p class="text-xs text-slate-600"><strong>Encryption at Rest:</strong> Dados sensíveis criptografados no banco.</p>
+                            </li>
+                            <li class="flex gap-3">
+                                <div class="w-6 h-6 rounded bg-green-50 text-green-600 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-check"></i></div>
+                                <p class="text-xs text-slate-600"><strong>PCI-DSS Compliance:</strong> Dados de cartão de crédito nunca tocam nossos servidores (Direct Tokenization com Mercado Pago).</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                         <h3 class="text-lg font-bold text-slate-800 mb-3">4.3. Escalabilidade</h3>
+                         <p class="text-slate-600 text-xs leading-relaxed mb-4">
+                             A arquitetura do backend é <strong>Stateless</strong>, permitindo que o serviço seja escalado horizontalmente (múltiplas instâncias do Node.js) atrás de um Load Balancer sem perda de sessão.
+                         </p>
+                         <div class="flex gap-2">
+                             <span class="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase">Node.js</span>
+                             <span class="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase">Docker</span>
+                             <span class="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase">Redis Queue</span>
+                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="mt-20 pt-8 border-t border-slate-200 text-center">
+                <p class="text-xs text-slate-400">© 2026 Arena Jiu-Jitsu Hub. Todos os direitos reservados. Documento Confidencial.</p>
+            </footer>
+
+        </main>
+    </div>
+
+</body>
+</html>

@@ -9,6 +9,7 @@ export interface IGraduationRule extends Document {
     minDaysRequired: number;
     examFee: number;
     isActive: boolean;
+    minAge: number;
 }
 
 const graduationRuleSchema = new Schema<IGraduationRule>({
@@ -46,6 +47,10 @@ const graduationRuleSchema = new Schema<IGraduationRule>({
     isActive: {
         type: Boolean,
         default: true
+    },
+    minAge: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true
