@@ -5,15 +5,15 @@ let dashboardData = null;
 
 // Belt Colors
 const beltColors = {
-    'Branca': { bg: '#F8FAFC', text: '#334155', icon: '#94A3B8' },
-    'Cinza': { bg: '#6B7280', text: '#FFFFFF', icon: '#6B7280' },
-    'Amarela': { bg: '#FCD34D', text: '#713F12', icon: '#F59E0B' },
-    'Laranja': { bg: '#FF6B00', text: '#FFFFFF', icon: '#FF6B00' },
-    'Verde': { bg: '#22C55E', text: '#FFFFFF', icon: '#22C55E' },
-    'Azul': { bg: '#3B82F6', text: '#FFFFFF', icon: '#3B82F6' },
-    'Roxa': { bg: '#A855F7', text: '#FFFFFF', icon: '#A855F7' },
-    'Marrom': { bg: '#92400E', text: '#FFFFFF', icon: '#92400E' },
-    'Preta': { bg: '#000000', text: '#FFFFFF', icon: '#000000' },
+    'Branca': { bg: '#F8FAFC', text: '#334155', border: '#CBD5E1' },
+    'Cinza': { bg: '#6B7280', text: '#FFFFFF', border: '#6B7280' },
+    'Amarela': { bg: '#FCD34D', text: '#713F12', border: '#FCD34D' },
+    'Laranja': { bg: '#FF6B00', text: '#FFFFFF', border: '#FF6B00' },
+    'Verde': { bg: '#22C55E', text: '#FFFFFF', border: '#22C55E' },
+    'Azul': { bg: '#3B82F6', text: '#FFFFFF', border: '#3B82F6' },
+    'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
+    'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
+    'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
     'Coral': { bg: 'repeating-linear-gradient(90deg, #F00 0, #F00 10px, #FFF 10px, #FFF 20px)', text: '#000000', border: '#DC2626' },
     'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
 };
@@ -52,6 +52,7 @@ async function loadDashboard() {
         renderProgress();
         renderPayment();
         renderAcademyInfo();
+        renderProfile();
 
         // Update stats
         if (dashboardData.stats) {
@@ -126,11 +127,11 @@ function renderProgress() {
     const beltLabel = belt;
     const degreeLabel = degree === 'Nenhum' ? '0 Graus' : degree;
 
-    // --- NEW: Next Belt Logic ---
-    const beltOrder = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'];
-    const currentIndex = beltOrder.indexOf(belt);
-    const nextBeltName = currentIndex >= 0 && currentIndex < beltOrder.length - 1 ? beltOrder[currentIndex + 1] : 'Mestre';
-    
+    // --- NEXT GOAL LOGIC (Backend Driven) ---
+    const nextGoal = (stats.nextGoal && stats.nextGoal.belt) ? stats.nextGoal : { belt: belt, degree: 'Próximo Grau' };
+    const nextBeltName = nextGoal.belt;
+    const nextDegreeLabel = nextGoal.degree;
+
     // --- 1. POPULATE DASHBOARD CARD (dash- prefixes) ---
     const dashBelt = document.getElementById('dash-current-belt');
     const dashDegree = document.getElementById('dash-current-degree');
@@ -138,10 +139,21 @@ function renderProgress() {
     
     if (dashBelt) dashBelt.textContent = beltLabel;
     if (dashDegree) dashDegree.textContent = degreeLabel;
-    if (dashNextBelt) dashNextBelt.textContent = nextBeltName;
+    
+    // Update Next Label
+    if (dashNextBelt) {
+        dashNextBelt.textContent = nextBeltName;
+        // Also update the small text "META" to show degree if it's the same belt
+        const nextMetaLabel = dashNextBelt.parentElement.querySelector('p');
+        if (nextMetaLabel) {
+            nextMetaLabel.textContent = nextDegreeLabel === 'Nenhum' ? 'NOVA FAIXA' : nextDegreeLabel;
+        }
+    }
 
     document.getElementById('dash-visual-curr-belt') && renderRealisticBelt('dash-visual-curr-belt', belt, degree);
-    document.getElementById('dash-visual-next-belt') && renderRealisticBelt('dash-visual-next-belt', nextBeltName, '0');
+    // Render next belt visual - if it's the same belt, show it with the target degree
+    document.getElementById('dash-visual-next-belt') && renderRealisticBelt('dash-visual-next-belt', nextBeltName, nextDegreeLabel);
+
 
     // --- 2. POPULATE EVOLUTION PAGE (evo-page- prefixes) ---
     const evoBelt = document.getElementById('evo-page-current-belt');
@@ -150,10 +162,17 @@ function renderProgress() {
     
     if (evoBelt) evoBelt.textContent = beltLabel;
     if (evoDegree) evoDegree.textContent = degreeLabel;
-    if (evoNextBelt) evoNextBelt.textContent = nextBeltName;
+    
+    if (evoNextBelt) {
+        evoNextBelt.textContent = nextBeltName;
+         const evoMetaLabel = evoNextBelt.parentElement.querySelector('p');
+        if (evoMetaLabel) {
+            evoMetaLabel.textContent = nextDegreeLabel === 'Nenhum' ? 'NOVA FAIXA' : nextDegreeLabel;
+        }
+    }
 
     document.getElementById('visual-curr-belt') && renderRealisticBelt('visual-curr-belt', belt, degree);
-    document.getElementById('visual-next-belt') && renderRealisticBelt('visual-next-belt', nextBeltName, '0');
+    document.getElementById('visual-next-belt') && renderRealisticBelt('visual-next-belt', nextBeltName, nextDegreeLabel);
 
 
     // Progress bar calculations
@@ -494,8 +513,8 @@ function applyBranding(franchise) {
             #btn-checkin div:first-child { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%) !important; }
 
             /* Action Buttons Branding */
-            .brand-btn-bg { background-color: ${primaryColor} !important; }
-            .brand-btn-bg:hover { filter: brightness(110%); }
+            .brand-btn-bg, .orange-gradient { background: ${primaryColor} !important; }
+            .brand-btn-bg:hover, .orange-gradient:hover { filter: brightness(110%); }
             
             /* Blue/Indigo Theme Overrides */
             .text-blue-500, .text-blue-600 { color: ${primaryColor} !important; }
@@ -891,32 +910,187 @@ function renderGraduationHistoryTable(history) {
     if (!container || !tbody) return;
 
     if (!history || history.length === 0) {
-        container.classList.add('hidden');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="px-6 py-12 text-center text-slate-400 italic">
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="fa-solid fa-scroll opacity-20 text-2xl"></i>
+                        <span>Nenhum registro de graduação disponível.</span>
+                    </div>
+                </td>
+            </tr>
+        `;
         return;
     }
-
-    container.classList.remove('hidden');
 
     // Sort by date descending
     const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     tbody.innerHTML = sorted.map(item => {
         const date = new Date(item.date).toLocaleDateString('pt-BR');
-        const promotedName = item.promotedBy ? item.promotedBy.name : (item.promotedBy === null ? '-' : 'Sistema');
-
-        // Handle case where promotedBy might be just an ID string if population failed (though it shouldn't)
-        const masterName = typeof item.promotedBy === 'object' && item.promotedBy?.name ? item.promotedBy.name : '-';
+        // Logic: if promotedBy is an object, use its name. If it's a string, use it. Fallback to 'Mestre Arena'.
+        const masterName = (typeof item.promotedBy === 'object' && item.promotedBy?.name) 
+                           ? item.promotedBy.name 
+                           : (typeof item.promotedBy === 'string' ? item.promotedBy : 'Mestre Arena');
 
         return `
             <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-4 py-3 text-slate-600 font-medium">${date}</td>
-                <td class="px-4 py-3 font-bold text-slate-800">${item.belt}</td>
-                <td class="px-4 py-3 text-slate-500">${item.degree || 'Nenhum'}</td>
-                <td class="px-4 py-3 text-slate-500 text-[10px] uppercase font-bold tracking-wider">${masterName}</td>
+                <td class="px-6 py-4 text-slate-600 font-medium">${date}</td>
+                <td class="px-6 py-4 font-bold text-slate-800">${item.belt}</td>
+                <td class="px-6 py-4 text-slate-500">${item.degree || 'Nenhum'}</td>
+                <td class="px-6 py-4 text-slate-500 text-[10px] uppercase font-bold tracking-wider">${masterName}</td>
             </tr>
         `;
     }).join('');
 }
+
+function renderProfile() {
+    const p = dashboardData.profile;
+    if (!p) return;
+
+    // Basic Info
+    const nameEl = document.getElementById('profile-name');
+    if (nameEl) nameEl.textContent = p.name;
+
+    const emailEl = document.getElementById('profile-email');
+    if (emailEl) emailEl.textContent = p.email || '--';
+
+    const phoneEl = document.getElementById('profile-phone');
+    if (phoneEl) phoneEl.textContent = p.phone || '--';
+
+    const addressEl = document.getElementById('profile-address');
+    if (addressEl) addressEl.textContent = p.address || 'Não informado';
+
+    const genderEl = document.getElementById('profile-gender');
+    if (genderEl) genderEl.textContent = p.gender || 'Masculino';
+
+    const birthEl = document.getElementById('profile-birth');
+    if (birthEl) {
+        const date = p.birthDate ? new Date(p.birthDate).toLocaleDateString('pt-BR') : '--';
+        birthEl.textContent = date;
+    }
+
+    const regDateEl = document.getElementById('profile-reg-date');
+    if (regDateEl) {
+        const date = p.registrationDate ? new Date(p.registrationDate).toLocaleDateString('pt-BR') : '--';
+        regDateEl.textContent = date;
+    }
+
+    const amountEl = document.getElementById('profile-amount');
+    if (amountEl) {
+        amountEl.textContent = p.amount ? `R$ ${p.amount.toFixed(2)}` : 'R$ 0,00';
+    }
+
+    const statusEl = document.getElementById('profile-status');
+    if (statusEl) {
+        statusEl.textContent = p.paymentStatus || 'Em dia';
+        statusEl.className = `text-xs font-bold ${p.paymentStatus === 'Atrasada' ? 'text-red-500' : 'text-green-600'}`;
+    }
+
+    const franchiseEl = document.getElementById('profile-franchise');
+    if (franchiseEl) franchiseEl.textContent = dashboardData.franchise.name;
+
+    const avatarEl = document.getElementById('profile-avatar-large');
+    if (avatarEl) avatarEl.textContent = p.name.charAt(0);
+
+    const beltBadge = document.getElementById('profile-belt-badge');
+    if (beltBadge) {
+        beltBadge.textContent = `${p.belt} • ${p.degree || 'Nenhum'}`;
+        // Apply belt colors
+        const colors = beltColors[p.belt] || beltColors['Branca'];
+        beltBadge.style.background = colors.bg;
+        beltBadge.style.color = colors.text;
+        beltBadge.style.borderColor = colors.border;
+    }
+}
+
+// PROFILE EDIT LOGIC
+window.openEditProfileModal = function() {
+    const modal = document.getElementById('modal-edit-profile');
+    const p = dashboardData.profile;
+    if (!modal || !p) return;
+
+    // Populate Fields
+    document.getElementById('edit-student-name').value = p.name || '';
+    document.getElementById('edit-student-email').value = p.email || '';
+    document.getElementById('edit-student-gender').value = p.gender || 'Masculino';
+    document.getElementById('edit-student-phone').value = p.phone || '';
+    
+    if (p.birthDate) {
+        document.getElementById('edit-student-birth').value = p.birthDate.split('T')[0];
+    }
+
+    document.getElementById('edit-student-address').value = p.address || '';
+    
+    // Read-only fields
+    document.getElementById('edit-student-belt').value = p.belt || 'Branca';
+    document.getElementById('edit-student-degree').value = p.degree || 'Nenhum';
+    document.getElementById('edit-student-amount').value = p.amount ? `R$ ${p.amount.toFixed(2)}` : 'R$ 0,00';
+    
+    if (p.registrationDate) {
+        document.getElementById('edit-student-reg').value = p.registrationDate.split('T')[0];
+    }
+    
+    document.getElementById('edit-student-status').value = p.paymentStatus || 'Paga';
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    modal.style.display = 'flex';
+};
+
+window.closeEditProfileModal = function() {
+    const modal = document.getElementById('modal-edit-profile');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        modal.style.display = 'none';
+    }
+};
+
+window.saveProfileUpdates = async function(event) {
+    if (event) event.preventDefault();
+    
+    const btn = document.getElementById('btn-save-student-profile');
+    const originalContent = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Salvando...';
+
+    const payload = {
+        email: document.getElementById('edit-student-email').value,
+        phone: document.getElementById('edit-student-phone').value,
+        address: document.getElementById('edit-student-address').value
+    };
+
+    try {
+        const response = await fetch(`${appConfig.apiBaseUrl}/students/${studentData.id}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('arena_token')}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast('Perfil atualizado com sucesso!', 'success');
+            
+            // Refresh dashboard to reflect changes
+            await loadDashboard();
+            closeEditProfileModal();
+        } else {
+            showToast(result.error || result.message || 'Erro ao atualizar perfil', 'error');
+        }
+    } catch (error) {
+        console.error('Save profile error:', error);
+        showToast('Erro de conexão ao salvar perfil', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
+};
 
 // --- WEEKLY SCHEDULE LOGIC (Student) ---
 let currentStudentScheduleFilter = 'my'; // 'my' or 'all'
@@ -1023,6 +1197,12 @@ async function loadStudentSchedule() {
                 
                 if (matchingBooking) {
                     console.log('✅ Found manual booking match for class:', cls.name);
+                    
+                    // Fix: If backend didn't count this booking, decrement available slots locally
+                    if (!cls.bookingInfo.isBookedByMe) {
+                         cls.bookingInfo.availableSlots = Math.max(0, cls.bookingInfo.availableSlots - 1);
+                    }
+
                     cls.bookingInfo.isBookedByMe = true;
                     cls.bookingInfo.myBookingId = matchingBooking._id;
                     // Force UI update params
@@ -1094,11 +1274,24 @@ function renderStudentSchedule() {
         
         // Get full color classes
         const colorClasses = getCategoryColorClasses(cls.category);
+
+        // Define hasAttended
+        const hasAttended = studentAttendedClassIds.includes(classId);
+
+        // Correction: If user has attended but backend didn't see a booking (isBookedByMe=false),
+        // we assume the user occupies a slot that wasn't counted.
+        let displaySlots = booking.availableSlots;
+        if (hasAttended && !booking.isBookedByMe) {
+            displaySlots = Math.max(0, displaySlots - 1);
+        }
+
+        // Unified Participation Check: Booked OR Attended
+        const isParticipating = booking.isBookedByMe || hasAttended; 
         
         let btnHtml = '';
-        if (booking.isBookedByMe) {
-             // Use myBookingId for cancellation
-             const bookingId = booking.myBookingId || '';
+        if (isParticipating) {
+             // Show CANCELAR (Unified for Reserved and Presença)
+             const bookingId = booking.myBookingId || ''; 
              btnHtml = `<button onclick="cancelBooking('${bookingId}')" class="w-full mt-2 py-1.5 rounded-lg bg-red-50 text-red-600 text-[10px] font-bold uppercase hover:bg-red-100 transition-colors border border-red-100">
                 <i class="fa-solid fa-times-circle mr-1"></i> Cancelar
              </button>`;
@@ -1107,19 +1300,19 @@ function renderStudentSchedule() {
                 <i class="fa-solid fa-ban mr-1"></i> Esgotado
              </button>`;
         } else {
-            // Use Branding Color for Reserve Button
+            // Show RESERVAR
             btnHtml = `<button onclick="reserveClass('${classId}', '${nextDateStr}')" class="w-full mt-2 py-1.5 rounded-lg brand-btn-bg text-white text-[10px] font-bold uppercase hover:brightness-110 transition-all shadow-sm">
                 <i class="fa-regular fa-calendar-check mr-1"></i> Reservar
              </button>`;
         }
 
         // Vagas indicator
-        const slotsColor = isFull ? 'text-red-500' : (booking.availableSlots < 5 ? 'text-orange-500' : 'text-slate-400');
+        let slotsColor = isFull ? 'text-red-500' : (displaySlots < 5 ? 'text-orange-500' : 'text-slate-400');
+        if (isParticipating) slotsColor = 'text-green-500'; 
 
-        // Reserved card styling
-        const isReserved = booking.isBookedByMe;
-        const cardBgClass = isReserved ? 'bg-green-50 border-green-300 shadow-green-100' : 'bg-white border-slate-100';
-        const cardBorderWidth = isReserved ? 'border-2' : 'border';
+        // Reserved card styling (Unified)
+        const cardBgClass = isParticipating ? 'bg-green-50 border-green-300 shadow-green-100' : 'bg-white border-slate-100';
+        const cardBorderWidth = isParticipating ? 'border-2' : 'border';
 
         const cardHtml = `
             <div class="${cardBgClass} ${cardBorderWidth} rounded-xl p-3 shadow-sm hover:shadow-md transition group relative flex flex-col min-h-[180px]">
@@ -1129,7 +1322,7 @@ function renderStudentSchedule() {
                     </span>
                     <div class="mt-1.5">
                         <span class="text-[8px] font-black uppercase ${slotsColor} inline-block">
-                            ${booking.availableSlots}/${booking.capacity} VAGAS
+                            ${displaySlots}/${booking.capacity} VAGAS
                     </div>
                 <div class="flex-1 flex flex-col justify-between">
                     <div>

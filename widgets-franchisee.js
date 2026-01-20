@@ -312,6 +312,7 @@ registerWidget({
                             <th class="pb-4 px-2 sortable group" onclick="setSort('monthlyFee')" id="th-monthlyFee">
                                 Mensalidade <i class="fa-solid fa-sort sort-icon group-hover:text-orange-500 transition-colors"></i>
                             </th>
+                            <th class="pb-4 px-2">Endereço</th>
                             <th class="pb-4 px-2 text-right">Ações</th>
                         </tr>
                     </thead>
@@ -842,6 +843,16 @@ registerWidget({
             const response = await fetch(`${apiUrl}/graduation/eligible/${currentFranchise._id || currentFranchise.id}`, {
                 headers: { 'Bypass-Tunnel-Reminder': 'true' }
             });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-orange-400 text-[10px] italic">Sessão expirada. Por favor, faça logout e entre novamente para sincronizar os dados.</td></tr>';
+                } else {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                return;
+            }
+
             const result = await response.json();
             const eligibleStudents = result.data || [];
 
@@ -1079,6 +1090,7 @@ async function loadSchedule() {
         const json = await res.json();
 
         if (json.success) {
+            window.currentScheduleData = json.data;
             renderSchedule(json.data);
         }
     } catch (e) {
@@ -1107,9 +1119,14 @@ function renderSchedule(classes) {
                         <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-${categoryColor}-50 text-${categoryColor}-600 border border-${categoryColor}-100">
                             ${cls.category || 'Geral'}
                         </span>
-                        <button onclick="deleteClass('${cls._id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition">
-                            <i class="fa-solid fa-trash text-[10px]"></i>
-                        </button>
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                            <button onclick="openEditClassModal('${cls._id}')" class="text-slate-300 hover:text-orange-500 transition">
+                                <i class="fa-solid fa-pen text-[10px]"></i>
+                            </button>
+                            <button onclick="deleteClass('${cls._id}')" class="text-slate-300 hover:text-red-500 transition">
+                                <i class="fa-solid fa-trash text-[10px]"></i>
+                            </button>
+                        </div>
                     </div>
                     <h4 class="font-bold text-slate-700 text-xs mb-0.5 leading-tight">${cls.name}</h4>
                     <p class="text-[10px] text-slate-400 mb-2 truncate">${teacherName}</p>
@@ -1170,6 +1187,7 @@ window.openAddClassModal = () => {
                     </select>
                 </div>
                 <div>
+                <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Categoria</label>
                     <select id="class-category" class="input-field" required>
                         <option value="BJJ">Jiu-Jitsu (Kimono)</option>
@@ -1178,6 +1196,47 @@ window.openAddClassModal = () => {
                         <option value="Fundamentals">Fundamentos</option>
                         <option value="Wrestling">Wrestling</option>
                     </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Tipo da Turma</label>
+                    <select id="class-level" class="input-field" required>
+                        <option value="beginner">Iniciantes</option>
+                        <option value="intermediate">Intermediários</option>
+                        <option value="advanced">Avançados</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Público Alvo</label>
+                    <select id="class-target" class="input-field" required>
+                        <option value="adults">Adultos</option>
+                        <option value="kids">Kids</option>
+                        <option value="women">Feminina</option>
+                        <option value="seniors">Terceira Idade</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Faixa Mínima</label>
+                    <select id="class-min-belt" class="input-field">
+                        <option value="Branca">Branca</option>
+                        <option value="Cinza">Cinza</option>
+                        <option value="Amarela">Amarela</option>
+                        <option value="Laranja">Laranja</option>
+                        <option value="Verde">Verde</option>
+                        <option value="Azul">Azul</option>
+                        <option value="Roxa">Roxa</option>
+                        <option value="Marrom">Marrom</option>
+                        <option value="Preta">Preta</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Capacidade Máx.</label>
+                    <input type="number" id="class-capacity" class="input-field" placeholder="Ex: 30" min="1" value="30">
                 </div>
             </div>
 
@@ -1256,7 +1315,11 @@ window.submitNewClass = async () => {
         dayOfWeek: parseInt(document.getElementById('class-day').value),
         startTime: document.getElementById('class-start').value,
         endTime: document.getElementById('class-end').value,
-        category: document.getElementById('class-category').value
+        category: document.getElementById('class-category').value,
+        level: document.getElementById('class-level').value,
+        targetAudience: document.getElementById('class-target').value,
+        minBelt: document.getElementById('class-min-belt').value,
+        capacity: parseInt(document.getElementById('class-capacity').value) || 30
     };
 
     try {
@@ -1285,27 +1348,198 @@ window.submitNewClass = async () => {
 };
 
 window.deleteClass = async (id) => {
-    if (!confirm('Tem certeza que deseja remover esta aula?')) return;
+    const confirmMsg = 'Tem certeza que deseja remover esta aula?';
+    
+    const executeDelete = async () => {
+        // Ensure API_URL is available
+        const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+
+        try {
+            const res = await fetch(`${apiUrl}/classes/${id}`, {
+                method: 'DELETE',
+                headers: { 'Bypass-Tunnel-Reminder': 'true' }
+            });
+            const json = await res.json();
+
+            if (json.success) {
+                if (typeof showToast === 'function') showToast('Aula removida!', 'success');
+                loadSchedule();
+            } else {
+                if (typeof showToast === 'function') showToast('Erro ao remover', 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            if (typeof showToast === 'function') showToast('Erro de conexão', 'error');
+        }
+    };
+
+    if (typeof showPortalConfirm === 'function') {
+        showPortalConfirm('Remover Aula', confirmMsg, executeDelete);
+    } else if (confirm(confirmMsg)) {
+        executeDelete();
+    }
+};
+
+window.openEditClassModal = (id) => {
+    const cls = window.currentScheduleData.find(c => c._id === id);
+    if (!cls) return;
+
+    // Build options for teachers
+    const teachersList = window.myTeachers || [];
+    const teacherOptions = teachersList.map(t =>
+        `<option value="${t._id}" ${t._id === (cls.teacherId?._id || cls.teacherId) ? 'selected' : ''}>${t.name} (${t.belt || 'Faixa?'})</option>`
+    ).join('');
+
+    const content = `
+        <div class="text-center mb-6">
+            <h3 class="text-xl font-bold text-slate-800">Editar Aula</h3>
+            <p class="text-xs text-slate-500">Atualize os dados da aula</p>
+        </div>
+        
+        <form id="form-edit-class" onsubmit="event.preventDefault(); submitEditClass('${id}')" class="space-y-4">
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Nome da Aula</label>
+                <input type="text" id="edit-class-name" class="input-field" value="${cls.name}" required>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Dia da Semana</label>
+                    <select id="edit-class-day" class="input-field" required>
+                        <option value="1" ${cls.dayOfWeek === 1 ? 'selected' : ''}>Segunda-feira</option>
+                        <option value="2" ${cls.dayOfWeek === 2 ? 'selected' : ''}>Terça-feira</option>
+                        <option value="3" ${cls.dayOfWeek === 3 ? 'selected' : ''}>Quarta-feira</option>
+                        <option value="4" ${cls.dayOfWeek === 4 ? 'selected' : ''}>Quinta-feira</option>
+                        <option value="5" ${cls.dayOfWeek === 5 ? 'selected' : ''}>Sexta-feira</option>
+                        <option value="6" ${cls.dayOfWeek === 6 ? 'selected' : ''}>Sábado</option>
+                        <option value="0" ${cls.dayOfWeek === 0 ? 'selected' : ''}>Domingo</option>
+                    </select>
+                </div>
+                <div>
+                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Categoria</label>
+                    <select id="edit-class-category" class="input-field" required>
+                        <option value="BJJ" ${cls.category === 'BJJ' ? 'selected' : ''}>Jiu-Jitsu (Kimono)</option>
+                        <option value="No-Gi" ${cls.category === 'No-Gi' ? 'selected' : ''}>No-Gi (Sem Kimono)</option>
+                        <option value="Kids" ${cls.category === 'Kids' ? 'selected' : ''}>Kids</option>
+                        <option value="Fundamentals" ${cls.category === 'Fundamentals' ? 'selected' : ''}>Fundamentos</option>
+                        <option value="Wrestling" ${cls.category === 'Wrestling' ? 'selected' : ''}>Wrestling</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Tipo da Turma</label>
+                    <select id="edit-class-level" class="input-field" required>
+                        <option value="beginner" ${cls.level === 'beginner' ? 'selected' : ''}>Iniciantes</option>
+                        <option value="intermediate" ${cls.level === 'intermediate' ? 'selected' : ''}>Intermediários</option>
+                        <option value="advanced" ${cls.level === 'advanced' ? 'selected' : ''}>Avançados</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Público Alvo</label>
+                    <select id="edit-class-target" class="input-field" required>
+                        <option value="adults" ${cls.targetAudience === 'adults' ? 'selected' : ''}>Adultos</option>
+                        <option value="kids" ${cls.targetAudience === 'kids' ? 'selected' : ''}>Kids</option>
+                        <option value="women" ${cls.targetAudience === 'women' ? 'selected' : ''}>Feminina</option>
+                        <option value="seniors" ${cls.targetAudience === 'seniors' ? 'selected' : ''}>Terceira Idade</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Faixa Mínima</label>
+                    <select id="edit-class-min-belt" class="input-field">
+                        <option value="Branca" ${cls.minBelt === 'Branca' ? 'selected' : ''}>Branca</option>
+                        <option value="Cinza" ${cls.minBelt === 'Cinza' ? 'selected' : ''}>Cinza</option>
+                        <option value="Amarela" ${cls.minBelt === 'Amarela' ? 'selected' : ''}>Amarela</option>
+                        <option value="Laranja" ${cls.minBelt === 'Laranja' ? 'selected' : ''}>Laranja</option>
+                        <option value="Verde" ${cls.minBelt === 'Verde' ? 'selected' : ''}>Verde</option>
+                        <option value="Azul" ${cls.minBelt === 'Azul' ? 'selected' : ''}>Azul</option>
+                        <option value="Roxa" ${cls.minBelt === 'Roxa' ? 'selected' : ''}>Roxa</option>
+                        <option value="Marrom" ${cls.minBelt === 'Marrom' ? 'selected' : ''}>Marrom</option>
+                        <option value="Preta" ${cls.minBelt === 'Preta' ? 'selected' : ''}>Preta</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Capacidade Máx.</label>
+                    <input type="number" id="edit-class-capacity" class="input-field" value="${cls.capacity || 30}" min="1">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Início</label>
+                    <input type="time" id="edit-class-start" class="input-field" value="${cls.startTime}" required>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Fim</label>
+                    <input type="time" id="edit-class-end" class="input-field" value="${cls.endTime}" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Professor Responsável</label>
+                <select id="edit-class-teacher" class="input-field" required>
+                    <option value="">Selecione...</option>
+                    ${teacherOptions}
+                </select>
+            </div>
+
+            <button type="submit" class="w-full btn-primary mt-4">
+                Salvar Alterações
+            </button>
+        </form>
+    `;
+
+    openModal(content);
+};
+
+window.submitEditClass = async (id) => {
+    const submitBtn = document.querySelector('#form-edit-class button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
 
     // Ensure API_URL is available
     const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
 
+    const data = {
+        teacherId: document.getElementById('edit-class-teacher').value,
+        name: document.getElementById('edit-class-name').value,
+        dayOfWeek: parseInt(document.getElementById('edit-class-day').value),
+        startTime: document.getElementById('edit-class-start').value,
+        endTime: document.getElementById('edit-class-end').value,
+        category: document.getElementById('edit-class-category').value,
+        level: document.getElementById('edit-class-level').value,
+        targetAudience: document.getElementById('edit-class-target').value,
+        minBelt: document.getElementById('edit-class-min-belt').value,
+        capacity: parseInt(document.getElementById('edit-class-capacity').value) || 30
+    };
+
     try {
         const res = await fetch(`${apiUrl}/classes/${id}`, {
-            method: 'DELETE',
-            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Bypass-Tunnel-Reminder': 'true'
+            },
+            body: JSON.stringify(data)
         });
         const json = await res.json();
 
         if (json.success) {
-            if (typeof showToast === 'function') showToast('Aula removida!', 'success');
-            loadSchedule();
+            if (typeof showToast === 'function') showToast('Aula atualizada com sucesso!', 'success');
+            closeModal();
+            loadSchedule(); // Refresh grid
         } else {
-            if (typeof showToast === 'function') showToast('Erro ao remover', 'error');
+            throw new Error(json.message);
         }
     } catch (e) {
-        console.error(e);
-        if (typeof showToast === 'function') showToast('Erro de conexão', 'error');
+        if (typeof showToast === 'function') showToast('Erro: ' + e.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
     }
 };
 

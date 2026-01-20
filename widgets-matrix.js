@@ -788,6 +788,7 @@ registerWidget({
                                 <th class="pb-4 px-2 sortable group cursor-pointer hover:text-orange-500 transition-colors" onclick="setSort('monthlyFee')" id="th-monthlyFee">
                                     Mensalidade <i class="fa-solid fa-sort sort-icon ml-1 opacity-30 group-hover:opacity-100"></i>
                                 </th>
+                                <th class="pb-4 px-2">Endereço</th>
                                 <th class="pb-4 px-2 text-right">Ações</th>
                             </tr>
                         </thead>
@@ -1162,6 +1163,16 @@ registerWidget({
             const response = await fetch(`${apiUrl}/graduation/eligible/${fId}`, {
                 headers: { 'Bypass-Tunnel-Reminder': 'true' }
             });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-orange-400 text-[10px] italic">Unidade não encontrada ou sessão expirada. Tente selecionar a unidade novamente.</td></tr>';
+                } else {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                return;
+            }
+
             const result = await response.json();
             const eligibleStudents = result.data || [];
 
@@ -1228,61 +1239,73 @@ registerWidget({
     }
 });
 
-window.processMatrixUnitGraduation = async (studentId, name, nextLevel) => {
-    if (!confirm(`Confirmar graduação de ${name} para ${nextLevel}?`)) return;
+window.processMatrixUnitGraduation = (studentId, name, nextLevel) => {
+    window.showConfirmModal(
+        'Confirmar Graduação',
+        `Confirmar graduação de ${name} para ${nextLevel}?`,
+        async function() {
+            try {
+                const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+                const fId = window.selectedFranchiseId;
 
-    try {
-        const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
-        const fId = window.selectedFranchiseId;
+                // Find a black belt teacher to "sign" the promotion (optional validation, using first for now)
+                const teachersRes = await fetch(`${apiUrl}/teachers?franchiseId=${fId}`, {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+                const teachersData = await teachersRes.json();
+                const teachers = teachersData.data || [];
 
-        // Find a black belt teacher to "sign" the promotion (optional validation, using first for now)
-        const teachersRes = await fetch(`${apiUrl}/teachers?franchiseId=${fId}`, {
-            headers: { 'Bypass-Tunnel-Reminder': 'true' }
-        });
-        const teachersData = await teachersRes.json();
-        const teachers = teachersData.data || [];
+                const blackBelt = teachers.find(t => t.belt === 'Preta');
+                const teacherId = blackBelt ? blackBelt._id : (teachers[0]?._id || null);
 
-        const blackBelt = teachers.find(t => t.belt === 'Preta');
-        const teacherId = blackBelt ? blackBelt._id : (teachers[0]?._id || null);
+                const response = await fetch(`${apiUrl}/graduation/promote`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
+                    body: JSON.stringify({ studentId, teacherId })
+                });
 
-        const response = await fetch(`${apiUrl}/graduation/promote`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Bypass-Tunnel-Reminder': 'true'
-            },
-            body: JSON.stringify({ studentId, teacherId })
-        });
+                const resData = await response.json();
 
-        const resData = await response.json();
+                if (resData.success) {
+                    if (typeof showNotification === 'function') {
+                        showNotification(`✅ Sucesso! ${name} foi graduado.`, 'success');
+                    } else {
+                        alert(`Sucesso! ${name} foi graduado.`);
+                    }
 
-        if (resData.success) {
-            alert(`Sucesso! ${name} foi graduado.`);
+                    // Optimistically update the local students array if it exists
+                    // This ensures renderStudents() shows the new degree immediately
+                    if (typeof students !== 'undefined' && Array.isArray(students)) {
+                        const studentIndex = students.findIndex(s => s._id === studentId || s.id === studentId);
+                        if (studentIndex !== -1) {
+                            const parts = nextLevel.split(' - ');
+                            students[studentIndex].belt = parts[0];
+                            students[studentIndex].degree = parts.length > 1 ? parts[1] : 'Nenhum';
+                            console.log(`Optimistically updated student ${name} to ${nextLevel}`);
+                        }
+                    }
 
-            // Optimistically update the local students array if it exists
-            // This ensures renderStudents() shows the new degree immediately
-            if (typeof students !== 'undefined' && Array.isArray(students)) {
-                const studentIndex = students.findIndex(s => s._id === studentId || s.id === studentId);
-                if (studentIndex !== -1) {
-                    const parts = nextLevel.split(' - ');
-                    students[studentIndex].belt = parts[0];
-                    students[studentIndex].degree = parts.length > 1 ? parts[1] : 'Nenhum';
-                    console.log(`Optimistically updated student ${name} to ${nextLevel}`);
+                    // Update widget
+                    const widget = typeof WIDGET_REGISTRY !== 'undefined' ? WIDGET_REGISTRY['matrix-unit-graduation'] : null;
+                    if (widget) widget.update();
+
+                    // Also update the students list widget to reflect the new degree
+                    const studentsWidget = typeof WIDGET_REGISTRY !== 'undefined' ? WIDGET_REGISTRY['matrix-unit-students'] : null;
+                    if (studentsWidget) studentsWidget.update();
+                }
+            } catch (error) {
+                console.error('Erro ao processar graduação:', error);
+                if (typeof showNotification === 'function') {
+                    showNotification('❌ Erro ao processar graduação. Tente novamente.', 'error');
+                } else {
+                    alert('Erro ao processar graduação. Tente novamente.');
                 }
             }
-
-            // Update widget
-            const widget = typeof WIDGET_REGISTRY !== 'undefined' ? WIDGET_REGISTRY['matrix-unit-graduation'] : null;
-            if (widget) widget.update();
-
-            // Also update the students list widget to reflect the new degree
-            const studentsWidget = typeof WIDGET_REGISTRY !== 'undefined' ? WIDGET_REGISTRY['matrix-unit-students'] : null;
-            if (studentsWidget) studentsWidget.update();
         }
-    } catch (error) {
-        console.error('Erro ao processar graduação:', error);
-        alert('Erro ao processar graduação. Tente novamente.');
-    }
+    );
 };
 
 // ===== UNIT SCHEDULE WIDGET =====
@@ -1468,6 +1491,47 @@ window.openUnitAddClassModal = async () => {
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Tipo da Turma</label>
+                    <select id="unit-class-level" class="input-field" required>
+                        <option value="beginner">Iniciantes</option>
+                        <option value="intermediate">Intermediários</option>
+                        <option value="advanced">Avançados</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Público Alvo</label>
+                    <select id="unit-class-target" class="input-field" required>
+                        <option value="adults">Adultos</option>
+                        <option value="kids">Kids</option>
+                        <option value="women">Feminina</option>
+                        <option value="seniors">Terceira Idade</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Faixa Mínima</label>
+                    <select id="unit-class-min-belt" class="input-field">
+                        <option value="Branca">Branca</option>
+                        <option value="Cinza">Cinza</option>
+                        <option value="Amarela">Amarela</option>
+                        <option value="Laranja">Laranja</option>
+                        <option value="Verde">Verde</option>
+                        <option value="Azul">Azul</option>
+                        <option value="Roxa">Roxa</option>
+                        <option value="Marrom">Marrom</option>
+                        <option value="Preta">Preta</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Capacidade Máx.</label>
+                    <input type="number" id="unit-class-capacity" class="input-field" placeholder="Ex: 30" min="1" value="30">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Início</label>
                     <input type="time" id="unit-class-start" class="input-field" required>
                 </div>
@@ -1523,7 +1587,11 @@ window.submitNewUnitClass = async () => {
         dayOfWeek: parseInt(document.getElementById('unit-class-day').value),
         startTime: document.getElementById('unit-class-start').value,
         endTime: document.getElementById('unit-class-end').value,
-        category: document.getElementById('unit-class-category').value
+        category: document.getElementById('unit-class-category').value,
+        level: document.getElementById('unit-class-level').value,
+        targetAudience: document.getElementById('unit-class-target').value,
+        minBelt: document.getElementById('unit-class-min-belt').value,
+        capacity: parseInt(document.getElementById('unit-class-capacity').value) || 30
     };
 
     try {
@@ -1538,7 +1606,11 @@ window.submitNewUnitClass = async () => {
         const json = await res.json();
 
         if (json.success) {
-            alert('Aula criada com sucesso!');
+            if (typeof showNotification === 'function') {
+                showNotification('✅ Aula criada com sucesso!', 'success');
+            } else {
+                alert('Aula criada com sucesso!');
+            }
             const modal = document.getElementById('ui-modal');
             if (modal) modal.style.display = 'none';
             loadUnitSchedule(); // Refresh grid
@@ -1546,7 +1618,11 @@ window.submitNewUnitClass = async () => {
             throw new Error(json.message);
         }
     } catch (e) {
-        alert('Erro: ' + e.message);
+        if (typeof showNotification === 'function') {
+            showNotification('❌ Erro: ' + e.message, 'error');
+        } else {
+            alert('Erro: ' + e.message);
+        }
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
     }

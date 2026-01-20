@@ -30,18 +30,39 @@ function updateHeaderAndProfile() {
         const style = getBeltStyle(belt);
         const degree = currentTeacher.degree && currentTeacher.degree !== 'Nenhum' ? ` • ${currentTeacher.degree}` : '';
 
-        pBelt.className = `inline-block px-4 py-1.5 rounded-full text-[10px] font-black mt-2 uppercase tracking-widest border ${style.bg} ${style.text} ${style.border}`;
+        pBelt.className = `inline-block px-4 py-1.5 rounded-full text-[10px] font-black mt-2 uppercase tracking-widest border`;
+        pBelt.style.background = style.bg;
+        pBelt.style.color = style.text;
+        pBelt.style.borderColor = style.border;
         pBelt.textContent = `${belt}${degree}`.toUpperCase();
     }
 
     const pFranchise = document.getElementById('profile-franchise');
-    if (pFranchise) pFranchise.textContent = currentTeacher.franchiseId?.name || 'Unidade Arena';
+    if (pFranchise) {
+        const name = currentTeacher.franchiseId?.name || 'Unidade não informada';
+        pFranchise.textContent = name.toLowerCase().startsWith('unidade') ? name : `Unidade ${name}`;
+    }
 
     const pEmail = document.getElementById('profile-email');
     if (pEmail) pEmail.textContent = currentTeacher.email;
 
+    const pPhone = document.getElementById('profile-phone');
+    if (pPhone) pPhone.textContent = currentTeacher.phone || '--';
+
+    const pGender = document.getElementById('profile-gender');
+    if (pGender) pGender.textContent = currentTeacher.gender || '--';
+
+    const pBirth = document.getElementById('profile-birth');
+    if (pBirth) pBirth.textContent = currentTeacher.birthDate ? new Date(currentTeacher.birthDate).toLocaleDateString('pt-BR') : '--';
+
     const pHire = document.getElementById('profile-hire-date');
-    if (pHire) pHire.textContent = new Date(currentTeacher.createdAt).toLocaleDateString('pt-BR');
+    if (pHire) {
+        const hireDate = currentTeacher.hireDate || currentTeacher.createdAt;
+        pHire.textContent = hireDate ? new Date(hireDate).toLocaleDateString('pt-BR') : '--';
+    }
+
+    const pAddress = document.getElementById('profile-address');
+    if (pAddress) pAddress.textContent = currentTeacher.address || '--';
 
     // Avatar initial
     const avatar = document.getElementById('profile-avatar');
@@ -49,7 +70,138 @@ function updateHeaderAndProfile() {
 
     const avatarLarge = document.getElementById('profile-avatar-large');
     if (avatarLarge) avatarLarge.textContent = currentTeacher.name.charAt(0);
+
+    // Render Graduation History
+    renderGraduationHistoryTable(currentTeacher.graduationHistory || []);
 }
+
+function renderGraduationHistoryTable(history) {
+    const tbody = document.getElementById('graduation-history-body');
+    if (!tbody) return;
+
+    if (!history || history.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="px-6 py-8 text-center text-slate-400 italic">
+                    Nenhum registro de graduação disponível para este professor.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    // Sort by date descending
+    const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    tbody.innerHTML = sorted.map(item => {
+        const date = new Date(item.date).toLocaleDateString('pt-BR');
+        const masterName = item.promotedBy || 'Mestre Arena';
+
+        return `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 text-slate-600 font-medium">${date}</td>
+                <td class="px-6 py-4 font-bold text-slate-800">${item.belt}</td>
+                <td class="px-6 py-4 text-slate-500">${item.degree || 'Nenhum'}</td>
+                <td class="px-6 py-4 text-slate-500 text-[10px] uppercase font-bold tracking-wider">${masterName}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Profile Editing Logic
+window.openEditProfileModal = function() {
+    const modal = document.getElementById('modal-edit-profile');
+    if (!modal) return;
+
+    // Populate Fields
+    document.getElementById('edit-teacher-name').value = currentTeacher.name || '';
+    document.getElementById('edit-teacher-email').value = currentTeacher.email || '';
+    document.getElementById('edit-teacher-gender').value = currentTeacher.gender || 'Masculino';
+    document.getElementById('edit-teacher-phone').value = currentTeacher.phone || '';
+    
+    if (currentTeacher.birthDate) {
+        document.getElementById('edit-teacher-birth').value = currentTeacher.birthDate.split('T')[0];
+    }
+    
+    const hireDate = currentTeacher.hireDate || currentTeacher.createdAt;
+    if (hireDate) {
+        document.getElementById('edit-teacher-hire').value = hireDate.split('T')[0];
+    }
+    
+    document.getElementById('edit-teacher-belt').value = currentTeacher.belt || 'Branca';
+    document.getElementById('edit-teacher-degree').value = currentTeacher.degree || 'Nenhum';
+    document.getElementById('edit-teacher-address').value = currentTeacher.address || '';
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+};
+
+window.closeEditProfileModal = function() {
+    const modal = document.getElementById('modal-edit-profile');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+};
+
+window.saveProfileUpdates = async function(event) {
+    if (event) event.preventDefault();
+    
+    const btn = document.getElementById('btn-save-profile');
+    const originalContent = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Salvando...';
+
+    const payload = {
+        name: document.getElementById('edit-teacher-name').value,
+        email: document.getElementById('edit-teacher-email').value,
+        gender: document.getElementById('edit-teacher-gender').value,
+        phone: document.getElementById('edit-teacher-phone').value,
+        birthDate: document.getElementById('edit-teacher-birth').value,
+        belt: document.getElementById('edit-teacher-belt').value,
+        degree: document.getElementById('edit-teacher-degree').value,
+        address: document.getElementById('edit-teacher-address').value
+    };
+
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/teachers/${currentTeacher._id}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('arena_token')}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showToast('Perfil atualizado com sucesso!', 'success');
+            currentTeacher = result.data;
+            
+            // Sync with localStorage teacher data if stored there
+            const stored = localStorage.getItem('arena_teacher');
+            if (stored) {
+                const storedTeacher = JSON.parse(stored);
+                if (storedTeacher._id === currentTeacher._id) {
+                    localStorage.setItem('arena_teacher', JSON.stringify(currentTeacher));
+                }
+            }
+            
+            updateHeaderAndProfile();
+            closeEditProfileModal();
+        } else {
+            showToast(result.error || 'Erro ao atualizar perfil', 'error');
+        }
+    } catch (error) {
+        console.error('Save profile error:', error);
+        showToast('Erro de conexão ao salvar perfil', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
+};
 
 async function fetchDashboardData() {
     try {
@@ -67,6 +219,10 @@ async function fetchDashboardData() {
 
         if (result.success) {
             dashboardData = result.data;
+            if (dashboardData.teacher) {
+                currentTeacher = dashboardData.teacher;
+                updateHeaderAndProfile();
+            }
             if (dashboardData.franchise) {
                 applyBranding(dashboardData.franchise);
                 updateSupportInfo(dashboardData.franchise);
@@ -152,25 +308,28 @@ function renderDashboard() {
 }
 
 function renderProStats() {
-    // Mock calculations or use real data if available in stats
-    const totalStudents = dashboardData.stats.totalStudents || 0;
-    const attendanceToday = dashboardData.stats.attendanceToday || 0;
+    const stats = dashboardData.stats || {};
     
-    // Update Sidebar Widget
+    // Alunos Atendidos (Total de presenças na semana)
+    const weekTotal = stats.weekTotal || 0;
     const elTotal = document.getElementById('stat-total-week');
-    if(elTotal) elTotal.textContent = totalStudents; // In a real app, this would be weekly total
+    if(elTotal) elTotal.textContent = weekTotal;
     
-    // Rate
-    const rate = totalStudents > 0 ? Math.round((attendanceToday / totalStudents) * 100) : 0;
+    // Taxa de Presença (Média da semana)
+    const weekRate = stats.weekRate || 0;
     const elRate = document.getElementById('stat-rate-week');
-    if(elRate) elRate.textContent = `${rate}%`;
+    if(elRate) elRate.textContent = `${weekRate}%`;
     
-    // Bars
-    document.getElementById('bar-students').style.width = this.lastTotalWeek === totalStudents ? '100%' : `${Math.min(totalStudents * 2, 100)}%`; // Fake scale for demo
-    document.getElementById('bar-rate').style.width = `${rate}%`;
+    // Bars Visuals
+    const barStudents = document.getElementById('bar-students');
+    if(barStudents) barStudents.style.width = `${Math.min(weekTotal * 2, 100)}%`; // Using 50 as a daily average target for 100% bar
     
-    // Streak (Mock)
-    document.getElementById('stat-streak').textContent = `${dashboardData.stats.streak || 3} aulas consecutivas`;
+    const barRate = document.getElementById('bar-rate');
+    if(barRate) barRate.style.width = `${weekRate}%`;
+    
+    // Streak
+    const elStreak = document.getElementById('stat-streak');
+    if(elStreak) elStreak.textContent = `${stats.streak || 0} aulas consecutivas`;
 }
 
 function autoSelectLiveClass() {
@@ -375,11 +534,15 @@ async function loadClassAttendance(classId, className) {
     if (statusLabel) statusLabel.textContent = "Atualizando...";
 
     try {
-        const response = await fetch(`${window.API_BASE_URL}/teachers/classes/${classId}/attendance`);
+        console.log(`Fetching attendance for class ${classId}...`);
+        const response = await fetch(`${window.API_BASE_URL}/teachers/classes/${classId}/attendance?t=${Date.now()}`);
         const result = await response.json();
+        
+        console.log('Attendance API provided:', result);
 
         if (result.success) {
             filteredStudents = result.data || [];
+            console.log('Filtered students set to:', filteredStudents);
             currentAttendanceClassId = classId;
             renderInlineStudentsList(); // New renderer
             
@@ -421,12 +584,23 @@ function renderInlineStudentsList() {
         const sData = student.studentId || student;
         const name = sData.name || 'Aluno';
         const belt = sData.belt || 'Branca';
-        const degree = sData.degree;
+        
+        // Degree Formatting
+        const rawDegree = String(sData.degree || 'Nenhum');
+        const degreeFormatted = rawDegree.toUpperCase().includes('GRAU') ? rawDegree : `${rawDegree}º Grau`;
+        // Ensure we don't display '0' or 'Nenhum' or empty
+        const hasDegree = sData.degree && sData.degree !== 'Nenhum' && sData.degree != 0 && sData.degree !== '0';
+        const degreeText = hasDegree ? ` • ${degreeFormatted}` : '';
+
         const beltStyle = getBeltStyle(belt);
         const initials = name.substring(0,2).toUpperCase();
         
         const isConfirmed = !!student.checkInTime || student.status === 'confirmed';
         const isReserved = !isConfirmed;
+
+        // Check if class check-in is open
+        const currentClass = dashboardData?.agenda?.find(c => c._id === (student.classId || currentAttendanceClassId));
+        const isOpen = currentClass ? isClassCheckinOpen(currentClass) : false;
 
         // Action Logic
         let actionBtn = '';
@@ -434,6 +608,12 @@ function renderInlineStudentsList() {
             actionBtn = `
                 <div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center border border-green-100 shadow-sm">
                     <i class="fa-solid fa-check"></i>
+                </div>
+            `;
+        } else if (!isOpen) { 
+             actionBtn = `
+                <div title="Check-in fechado (Abre 15min antes)" class="w-10 h-10 rounded-full bg-slate-100 text-slate-300 flex items-center justify-center border border-slate-200 cursor-not-allowed">
+                    <i class="fa-regular fa-clock"></i>
                 </div>
             `;
         } else {
@@ -461,8 +641,8 @@ function renderInlineStudentsList() {
                     <div>
                         <h4 class="font-bold text-slate-800 text-sm leading-tight">${name}</h4>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase ${beltStyle.bg} ${beltStyle.text} border ${beltStyle.border}">
-                                ${belt}
+                            <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase border" style="background: ${beltStyle.bg}; color: ${beltStyle.text}; border-color: ${beltStyle.border}">
+                                ${belt}${degreeText}
                             </span>
                             ${statusText}
                         </div>
@@ -645,21 +825,20 @@ window.confirmAllAttendance = async function() {
 };
 
 function getBeltStyle(belt) {
-
-    const styles = {
-        'Branca': { bg: 'bg-white', text: 'text-slate-600', border: 'border-slate-200' },
-        'Cinza': { bg: 'bg-slate-400', text: 'text-white', border: 'border-slate-500' },
-        'Amarela': { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200' },
-        'Laranja': { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' },
-        'Verde': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' },
-        'Azul': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
-        'Roxa': { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
-        'Marrom': { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
-        'Preta': { bg: 'bg-slate-900', text: 'text-white', border: 'border-black' },
-        'Coral': { bg: 'bg-[repeating-linear-gradient(90deg,#F00_0,#F00_10px,#FFF_10px,#FFF_20px)]', text: 'text-black', border: 'border-red-600' },
-        'Vermelha': { bg: 'bg-red-600', text: 'text-white', border: 'border-red-700' }
+    const beltColors = {
+        'Branca': { bg: '#F8FAFC', text: '#334155', border: '#CBD5E1' },
+        'Cinza': { bg: '#6B7280', text: '#FFFFFF', border: '#6B7280' },
+        'Amarela': { bg: '#FCD34D', text: '#713F12', border: '#FCD34D' },
+        'Laranja': { bg: '#FF6B00', text: '#FFFFFF', border: '#FF6B00' },
+        'Verde': { bg: '#22C55E', text: '#FFFFFF', border: '#22C55E' },
+        'Azul': { bg: '#3B82F6', text: '#FFFFFF', border: '#3B82F6' },
+        'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
+        'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
+        'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' },
+        'Coral': { bg: 'repeating-linear-gradient(90deg, #F00 0, #F00 10px, #FFF 10px, #FFF 20px)', text: '#000000', border: '#DC2626' },
+        'Vermelha': { bg: '#EE1111', text: '#FFFFFF', border: '#EE1111' }
     };
-    return styles[belt] || styles['Branca'];
+    return beltColors[belt] || beltColors['Branca'];
 }
 
 // Search Logic
@@ -728,7 +907,7 @@ function renderAllStudentsList() {
                     <div class="flex-1 min-w-0">
                         <h4 class="text-base font-black text-slate-800 tracking-tight mb-1 truncate">${student.name}</h4>
                         <div class="flex items-center gap-2">
-                             <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg ${beltStyle.bg} ${beltStyle.text} border ${beltStyle.border} shadow-sm">
+                             <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border shadow-sm" style="background: ${beltStyle.bg}; color: ${beltStyle.text}; border-color: ${beltStyle.border}">
                                 ${student.belt}${degreeText}
                             </span>
                         </div>
@@ -1261,8 +1440,13 @@ window.openClassBookingsModal = async function(classId, className, dateStrFromMo
                 const statusColor = isConfirmed ? 'text-blue-500 border-blue-100' : 'text-green-500 border-green-100';
                 const statusIcon = isConfirmed ? 'fa-solid fa-user-check' : 'fa-solid fa-check-circle';
 
-                const rawDegree = String(student.degree || 0);
+                const beltStyle = getBeltStyle(student.belt || 'Branca');
+
+                const rawDegree = String(student.degree || 'Nenhum');
                 const degreeFormatted = rawDegree.toUpperCase().includes('GRAU') ? rawDegree : `${rawDegree}º Grau`;
+                // Ensure we don't display '0' or 'Nenhum' or empty
+                const hasDegree = student.degree && student.degree !== 'Nenhum' && student.degree != 0 && student.degree !== '0';
+                const degreeText = hasDegree ? ` • ${degreeFormatted}` : '';
 
                 html += `
                     <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100 hover:border-orange-200 transition-all group">
@@ -1272,9 +1456,9 @@ window.openClassBookingsModal = async function(classId, className, dateStrFromMo
                         <div class="flex-1 overflow-hidden">
                             <h4 class="font-bold text-slate-800 text-sm truncate">${student.name}</h4>
                             <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">${student.belt || 'Branca'}</span>
-                                <span class="w-1 h-1 rounded-full bg-slate-200"></span>
-                                <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">${degreeFormatted}</span>
+                                <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase border" style="background: ${beltStyle.bg}; color: ${beltStyle.text}; border-color: ${beltStyle.border}">
+                                    ${student.belt || 'Branca'}${degreeText}
+                                </span>
                             </div>
                         </div>
                         <div class="bg-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest ${statusColor} border shadow-sm flex items-center gap-2">
@@ -1304,3 +1488,168 @@ window.openClassBookingsModal = async function(classId, className, dateStrFromMo
         }
     }
 };
+
+// --- GRADUATION LOGIC (Ported from Franchisee Widget) ---
+
+window.loadGraduationView = async function() {
+    const container = document.getElementById('section-graduation');
+    if (!container) return;
+
+    // Render Container Logic
+    container.innerHTML = `
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-medal"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Gestão de Graduações</h2>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Alunos aptos para promoção</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Alunos Prontos para Graduar</h3>
+                        <p class="text-[10px] text-slate-400">Com base em frequência e tempo mínimo</p>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-[11px]">
+                        <thead class="bg-slate-50/50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
+                            <tr>
+                                <th class="px-6 py-4">Aluno</th>
+                                <th class="px-6 py-4">De -> Para</th>
+                                <th class="px-6 py-4">Aulas</th>
+                                <th class="px-6 py-4 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-graduation-table-body" class="divide-y divide-slate-50">
+                            <tr>
+                                <td colspan="4" class="text-center py-10 text-slate-400">
+                                    <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verificando...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="p-4 bg-orange-50/50 border-t border-orange-100/50 text-orange-600 text-[10px] font-medium italic">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Só aparecem nesta lista alunos que atingiram critério de tempo e presença.
+                </div>
+            </div>
+        </div>
+    `;
+
+    updateGraduationTable();
+};
+
+async function updateGraduationTable() {
+    const tableBody = document.getElementById('teacher-graduation-table-body');
+    if (!tableBody) return;
+
+    // Resolve Franchise ID
+    let franchiseId = null;
+    if (currentTeacher && currentTeacher.franchiseId) {
+        franchiseId = typeof currentTeacher.franchiseId === 'object' ? currentTeacher.franchiseId._id : currentTeacher.franchiseId;
+    } else if (dashboardData && dashboardData.franchise) {
+        franchiseId = dashboardData.franchise._id;
+    }
+
+    if (!franchiseId) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-red-400 text-xs">Erro: Unidade não identificada.</td></tr>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/graduation/eligible/${franchiseId}`);
+        
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
+        const result = await response.json();
+        const eligibleStudents = result.data || [];
+
+        if (eligibleStudents.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-slate-400 italic">Nenhum aluno elegível no momento.</td></tr>';
+            return;
+        }
+
+        const renderBadge = (fullString) => {
+            if (!fullString) return '';
+            const parts = fullString.split(' - ');
+            const belt = parts[0] || 'Branca';
+            const style = getBeltStyle(belt); // Using existing helper
+            return `<span class="inline-block px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase border whitespace-nowrap" 
+                          style="background: ${style.bg}; color: ${style.text}; border-color: ${style.border};">
+                        ${fullString}
+                    </span>`;
+        };
+
+        tableBody.innerHTML = eligibleStudents.map(s => `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
+                <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                         ${renderBadge(s.current || s.belt)}
+                         <i class="fa-solid fa-arrow-right text-[8px] text-slate-300"></i>
+                         ${renderBadge(s.next)}
+                    </div>
+                </td>
+                <td class="px-6 py-4 font-bold text-slate-600">
+                    ${s.attended} <span class="text-slate-400 font-normal">/ ${s.required}</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <button onclick="processTeacherPromotion('${s.id}', '${s.name}', '${s.next}')" 
+                            class="px-3 py-1.5 bg-brand-500 text-white rounded-lg text-[9px] font-bold hover:bg-brand-600 transition shadow-sm uppercase tracking-wider mobile-touch-target">
+                        Graduar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Erro ao carregar graduáveis:', error);
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-red-400 text-xs">Erro ao verificar elegibilidade.</td></tr>';
+    }
+}
+
+window.processTeacherPromotion = async (studentId, name, nextLevel) => {
+    const confirmMsg = `Deseja confirmar a graduação de ${name} para ${nextLevel}?`;
+
+    showPortalConfirm('Confirmar Graduação', confirmMsg, () => executeTeacherPromotion(studentId, name, nextLevel));
+};
+
+async function executeTeacherPromotion(studentId, name, nextLevel) {
+    try {
+        const payload = { 
+            studentId, 
+            teacherId: currentTeacher._id 
+        };
+
+        const response = await fetch(`${window.API_BASE_URL}/graduation/promote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const resData = await response.json();
+
+        if (resData.success) {
+            showToast(`${name} graduado com sucesso!`, 'success');
+            
+            // Refresh table
+            updateGraduationTable();
+        } else {
+            throw new Error(resData.message || 'Erro ao processar graduação');
+        }
+    } catch (error) {
+        console.error('Erro ao processar graduação:', error);
+        showToast('Não foi possível realizar a graduação.', 'error');
+    }
+}

@@ -44,8 +44,8 @@ async function init() {
             }
         });
     } else {
-        // Use mock data
-        franchises = mockFranchises;
+        // Firebase disabled, normally this would connect to the local Node backend
+        // For now, we'll just initialize with empty state
         renderNetwork();
         renderTopUnits();
         updateStats();
@@ -60,15 +60,7 @@ function loadDataFromFirebase() {
     onSnapshot(colFranchises, (snap) => {
         franchises = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // Seed data if empty
-        if (franchises.length === 0) {
-            mockFranchises.forEach(f => {
-                const { id, ...data } = f;
-                addDoc(colFranchises, data);
-            });
-            return;
-        }
-
+        // Seed logic removed to avoid accidental data generation
         renderNetwork();
         renderTopUnits();
         updateStats();

@@ -75,7 +75,7 @@ function initWidgetSystem(containerId, appType) {
 
 // ===== LAYOUT PERSISTENCE =====
 function loadUserLayout(appType) {
-    const storageKey = `arenaHub_${appType}_layout`;
+    const storageKey = `arenaHub_v2_${appType}_layout`;
     const defaultLayout = getDefaultLayout(appType);
 
     // Try localStorage first
@@ -119,7 +119,7 @@ function loadUserLayout(appType) {
 }
 
 function saveUserLayout(layout, appType) {
-    const storageKey = `arenaHub_${appType}_layout`;
+    const storageKey = `arenaHub_v2_${appType}_layout`;
 
     // Save to localStorage immediately
     localStorage.setItem(storageKey, JSON.stringify(layout));
@@ -158,13 +158,8 @@ function getDefaultLayout(appType) {
         return [
             { id: 'franchisee-metrics', position: 0 },
             { id: 'franchisee-performance', position: 1 },
-            { id: 'franchisee-schedule', position: 2 },
-            { id: 'franchisee-students-list', position: 3 },
-            { id: 'franchisee-teachers-list', position: 4 },
-            { id: 'franchisee-ai-auditor', position: 5 },
-            { id: 'franchisee-directives', position: 6 },
-            { id: 'franchisee-graduation', position: 7 },
-            { id: 'franchisee-settings', position: 8 }
+            { id: 'franchisee-ai-auditor', position: 2 },
+            { id: 'franchisee-directives', position: 3 }
         ];
     } else if (appType === 'matrix-detail') {
         return [

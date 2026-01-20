@@ -516,6 +516,35 @@
     <!-- Floating Button (Fixed) -->
 
 
+    <!-- UI CONFIRMATION MODAL -->
+    <div id="ui-confirm-modal" class="fixed inset-0 z-[3000] hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true" style="display: none;">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0" id="confirm-backdrop">
+        </div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="confirm-panel"
+                    class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md scale-95 opacity-0 border border-slate-100">
+                    <div class="bg-white px-8 pb-8 pt-8 text-center">
+                        <div
+                            class="w-20 h-20 rounded-3xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-6">
+                            <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-3" id="confirm-title">Confirmar Ação</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed" id="confirm-msg">Deseja realmente prosseguir?
+                        </p>
+                    </div>
+                    <div class="bg-slate-50 px-8 py-6 flex flex-col gap-3">
+                        <button type="button" id="btn-confirm-yes"
+                            class="w-full py-4 bg-red-600 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-red-200">Confirmar</button>
+                        <button type="button" onclick="closeConfirmModal()"
+                            class="w-full py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold uppercase tracking-widest text-[10px]">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- SortableJS Library (Drag & Drop) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 

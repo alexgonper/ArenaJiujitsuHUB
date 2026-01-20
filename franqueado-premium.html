@@ -152,7 +152,7 @@
             <div id="portal-logo-container" class="flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                     <img id="portal-logo-img" class="hidden h-6 object-contain" src="" alt="Logo">
-                    <span class="text-orange-600 font-black text-lg tracking-tighter brand-typography">ARENA</span>
+                    <span id="portal-brand-title" class="text-orange-600 font-black text-lg tracking-tighter brand-typography">ARENA</span>
                 </div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">PORTAL DO
                     FRANQUEADO</span>
@@ -176,6 +176,10 @@
             <button onclick="changeSection('graduation')" id="nav-graduation"
                 class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-orange-600 rounded-2xl transition-all group">
                 <i class="fa-solid fa-medal w-5 transition-transform group-hover:scale-110"></i> Graduações
+            </button>
+            <button onclick="changeSection('schedule')" id="nav-schedule"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-orange-600 rounded-2xl transition-all group">
+                <i class="fa-regular fa-calendar-days w-5 transition-transform group-hover:scale-110"></i> Grade de Horários
             </button>
             <button onclick="changeSection('matrix')" id="nav-matrix"
                 class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-orange-600 rounded-2xl transition-all group relative">
@@ -316,6 +320,13 @@
                     <div id="section-graduation" class="hidden animate-in">
                         <div id="section-graduation-container" class="grid grid-cols-12 gap-6">
                             <!-- Graduation widget will be forced here -->
+                        </div>
+                    </div>
+
+                    <!-- SECTION: SCHEDULE -->
+                    <div id="section-schedule" class="hidden animate-in">
+                        <div id="section-schedule-container" class="grid grid-cols-12 gap-6">
+                            <!-- Schedule widget will be forced here -->
                         </div>
                     </div>
 
@@ -505,6 +516,7 @@
                 'students': 'Meus Alunos',
                 'teachers': 'Corpo Docente',
                 'graduation': 'Gestão Técnica',
+                'schedule': 'Grade de Horários',
                 'matrix': 'Matrix Hub',
                 'settings': 'Configuração da Unidade'
             };
@@ -513,6 +525,7 @@
                 'students': 'Gestão e Matrícula de Alunos',
                 'teachers': 'Gestão de Professores e Instrutores',
                 'graduation': 'Monitoramento de Graduações e Presenças',
+                'schedule': 'Gestão da Grade Semanal de Aulas',
                 'matrix': 'Comunicados Oficiais Matriz Arena',
                 'settings': 'Customização e White Label'
             };
@@ -528,34 +541,52 @@
                     'students': 'franchisee-students-list',
                     'teachers': 'franchisee-teachers-list',
                     'graduation': 'franchisee-graduation',
+                    'schedule': 'franchisee-schedule',
                     'matrix': 'franchisee-directives',
                     'settings': 'franchisee-settings'
                 };
 
                 const widgetId = widgetMap[sectionId];
+                console.log(`Navigating to ${sectionId}, Widget ID: ${widgetId}`);
+
                 if (widgetId && typeof WIDGET_REGISTRY !== 'undefined' && container) {
-                    // Find widget in dashboard
-                    const dashboardWidget = document.querySelector(`#widget-container [data-widget-id="${widgetId}"]`);
+                    // Check if widget is already in the specific section container
+                    const existingWidget = container.querySelector(`[data-widget-id="${widgetId}"]`) 
+                                        || container.querySelector('.col-span-12'); // Fallback check
 
-                    if (dashboardWidget) {
-                        // Clear container just in case and move widget there
-                        container.innerHTML = '';
-                        container.appendChild(dashboardWidget);
-
-                        // Force update to ensure it's rendered correctly in new parent
-                        const widget = WIDGET_REGISTRY[widgetId];
-                        if (widget && typeof widget.update === 'function') {
-                            widget.update();
-                        }
+                    if (existingWidget) {
+                         console.log("Widget already exists in section container. Updating...");
+                         const widget = WIDGET_REGISTRY[widgetId];
+                         if (widget && typeof widget.update === 'function') {
+                             widget.update();
+                         }
                     } else {
-                        // Fallback: render fresh if not in dashboard
-                        if (container.innerHTML.trim() === '') {
-                            const widget = WIDGET_REGISTRY[widgetId];
-                            if (widget) {
-                                const widgetEl = document.createElement('div');
-                                widgetEl.className = 'col-span-12 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm transition-all hover:shadow-md';
-                                container.appendChild(widgetEl);
-                                widget.render(widgetEl);
+                        // Find widget in dashboard (kidnap it)
+                        const dashboardWidget = document.querySelector(`#widget-container [data-widget-id="${widgetId}"]`);
+
+                        if (dashboardWidget) {
+                             console.log("Moving widget from dashboard...");
+                             container.innerHTML = '';
+                             container.appendChild(dashboardWidget);
+                             const widget = WIDGET_REGISTRY[widgetId];
+                             if (widget && typeof widget.update === 'function') {
+                                 widget.update();
+                             }
+                        } else {
+                            // Render fresh if not found anywhere
+                            console.log("Widget not found, rendering fresh...");
+                            // Always clear to be safe
+                            if (container.children.length === 0) {
+                                const widget = WIDGET_REGISTRY[widgetId];
+                                if (widget) {
+                                    const widgetEl = document.createElement('div');
+                                    widgetEl.className = 'col-span-12 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm transition-all hover:shadow-md h-full';
+                                    widgetEl.setAttribute('data-widget-id', widgetId); // Mark it!
+                                    container.appendChild(widgetEl);
+                                    widget.render(widgetEl);
+                                    // Some widgets might not call update in render, so force it
+                                    if(typeof widget.update === 'function') widget.update();
+                                }
                             }
                         }
                     }
@@ -563,7 +594,13 @@
             } else {
                 // Moving widgets BACK to dashboard if they were kidnapped
                 const widgetContainer = document.getElementById('widget-container');
-                const maps = ['students', 'teachers', 'graduation', 'matrix', 'settings'];
+                // Only restore widgets that belong in the dashboard (from widget-system default layout)
+                // We don't want to move back students/teachers if they are not supposed to be there.
+                // But current logic in widget-system is purely based on layouts.
+                
+                // Since we removed 'students' from dashboard layout, we don't need to do anything here for them.
+                // However, 'matrix' (directives) IS in the dashboard layout.
+                const maps = ['matrix'];
 
                 maps.forEach(sec => {
                     const secContainer = document.getElementById(`section-${sec}-container`);

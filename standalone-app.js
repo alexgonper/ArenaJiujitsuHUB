@@ -15,7 +15,6 @@ if (!API_BASE_URL) {
 }
 // Note: We removed the force-overwrite for 'localhost' to allow local development
 
-const USE_BACKEND = true; // Mudar para false para usar dados mock
 
 // ===== UTILITY FUNCTIONS =====
 // Format currency values with R$ prefix and 2 decimal places
@@ -285,6 +284,65 @@ window.closeModal = () => {
     const modal = document.getElementById('ui-modal');
     modal.classList.add('hidden');
     modal.style.display = 'none';
+};
+
+// ===== CUSTOM CONFIRM MODAL (System Standard) =====
+window.showConfirmModal = function(title, message, onConfirm) {
+    const modal = document.getElementById('ui-confirm-modal');
+    const backdrop = document.getElementById('confirm-backdrop');
+    const panel = document.getElementById('confirm-panel');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl = document.getElementById('confirm-msg');
+    
+    // Safety check if elements exist
+    if (!modal || !panel || !titleEl || !msgEl) {
+        console.error('Confirm modal elements not found');
+        if (confirm(message)) {
+            if (onConfirm) onConfirm();
+        }
+        return;
+    }
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    
+    // Setup confirm button
+    const btnYes = document.getElementById('btn-confirm-yes');
+    btnYes.onclick = function() {
+        if (onConfirm) onConfirm();
+        window.closeConfirmModal();
+    };
+
+    // Show modal
+    modal.style.display = 'block';
+    modal.classList.remove('hidden');
+    
+    // Animate in
+    setTimeout(() => {
+        backdrop.classList.remove('opacity-0');
+        backdrop.classList.add('opacity-100');
+        panel.classList.remove('scale-95', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+    }, 10);
+};
+
+window.closeConfirmModal = function() {
+    const modal = document.getElementById('ui-confirm-modal');
+    const backdrop = document.getElementById('confirm-backdrop');
+    const panel = document.getElementById('confirm-panel');
+
+    if (!modal || !panel || !backdrop) return;
+
+    // Animate out
+    backdrop.classList.remove('opacity-100');
+    backdrop.classList.add('opacity-0');
+    panel.classList.remove('scale-100', 'opacity-100');
+    panel.classList.add('scale-95', 'opacity-0');
+
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }, 300);
 };
 
 window.confirmAction = (message) => {
@@ -1359,9 +1417,10 @@ function updateMapMarkers() {
             }).addTo(map);
 
             marker.bindPopup(`
-                <div class="p-2">
-                    <p class="text-[10px] font-bold mb-1">${f.name}</p>
-                    <p class="text-[8px] text-slate-500 mb-2">${f.students} alunos</p>
+                <div class="p-2 max-w-[150px]">
+                    <p class="text-[10px] font-bold mb-1 truncate">${f.name}</p>
+                    <p class="text-[8px] text-slate-500 mb-1 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${f.address}</p>
+                    <p class="text-[8px] text-slate-400 mb-2">${f.students} alunos</p>
                     <button onclick="viewUnitDetail('${f.id}')" class="w-full text-[8px] orange-gradient text-white px-2 py-1 rounded">Ver Detalhes</button>
                 </div>
             `);
@@ -1651,6 +1710,9 @@ window.renderStudents = () => {
                             ${status}
                         </span>
                     </div>
+                </td>
+                <td class="py-4 px-2 text-slate-500 max-w-[150px] truncate" title="${s.address || ''}">
+                    ${s.address || '-'}
                 </td>
                 <td class="py-4 px-2 text-right">
                     <div class="flex items-center justify-end gap-1">
@@ -2183,6 +2245,13 @@ window.openStudentForm = async (studentId = null) => {
                             <option value="Atrasada" ${student && student.paymentStatus === 'Atrasada' ? 'selected' : ''}>Atrasada</option>
                         </select>
                     </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Endereço Completo</label>
+                        <input type="text" name="address" value="${student ? student.address || '' : ''}"
+                            class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+                            placeholder="Rua, Número, Bairro, Cidade - UF">
+                    </div>
                 </div>
                 
                 ${historyHTML}
@@ -2328,44 +2397,7 @@ window.deleteStudent = async (id) => {
 };
 
 
-function loadMockData() {
-    console.log('🔄 Data Source: MOCK DATA (Backend unavailable)');
 
-    franchises = [
-        { id: '1', _id: '1', name: 'Arena Matriz Curitiba', owner: 'Mestre Rickson', address: 'Av. Batel, 1230 - Curitiba/PR', students: 450, revenue: 125000, status: 'active', perf: 98, lat: -25.443150, lng: -49.280190, royaltyPercent: 10, location: { coordinates: [-49.280190, -25.443150] } },
-        { id: '2', _id: '2', name: 'Arena São Paulo Jardins', owner: 'Prof. Xandão', address: 'Rua Oscar Freire, 500 - SP', students: 320, revenue: 98000, status: 'active', perf: 95, lat: -23.561680, lng: -46.655980, royaltyPercent: 8, location: { coordinates: [-46.655980, -23.561680] } },
-        { id: '3', _id: '3', name: 'Arena Rio Copacabana', owner: 'Mestre Royler', address: 'Av. Atlântica, 200 - RJ', students: 280, revenue: 75000, status: 'warning', perf: 82, lat: -22.969440, lng: -43.186940, royaltyPercent: 8, location: { coordinates: [-43.186940, -22.969440] } },
-        { id: '4', _id: '4', name: 'Arena Floripa Ilha', owner: 'Prof. Guga', address: 'Av. Beira Mar, 100 - SC', students: 150, revenue: 42000, status: 'danger', perf: 65, lat: -27.596900, lng: -48.549500, royaltyPercent: 5, location: { coordinates: [-48.549500, -27.596900] } },
-        { id: '5', _id: '5', name: 'Arena Belo Horizonte', owner: 'Prof. Mineiro', address: 'Av. Afonso Pena, 1000 - MG', students: 200, revenue: 55000, status: 'active', perf: 88, lat: -19.916700, lng: -43.934500, royaltyPercent: 7, location: { coordinates: [-43.934500, -19.916700] } }
-    ];
-
-    students = [];
-    const belts = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta', 'Coral', 'Vermelha'];
-
-    // Generate mock students
-    franchises.forEach(f => {
-        const studentCount = 20; // Generate sample
-        for (let i = 0; i < studentCount; i++) {
-            students.push({
-                id: `s-${f.id}-${i}`,
-                _id: `s-${f.id}-${i}`,
-                name: `Aluno ${i + 1} - ${f.name.split(' ')[1]}`,
-                franchiseId: f.id, // Linked by ID
-                belt: belts[Math.floor(Math.random() * belts.length)],
-                amount: 250 + Math.floor(Math.random() * 100),
-                status: Math.random() > 0.1 ? 'active' : 'inactive',
-                birthDate: '1990-01-01',
-                phone: '(11) 99999-9999',
-                gender: Math.random() > 0.7 ? 'Feminino' : 'Masculino'
-            });
-        }
-    });
-
-    directives = [
-        { id: 1, title: 'Padronização de Tatame', content: 'Todos os tatames devem seguir o padrão de cores azul e laranja oficial.', priority: 'high' },
-        { id: 2, title: 'Campanha de Verão', content: 'Iniciar campanha de matrícula grátis para planos anuais em Dezembro.', priority: 'medium' }
-    ];
-}
 
 // ===== INITIALIZATION =====
 async function init() {
@@ -2379,7 +2411,7 @@ async function init() {
             backendAvailable = await loadFranchisesFromBackend();
         } catch (e) { console.warn('Backend connection check failed'); }
 
-        if (backendAvailable && franchises.length > 0) {
+        if (backendAvailable) {
             console.log('✅ Using backend data');
             try {
                 await loadDirectivesFromBackend();
@@ -2388,12 +2420,11 @@ async function init() {
                 await loadNetworkHistoricalMetrics();
             } catch (e) { console.error('Error loading secondary data', e); }
         } else {
-            console.warn('⚠️ Backend not available or empty, using mock data');
-            loadMockData();
+            console.error('❌ Backend not available. Please ensure the server is running.');
+            showNotification('Não foi possível conectar ao servidor.', 'error');
         }
     } catch (error) {
         console.error('Error loading data:', error);
-        loadMockData(); // Ultimate fallback
     }
 
     updateStats();
@@ -2425,40 +2456,12 @@ async function init() {
     setTimeout(initializeWidgets, 100);
 }
 
-// ===== MATRIX HUB (MOCK) =====
-const mockMessages = [
-    {
-        id: 1,
-        subject: 'Atualização de Protocolos Sanitários',
-        body: 'Prezados franqueados, reforçamos a importância de manter os totens de álcool em gel abastecidos em todas as áreas de tatame. A fiscalização será intensificada no próximo mês.',
-        date: new Date(Date.now() - 86400000 * 2).toLocaleDateString(),
-        author: 'Diretoria Geral',
-        read: true
-    },
-    {
-        id: 2,
-        subject: 'Novo Ajuste de Mensalidades 2026',
-        body: 'A tabela de preços sugerida para 2026 já está disponível na área de downloads. O reajuste médio é de 12% para acompanhar a inflação e melhorias na infraestrutura.',
-        date: new Date(Date.now() - 86400000 * 5).toLocaleDateString(),
-        author: 'Financeiro Central',
-        read: true
-    },
-    {
-        id: 3,
-        subject: 'Campanha "Amigo no Tatame"',
-        body: 'Lançaremos a campanha de indicação na próxima segunda-feira. Todo aluno que trouxer um amigo ganha 50% de desconto na mensalidade se o amigo se matricular.',
-        date: new Date(Date.now() - 86400000 * 10).toLocaleDateString(),
-        author: 'Marketing',
-        read: true
-    }
-];
-
 function renderMatrixMessages() {
     const container = document.getElementById('matrix-messages');
     if (!container) return;
 
-    // Use real directives from backend if available, otherwise fallback to mock
-    const messagesToDisplay = directives && directives.length > 0 ? directives : mockMessages;
+    // Use real directives from backend
+    const messagesToDisplay = directives || [];
 
     if (messagesToDisplay.length === 0) {
         container.innerHTML = `

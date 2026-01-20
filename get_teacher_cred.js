@@ -1,1 +1,0 @@
-const mongoose = require('mongoose'); const Teacher = require('./server/models/Teacher'); require('dotenv').config({path: './server/.env'}); async function run() { await mongoose.connect('mongodb://localhost:27017/arena-matrix'); const t = await Teacher.findOne(); console.log('EMAIL:', t.email); process.exit(); } run();

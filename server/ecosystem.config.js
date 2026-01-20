@@ -6,7 +6,7 @@
 module.exports = {
   apps: [{
     name: 'arena-hub-api',
-    script: './server.js',
+    script: './dist/server.js',
     
     // Clustering - usa todos os CPUs disponíveis
     instances: 'max', // ou número específico como 2, 4, etc

@@ -472,12 +472,9 @@ async function initApp() {
         await loadTeachers();
         await loadMetrics();
 
-        // Initial Stats & AI
+        // Initial Stats
         updateStats();
-        // Run AI Analysis safely (non-blocking)
-        if (typeof window.runAiAnalysis === 'function') {
-            window.runAiAnalysis().catch(err => console.error("AI Analysis failed:", err));
-        }
+        // Note: AI Analysis is now triggered by the widget itself when rendered to avoid double-calling
 
     } catch (err) {
         console.error("Critical error in initApp:", err);
@@ -733,10 +730,17 @@ window.resetStudentPage = () => {
 // --- RENDERERS ---
 window.renderStudents = () => {
     const tbody = document.getElementById('students-table-body');
-    const beltFilter = document.getElementById('filter-belt').value;
-    const feeFilter = document.getElementById('filter-fee').value;
-    const degreeFilter = document.getElementById('filter-degree')?.value || '';
-    const search = document.getElementById('filter-search').value.toLowerCase();
+    if (!tbody) return;
+
+    const beltFilterEl = document.getElementById('filter-belt');
+    const feeFilterEl = document.getElementById('filter-fee');
+    const degreeFilterEl = document.getElementById('filter-degree');
+    const searchEl = document.getElementById('filter-search');
+
+    const beltFilter = beltFilterEl ? beltFilterEl.value : 'Todas';
+    const feeFilter = feeFilterEl ? feeFilterEl.value : 'Todos';
+    const degreeFilter = degreeFilterEl ? degreeFilterEl.value : '';
+    const search = searchEl ? searchEl.value.toLowerCase() : '';
 
     let filtered = myStudents.filter(s => {
         const myBelt = s.belt || 'Branca';
@@ -829,6 +833,9 @@ window.renderStudents = () => {
                             ${status}
                         </span>
                     </div>
+                </td>
+                <td class="py-4 px-2 text-slate-500 max-w-[150px] truncate" title="${s.address || ''}">
+                    ${s.address || '-'}
                 </td>
                 <td class="py-4 px-2 text-right">
                     <div class="flex items-center justify-end gap-1">
@@ -939,9 +946,13 @@ window.renderTeachers = () => {
     const tbody = document.getElementById('teachers-table-body');
     if (!tbody) return;
 
-    const beltFilter = document.getElementById('filter-teacher-belt')?.value || 'Todas';
-    const search = document.getElementById('filter-teacher-search')?.value.toLowerCase() || '';
-    const degreeFilter = document.getElementById('filter-teacher-degree')?.value || '';
+    const beltFilterEl = document.getElementById('filter-teacher-belt');
+    const searchEl = document.getElementById('filter-teacher-search');
+    const degreeFilterEl = document.getElementById('filter-teacher-degree');
+
+    const beltFilter = beltFilterEl ? beltFilterEl.value : 'Todas';
+    const search = searchEl ? searchEl.value.toLowerCase() : '';
+    const degreeFilter = degreeFilterEl ? degreeFilterEl.value : '';
 
     let filtered = myTeachers.filter(t => {
         const myBelt = t.belt || 'Preta';
@@ -1183,6 +1194,12 @@ window.openStudentModal = async (id = null) => {
                             <option value="Atrasada" ${student?.paymentStatus === 'Atrasada' ? 'selected' : ''}>Atrasada</option>
                         </select>
                     </div>
+
+                    <!-- ADDRESS -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Endereço Completo</label>
+                        <input type="text" id="new-address" class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none text-sm transition-all" value="${student?.address || ''}" placeholder="Rua, Número, Bairro, Cidade - UF">
+                    </div>
                 </div>
             </div>
 
@@ -1229,7 +1246,8 @@ window.saveStudent = async () => {
         amount: amount, // Schema expects Number, not Array
         franchiseId: currentFranchiseId,
         paymentStatus: document.getElementById('new-payment-status').value,
-        registrationDate: document.getElementById('new-date').value // Capture Date
+        registrationDate: document.getElementById('new-date').value, // Capture Date
+        address: document.getElementById('new-address').value
     };
 
     const btn = document.querySelector('#modal-content button');
@@ -1649,7 +1667,7 @@ window.showToast = (msg, type = 'success') => {
 // AI Analysis Logic (Advanced Rule-Based Engine)
 // --- AI INTEGRATION (SECURE BACKEND PROXY) ---
 async function callGemini(prompt, systemInstruction = null, retries = 3) {
-    const delays = [1000, 2000, 4000]; // Backoff exponencial: 1s, 2s, 4s
+    const delays = [1000, 2000, 4000]; 
 
     for (let attempt = 0; attempt < retries; attempt++) {
         try {
@@ -1665,26 +1683,31 @@ async function callGemini(prompt, systemInstruction = null, retries = 3) {
                     'Bypass-Tunnel-Reminder': 'true'
                 },
                 body: JSON.stringify(requestBody),
-                signal: AbortSignal.timeout(30000) // 30 segundos timeout
+                signal: AbortSignal.timeout(30000) 
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
+                // Should we retry?
+                if (response.status === 404) {
+                    console.warn("⚠️ AI Service endpoint not found (404). Disabling AI.");
+                    return null; 
+                }
+                if (response.status === 401 || response.status === 403) {
+                    console.warn("⚠️ AI Service unauthorized. Check API key.");
+                    return null;
+                }
 
-                // Parse error para verificar se é "overloaded"
+                const errorText = await response.text();
                 let errorMessage = errorText;
                 try {
                     const errorJson = JSON.parse(errorText);
                     errorMessage = errorJson.error || errorText;
-                } catch (e) {
-                    // Se não for JSON, usa o texto direto
-                }
+                } catch (e) {}
 
-                // Se for erro de sobrecarga E ainda temos tentativas, retry
                 if ((errorMessage.includes('overloaded') || response.status === 503 || response.status === 429) && attempt < retries - 1) {
                     console.warn(`⚠️ Modelo sobrecarregado. Tentando novamente em ${delays[attempt]}ms...`);
                     await new Promise(resolve => setTimeout(resolve, delays[attempt]));
-                    continue; // Tenta novamente
+                    continue; 
                 }
 
                 throw new Error(`Server returned ${response.status}: ${errorMessage}`);
@@ -1693,17 +1716,15 @@ async function callGemini(prompt, systemInstruction = null, retries = 3) {
             const json = await response.json();
 
             if (!json.success || !json.data) {
-                // Verifica se é erro de overload
                 const errorMsg = json.error || 'Falha na comunicação com IA';
                 if ((errorMsg.includes('overloaded') || errorMsg.includes('quota')) && attempt < retries - 1) {
                     console.warn(`⚠️ Erro de cota/sobrecarga. Tentando novamente em ${delays[attempt]}ms...`);
                     await new Promise(resolve => setTimeout(resolve, delays[attempt]));
-                    continue; // Tenta novamente
+                    continue;
                 }
                 throw new Error(errorMsg);
             }
 
-            // ✅ Sucesso! Limpar markdown e retornar
             let cleanedData = json.data;
             if (typeof cleanedData === 'string') {
                 cleanedData = cleanedData
@@ -1717,26 +1738,11 @@ async function callGemini(prompt, systemInstruction = null, retries = 3) {
             return cleanedData;
 
         } catch (e) {
-            // Se for o último retry, retorna null
             if (attempt === retries - 1) {
-                console.error(`❌ AI Service Error após ${retries} tentativas:`, e);
-
-                // Mensagens de erro mais amigáveis para o usuário via console
-                if (e.message.includes('overloaded')) {
-                    console.error('💡 Sugestão: O serviço de IA está temporariamente sobrecarregado. Aguarde alguns minutos.');
-                } else if (e.message.includes('quota')) {
-                    console.error('💡 Sugestão: Limite de uso da IA atingido. Contate o administrador.');
-                } else if (e.message.includes('timeout') || e.name === 'AbortError') {
-                    console.error('💡 Sugestão: Tempo de resposta excedido. Verifique sua conexão.');
-                } else if (e.message.includes('Failed to fetch')) {
-                    console.error('💡 Sugestão: Não foi possível conectar ao servidor backend.');
-                }
-
+                console.error(`❌ AI Service Error após ${retries} tentativas:`, e.message);
                 return null;
             }
-
-            // Se não for o último retry, tenta novamente
-            console.warn(`⚠️ Erro na tentativa ${attempt + 1}. Tentando novamente em ${delays[attempt]}ms...`);
+            console.warn(`⚠️ Erro na tentativa ${attempt + 1}: ${e.message}. Tentando novamente...`);
             await new Promise(resolve => setTimeout(resolve, delays[attempt]));
         }
     }
@@ -1829,11 +1835,19 @@ window.generateTrainingPlan = async (studentId) => {
 };
 
 window.runAiAnalysis = async (manual = false) => {
-    const container = document.getElementById('ai-insight-content');
-    if (!container) {
-        console.warn('AI Container not found - skipping analysis');
+    // Prevent concurrent runs
+    if (window.isAiAnalysisRunning && !manual) {
+        console.debug("⚠️ AI Analysis already running, skipping...");
         return;
     }
+    window.isAiAnalysisRunning = true;
+
+    try {
+        const container = document.getElementById('ai-insight-content');
+        if (!container) {
+            console.warn('AI Container not found - skipping analysis');
+            return;
+        }
 
     // Loading State
     if (manual) {
@@ -2019,6 +2033,9 @@ window.runAiAnalysis = async (manual = false) => {
     `;
 
     container.innerHTML = html;
+    } finally {
+        window.isAiAnalysisRunning = false;
+    }
 };
 
 // --- SENSEI CHAT (REAL GEMINI) ---

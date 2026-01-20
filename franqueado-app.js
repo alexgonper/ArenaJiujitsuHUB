@@ -4,20 +4,7 @@ let teachers = [];
 let currentUnit = null;
 // Mock students removed - now using real API data
 
-const matrixMessages = [
-    {
-        subject: 'Atualização de Protocolos Sanitários',
-        body: 'Prezados franqueados, reforçamos a importância de manter os totens de álcool em gel abastecidos.',
-        date: 'Ontem',
-        author: 'Diretoria Geral'
-    },
-    {
-        subject: 'Novo Ajuste de Mensalidades 2026',
-        body: 'A tabela de preços sugerida para 2026 já está disponível na área de downloads.',
-        date: 'Há 3 dias',
-        author: 'Financeiro'
-    }
-];
+let directives = [];
 
 // Belt Colors Helper
 const beltColors = {
@@ -40,12 +27,17 @@ const beltColors = {
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const response = await FranchiseAPI.getAll();
-        franchises = response.data;
+        const [franchiseRes, directiveRes] = await Promise.all([
+            FranchiseAPI.getAll(),
+            DirectiveAPI.getAll()
+        ]);
+        
+        franchises = franchiseRes.data;
+        directives = directiveRes.data || [];
+        
         initLoginScreen();
     } catch (error) {
-        console.error('Erro ao carregar academias:', error);
-        // Fallback to empty list or alert
+        console.error('Erro na inicialização:', error);
     }
 });
 
@@ -215,19 +207,49 @@ async function loadDashboard(unit) {
 }
 
 function renderMessages() {
-    const html = matrixMessages.map(msg => `
-        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-            <div class="flex justify-between items-start mb-1">
-                <span class="text-[10px] font-bold uppercase tracking-widest text-orange-500">${msg.author}</span>
-                <span class="text-[10px] text-slate-400">${msg.date}</span>
+    if (!directives || directives.length === 0) {
+        const emptyHtml = `
+            <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dotted border-slate-200">
+                <i class="fa-solid fa-inbox text-2xl mb-2 opacity-20"></i>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Nenhuma diretriz recente</p>
             </div>
-            <h4 class="font-bold text-sm text-slate-800">${msg.subject}</h4>
-            <p class="text-xs text-slate-500 mt-1 line-clamp-2">${msg.body}</p>
+        `;
+        document.getElementById('dashboard-messages').innerHTML = emptyHtml;
+        document.getElementById('matrix-feed').innerHTML = emptyHtml;
+        return;
+    }
+
+    const html = directives.map(msg => {
+        // Parse subject and body from the text field if necessary (matching standalone-app.js logic)
+        let subject = msg.subject || 'Comunicado';
+        let body = msg.body || msg.text || '';
+        let author = msg.author?.name || msg.author || 'Matriz';
+        let date = msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('pt-BR') : '--';
+
+        if (msg.text && !msg.subject) {
+            const lines = msg.text.split('\n');
+            if (lines[0].startsWith('**') && lines[0].endsWith('**')) {
+                subject = lines[0].replace(/\*\*/g, '');
+                body = lines.slice(2).join('\n');
+            } else {
+                body = msg.text;
+            }
+        }
+
+        return `
+        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-4 last:mb-0">
+            <div class="flex justify-between items-start mb-1">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-orange-500">${author}</span>
+                <span class="text-[10px] text-slate-400">${date}</span>
+            </div>
+            <h4 class="font-bold text-sm text-slate-800">${subject}</h4>
+            <p class="text-xs text-slate-500 mt-1 line-clamp-2">${body}</p>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     document.getElementById('dashboard-messages').innerHTML = html;
-    document.getElementById('matrix-feed').innerHTML = html.replace('line-clamp-2', ''); // Full view in Matrix tab
+    document.getElementById('matrix-feed').innerHTML = html.replace(/line-clamp-2/g, ''); // Full view in Matrix tab
 }
 
 async function renderStudentsList(franchiseId) {

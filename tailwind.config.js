@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const tailwindConfig = {
   content: ["./**/*.{html,js}"],
   theme: {
     extend: {
@@ -8,6 +8,10 @@ module.exports = {
           500: '#FF6B00',
           600: '#e66000',
           50: '#fff7ed',
+        },
+        arena: {
+          orange: '#FF6B00',
+          dark: '#1e293b'
         }
       },
       borderRadius: {
@@ -21,4 +25,10 @@ module.exports = {
     },
   },
   plugins: [],
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = tailwindConfig;
+} else {
+  tailwind.config = tailwindConfig;
 }

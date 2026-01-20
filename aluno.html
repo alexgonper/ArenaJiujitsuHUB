@@ -14,9 +14,6 @@
     <meta name="apple-mobile-web-app-title" content="Arena Aluno">
     <meta name="theme-color" content="#3B82F6">
 
-    <meta name="apple-mobile-web-app-title" content="Arena Aluno">
-    <meta name="theme-color" content="#3B82F6">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="tailwind.config.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -75,6 +72,10 @@
         .animate-in {
             animation: fadeIn 0.5s ease-out forwards;
         }
+
+        .orange-gradient {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8A00 100%);
+        }
     </style>
 
     <style id="branding-styles"></style>
@@ -117,6 +118,10 @@
             <button onclick="changeView('schedule')" id="nav-schedule"
                 class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-blue-600 rounded-2xl transition-all group">
                 <i class="fa-solid fa-calendar-days w-5 transition-transform group-hover:scale-110"></i> Grade Horária
+            </button>
+            <button onclick="changeView('profile')" id="nav-profile"
+                class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-blue-600 rounded-2xl transition-all group">
+                <i class="fa-solid fa-user-circle w-5 transition-transform group-hover:scale-110"></i> Meu Perfil
             </button>
         </nav>
 
@@ -350,7 +355,7 @@
                             </div>
 
                             <button onclick="payTuition()" id="pay-btn"
-                                class="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest">
+                                class="w-full py-5 orange-gradient text-white font-black rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-[11px] tracking-widest brand-btn-bg">
                                 <i class="fa-solid fa-credit-card"></i>
                                 PAGAR MENSALIDADE
                             </button>
@@ -406,8 +411,7 @@
 
                 </div>
 
-                <!-- OTHER SECTIONS (evolution, finance, schedule) -->
-                <!-- They are mapped via JS changeView -->
+                <!-- SECTION: EVOLUTION -->
                 <div id="section-evolution" class="hidden animate-in space-y-8">
                      <!-- Detailed Progress/Stats Card -->
                      <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
@@ -438,7 +442,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Arrow Indicator (Visual connection) -->
+                                    <!-- Arrow Indicator -->
                                     <div class="hidden md:flex flex-1 mx-8 items-center justify-center opacity-20">
                                             <div class="h-0.5 w-full bg-slate-300 rounded-full"></div>
                                             <i class="fa-solid fa-chevron-right text-slate-300 ml-[-4px]"></i>
@@ -498,31 +502,32 @@
                             </div>
                         </div>
 
-                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
-                        <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
-                            <i class="fa-solid fa-list-ul text-blue-500"></i>
-                            Histórico de Graduações
-                        </h2>
-                        <div id="graduation-history-container"
-                            class="overflow-hidden rounded-3xl border border-slate-100">
-                            <table class="w-full text-left">
-                                <thead
-                                    class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                    <tr>
-                                        <th class="px-6 py-4">Data</th>
-                                        <th class="px-6 py-4">Faixa</th>
-                                        <th class="px-6 py-4">Grau</th>
-                                        <th class="px-6 py-4">Mestre</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="graduation-history-body"
-                                    class="divide-y divide-slate-50 text-sm font-medium text-slate-600">
-                                </tbody>
-                            </table>
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                            <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                                <i class="fa-solid fa-list-ul text-blue-500"></i>
+                                Histórico de Graduações
+                            </h2>
+                            <div id="graduation-history-container"
+                                class="overflow-hidden rounded-3xl border border-slate-100">
+                                <table class="w-full text-left">
+                                    <thead
+                                        class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                        <tr>
+                                            <th class="px-6 py-4">Data</th>
+                                            <th class="px-6 py-4">Faixa</th>
+                                            <th class="px-6 py-4">Grau</th>
+                                            <th class="px-6 py-4">Mestre</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="graduation-history-body"
+                                        class="divide-y divide-slate-50 text-sm font-medium text-slate-600">
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
                 </div>
 
+                <!-- SECTION: FINANCE -->
                 <div id="section-finance" class="hidden animate-in space-y-8">
                     <!-- Detailed Financial Status Card -->
                     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex flex-col items-center text-center md:text-left md:items-stretch md:flex-row justify-between relative overflow-hidden">
@@ -559,7 +564,7 @@
                             </div>
 
                             <button onclick="payTuition('fin-page-pay-btn')" id="fin-page-pay-btn"
-                                class="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest group">
+                                class="w-full py-5 orange-gradient text-white font-black rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-[11px] tracking-widest group brand-btn-bg">
                                 <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                                      <i class="fa-solid fa-credit-card"></i>
                                 </span>
@@ -577,6 +582,7 @@
                     </div>
                 </div>
 
+                <!-- SECTION: SCHEDULE -->
                 <div id="section-schedule" class="hidden animate-in space-y-8">
                     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
@@ -651,6 +657,115 @@
                     </div>
                 </div>
 
+                <!-- SECTION: PROFILE -->
+                <div id="section-profile" class="hidden animate-in pb-20">
+                    <div class="max-w-full mx-auto">
+                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 text-center">
+                            <div id="profile-avatar-large" class="w-24 h-24 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-4xl font-black shadow-xl mb-4">
+                                ?
+                            </div>
+                            <h2 id="profile-name" class="text-2xl font-black text-slate-800 tracking-tight">...</h2>
+                            <p id="profile-belt-badge" class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black mt-2 uppercase tracking-widest border border-slate-100 bg-slate-50">
+                                BRANCA
+                            </p>
+                            
+                            <div class="mt-8 space-y-4 text-left border-t border-slate-50 pt-8">
+                                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-envelope text-sm"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">E-mail</p>
+                                            <p id="profile-email" class="text-xs font-bold text-slate-700 truncate">...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-phone text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">Telefone</p>
+                                            <p id="profile-phone" class="text-xs font-bold text-slate-700">...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-cake-candles text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">Nascimento</p>
+                                            <p id="profile-birth" class="text-xs font-bold text-slate-700">...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-venus-mars text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">Gênero</p>
+                                            <p id="profile-gender" class="text-xs font-bold text-slate-700">...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3 md:col-span-2 lg:col-span-2">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-map-location-dot text-sm"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">Endereço</p>
+                                            <p id="profile-address" class="text-xs font-bold text-slate-700 truncate">...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-building text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">Unidade</p>
+                                            <p id="profile-franchise" class="text-xs font-bold text-slate-700">...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-calendar-check text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">Aluno desde</p>
+                                            <p id="profile-reg-date" class="text-xs font-bold text-slate-700">...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-hand-holding-dollar text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">Mensalidade</p>
+                                            <p id="profile-amount" class="text-xs font-bold text-slate-700">...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                            <i class="fa-solid fa-circle-check text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] font-black text-slate-400 uppercase">Status</p>
+                                            <p id="profile-status" class="text-xs font-bold text-slate-700">...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-10 flex justify-center">
+                                    <button onclick="openEditProfileModal()" id="btn-edit-profile"
+                                        class="px-10 py-4 orange-gradient text-white font-black rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 text-[11px] uppercase tracking-widest brand-btn-bg">
+                                        <i class="fa-solid fa-user-pen"></i>
+                                        Editar Perfil
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>
@@ -703,6 +818,118 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT PROFILE -->
+    <div id="modal-edit-profile" class="fixed inset-0 z-[2000] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" style="display: none;">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 no-scrollbar">
+            <!-- Header -->
+            <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-white sticky top-0 z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-lg shadow-orange-100">
+                        <i class="fa-solid fa-user-pen"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 tracking-tight">Editar Perfil</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Atualize seus dados pessoais</p>
+                    </div>
+                </div>
+                <button onclick="closeEditProfileModal()" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <form id="form-edit-profile" onsubmit="saveProfileUpdates(event)" class="p-8 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Name (Read-only) -->
+                    <div class="space-y-2 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Nome Completo (Apenas Leitura)</label>
+                        <input type="text" id="edit-student-name" readonly
+                            class="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                    </div>
+
+                    <!-- Email (Editable) -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">E-mail *</label>
+                        <input type="email" id="edit-student-email" required
+                            class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-300">
+                    </div>
+
+                    <!-- Gender (Read-only) -->
+                    <div class="space-y-2 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Gênero (Apenas Leitura)</label>
+                        <input type="text" id="edit-student-gender" readonly
+                            class="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                    </div>
+
+                    <!-- Phone (Editable) -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Telefone</label>
+                        <input type="text" id="edit-student-phone" placeholder="(00) 00000-0000"
+                            class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                    </div>
+
+                    <!-- Birth Date (Read-only) -->
+                    <div class="space-y-2 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Data de Nascimento (Apenas Leitura)</label>
+                        <input type="date" id="edit-student-birth" readonly
+                            class="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                    </div>
+
+                    <!-- Address (Editable) -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Endereço Completo</label>
+                        <input type="text" id="edit-student-address" placeholder="Rua, Número, Complemento, Bairro, Cidade"
+                            class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                    </div>
+
+                    <!-- Read-only Fields -->
+                    <div class="space-y-2 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Faixa (Somente Leitura)</label>
+                        <input type="text" id="edit-student-belt" readonly
+                            class="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                    </div>
+
+                    <div class="space-y-2 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Grau (Somente Leitura)</label>
+                        <input type="text" id="edit-student-degree" readonly
+                            class="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                    </div>
+
+                    <div class="space-y-2 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Valor Mensalidade (Somente Leitura)</label>
+                        <input type="text" id="edit-student-amount" readonly
+                            class="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                    </div>
+
+                    <div class="space-y-2 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Data de inscrição (Somente Leitura)</label>
+                        <input type="date" id="edit-student-reg" readonly
+                            class="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                    </div>
+
+                    <div class="space-y-2 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Status de Pagamento (Somente Leitura)</label>
+                        <input type="text" id="edit-student-status" readonly
+                            class="w-full bg-slate-100 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-6 flex flex-col md:flex-row gap-4">
+                    <button type="submit" id="btn-save-student-profile"
+                        class="flex-1 py-5 orange-gradient text-white font-black rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest brand-btn-bg">
+                        <i class="fa-solid fa-check"></i>
+                        Salvar Alterações
+                    </button>
+                    <button type="button" onclick="closeEditProfileModal()"
+                        class="flex-1 py-5 bg-slate-50 text-slate-500 font-black rounded-full hover:bg-slate-100 transition-all uppercase text-xs tracking-widest">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
