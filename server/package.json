@@ -15,6 +15,7 @@
     "pm2:logs": "pm2 logs arena-hub-api",
     "pm2:monit": "pm2 monit",
     "optimize:db": "ts-node src/scripts/optimizeDatabase.ts",
+    "sync:db": "ts-node src/scripts/sync_db.ts",
     "production": "NODE_ENV=production npm run build && NODE_ENV=production pm2 start ecosystem.config.js --env production"
   },
   "keywords": [
@@ -37,10 +38,7 @@
     "jsonwebtoken": "^9.0.3",
     "mercadopago": "^2.11.0",
     "mongoose": "^8.0.3",
-    "morgan": "^1.10.0"
-  },
-  "devDependencies": {
-    "@fortawesome/fontawesome-free": "^7.1.0",
+    "morgan": "^1.10.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
@@ -49,10 +47,13 @@
     "@types/mongoose": "^5.11.97",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.11.0",
-    "nodemon": "^3.1.11",
-    "tailwindcss": "^4.1.18",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "nodemon": "^3.1.11",
+    "tailwindcss": "^4.1.18"
   },
   "engines": {
     "node": ">=18.0.0",
