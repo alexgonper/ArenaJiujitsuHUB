@@ -51,34 +51,37 @@ const paymentController = {
 
             const preference = new MercadoPago.Preference(client);
 
-            const preferenceData = {
-                body: {
-                    items: [
-                        {
-                            id: payment._id.toString(),
-                            title: description || 'Mensalidade Arena Jiu-Jitsu',
-                            quantity: 1,
-                            unit_price: Number(amount)
-                        }
-                    ],
-                    payer: {
-                        name: student.name,
-                        email: student.email || 'email@test.com',
-                        phone: {
-                            area_code: '55',
-                            number: student.phone ? student.phone.replace(/\D/g, '') : '999999999'
-                        }
-                    },
-                    external_reference: payment._id.toString(),
-                    back_urls: {
-                        success: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=success`,
-                        failure: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=failure`,
-                        pending: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=pending`
-                    },
-                    auto_return: 'approved',
-                    notification_url: `${process.env.API_URL || 'https://arenahub.ngrok.io'}/api/v1/payments/webhook`
-                }
-            };
+                const preferenceData = {
+                    body: {
+                        items: [
+                            {
+                                id: payment._id.toString(),
+                                title: description || 'Mensalidade Arena Jiu-Jitsu',
+                                quantity: 1,
+                                unit_price: Number(amount),
+                                currency_id: 'BRL'
+                            }
+                        ],
+                        marketplace_fee: Number(matrixFee.toFixed(2)), // AUTOMATIC SPLIT
+                        payer: {
+                            name: student.name,
+                            email: student.email || 'email@test.com',
+                            phone: {
+                                area_code: '55',
+                                number: student.phone ? student.phone.replace(/\D/g, '') : '999999999'
+                            },
+                        },
+                        external_reference: payment._id.toString(),
+                        back_urls: {
+                            success: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=success`,
+                            failure: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=failure`,
+                            pending: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=pending`
+                        },
+                        auto_return: 'approved',
+                        notification_url: `${process.env.API_URL || 'https://arenahub.ngrok.io'}/api/v1/payments/webhook`,
+                        statement_descriptor: "ARENA HUB"
+                    }
+                };
 
             const result = await preference.create(preferenceData);
 
