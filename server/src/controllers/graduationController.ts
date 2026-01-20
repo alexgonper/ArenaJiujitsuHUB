@@ -74,8 +74,6 @@ const graduationController = {
                         classesRequired: rule.classesRequired,
                         classesAttended: attendanceCount,
                         daysRequired: rule.minDaysRequired,
-                        classesAttended: attendanceCount,
-                        daysRequired: rule.minDaysRequired,
                         daysPassed: daysSinceGraduation,
                         minAge: rule.minAge || 0,
                         currentAge: studentAge
