@@ -266,6 +266,59 @@
                         </div>
                     </div>
                 </div>
+                <!-- 2.3 Financial Intelligence -->
+                <div id="financial-engine" class="mb-12 pt-8 border-t border-slate-100">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-slate-300"></i> 2.3. Inteligência Financeira
+                    </h3>
+                    <p class="text-slate-600 text-sm mb-6">
+                        O sistema resolve a complexidade financeira de redes de franquias com <strong>Split de Pagamentos Nativo</strong>. Diferente de sistemas comuns onde o repasse é manual (e propenso a erros), nossa arquitetura divide o valor na origem.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                            <h4 class="font-bold text-blue-800 text-sm mb-3">Fluxo de Split Automático</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-start gap-3">
+                                    <div class="mt-1 w-5 h-5 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[10px] font-bold">1</div>
+                                    <p class="text-xs text-blue-900 leading-relaxed">
+                                        <strong>Transação:</strong> Aluno paga mensalidade de <strong>R$ 200,00</strong> via App (Mercado Pago).
+                                    </p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="mt-1 w-5 h-5 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[10px] font-bold">2</div>
+                                    <p class="text-xs text-blue-900 leading-relaxed">
+                                        <strong>Regra de Royalty:</strong> Sistema aplica retenção configurada (ex: 10%).
+                                    </p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="mt-1 w-5 h-5 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[10px] font-bold">3</div>
+                                    <p class="text-xs text-blue-900 leading-relaxed">
+                                        <strong>Liquidação Imediata:</strong><br>
+                                        <span class="text-green-700 font-bold">R$ 20,00</span> → Conta da Matriz (Holding).<br>
+                                        <span class="text-blue-700 font-bold">R$ 180,00</span> → Conta do Franqueado.
+                                    </p>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="flex flex-col justify-between">
+                            <div class="glass-card p-5 rounded-xl mb-4">
+                                <h4 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-bolt text-yellow-400 mr-2"></i>Conciliação em Real-Time</h4>
+                                <p class="text-xs text-slate-500">
+                                    Webhooks de alta disponibilidade processam a mudança de status (<code>pending</code> → <code>approved</code>) em milissegundos, liberando o check-in na catraca virtual instantaneamente.
+                                </p>
+                            </div>
+                             <div class="glass-card p-5 rounded-xl">
+                                <h4 class="font-bold text-slate-700 text-sm mb-2"><i class="fa-solid fa-file-invoice-dollar text-green-400 mr-2"></i>Zero Bitributação</h4>
+                                <p class="text-xs text-slate-500">
+                                    Como o dinheiro é separado na origem (Split Payment), cada CNPJ é tributado apenas sobre a sua parte da receita, otimizando a carga fiscal da rede.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <!-- 3. MODULES -->
@@ -349,6 +402,7 @@
                                <h4 class="font-bold text-sm text-slate-800">Experiência Digital</h4>
                                <ul class="list-disc pl-5 mt-2 space-y-1 text-xs text-slate-600">
                                    <li><strong>Smart Booking:</strong> Reserva de aulas com validação instantânea de plano ativo.</li>
+                                   <li><strong>Check-in Georreferenciado:</strong> O aluno pode confirmar presença pelo App, mas apenas 15 min antes e num raio de 100m da academia (GPS).</li>
                                    <li><strong>Financeiro Integrado:</strong> Pagamento de recorrência via cartão/Gateway sem sair do app.</li>
                                </ul>
                            </div>

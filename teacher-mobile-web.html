@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArenaHub - Professor (Web)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        /* Login */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 42px;
+            font-weight: 900;
+            font-style: italic;
+            color: #FF6B00;
+            letter-spacing: -1px;
+        }
+        .subtitle {
+            color: #94A3B8;
+            margin-top: 5px;
+        }
+        .card {
+            background: #1E293B;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .input {
+            width: 100%;
+            height: 50px;
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 0 16px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.05);
+            color: #F8FAFC;
+            font-size: 16px;
+        }
+        .button {
+            width: 100%;
+            height: 56px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #FF6B00, #FF6B00DD);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background: linear-gradient(135deg, #FF7B10, #FF7B10DD);
+        }
+        
+        /* Dashboard */
+        .greeting {
+            color: #94A3B8;
+            font-size: 16px;
+        }
+        .name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .highlight-card {
+            background: #1E293B;
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #FF6B00;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #FF6B00;
+            color: white;
+            padding: 6px 12px;
+            border-bottom-left-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .class-time {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+        .class-name {
+            color: #94A3B8;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+        .action-button {
+            background: #FF6B00;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        /* Attendance */
+        .student-card {
+            background: #1E293B;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .student-card.present {
+            border-color: #10B981;
+        }
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: #475569;
+            margin-right: 15px;
+        }
+        .student-info {
+            flex: 1;
+        }
+        .student-name {
+            font-weight: 600;
+        }
+        .student-belt {
+            font-size: 12px;
+            color: #94A3B8;
+            margin-top: 4px;
+        }
+        .check-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
+            background: #10B981;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .student-card.present .check-icon {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div class="container screen active" id="login-screen">
+    <div class="header">
+        <div class="title">ArenaHub</div>
+        <div class="subtitle">Portal do Professor (Web)</div>
+    </div>
+    <div class="card">
+        <label class="label">Email</label>
+        <input type="email" class="input" id="email-input" placeholder="seu@email.com" value="prof.riodejaneiro.0@arena.com">
+        <button class="button" onclick="handleLogin()">ENTRAR</button>
+    </div>
+</div>
+
+<!-- Dashboard Screen -->
+<div class="container screen" id="dashboard-screen">
+    <div style="margin-top: 20px; margin-bottom: 30px;">
+        <div class="greeting">Bem-vindo Sensei,</div>
+        <div class="name" id="teacher-name">Professor</div>
+    </div>
+    
+    <div class="section-title">Sua Próxima Aula</div>
+    <div class="highlight-card">
+        <div class="badge">AGORA</div>
+        <div class="class-time">18:00</div>
+        <div class="class-name">Jiu-Jitsu Fundamentals</div>
+        <button class="action-button" onclick="showAttendance()">INICIAR CHAMADA</button>
+    </div>
+</div>
+
+<!-- Attendance Screen -->
+<div class="container screen" id="attendance-screen">
+    <div style="margin-top: 20px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="section-title">Chamada</div>
+            <div style="color: #FF6B00;" id="attendance-count">0/12</div>
+        </div>
+    </div>
+    
+    <div id="student-list">
+        <!-- Students will be added here dynamically -->
+    </div>
+    
+    <div style="margin-top: 30px;">
+        <button class="button" onclick="confirmAttendance()">CONFIRMAR CHAMADA</button>
+    </div>
+</div>
+
+<script>
+const API_URL = 'http://192.168.1.131:5000/api/v1';
+let currentTeacher = null;
+let presentStudents = new Set();
+
+const mockStudents = [
+    { id: '1', name: 'Carlos Silva', belt: 'Azul', degree: '2º Grau' },
+    { id: '2', name: 'Ana Souza', belt: 'Branca', degree: '4º Grau' },
+    { id: '3', name: 'Roberto Firmino', belt: 'Roxa', degree: 'Nenhum' },
+    { id: '4', name: 'Marcia Nobre', belt: 'Azul', degree: '1º Grau' },
+    { id: '5', name: 'Felipe Costa', belt: 'Marrom', degree: '3º Grau' },
+    { id: '6', name: 'Juliana Lima', belt: 'Azul', degree: '4º Grau' },
+    { id: '7', name: 'Ricardo Gomes', belt: 'Branca', degree: 'Nenhum' },
+    { id: '8', name: 'Beatriz Martins', belt: 'Roxa', degree: '2º Grau' },
+    { id: '9', name: 'Thiago Alves', belt: 'Preta', degree: '1º Grau' },
+    { id: '10', name: 'Fernanda Ribeiro', belt: 'Azul', degree: '3º Grau' },
+    { id: '11', name: 'Lucas Pereira', belt: 'Branca', degree: '2º Grau' },
+    { id: '12', name: 'Camila Santos', belt: 'Roxa', degree: '4º Grau' }
+];
+
+function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+}
+
+async function handleLogin() {
+    const email = document.getElementById('email-input').value;
+    
+    if (!email) {
+        alert('Por favor, digite seu email');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/auth/login-teacher`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            currentTeacher = data.data;
+            document.getElementById('teacher-name').textContent = currentTeacher.name;
+            showScreen('dashboard-screen');
+        } else {
+            alert(data.message || 'Erro ao fazer login');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Erro ao conectar com o servidor. Verifique se o backend está rodando.');
+    }
+}
+
+function showAttendance() {
+    showScreen('attendance-screen');
+    renderStudents();
+}
+
+function renderStudents() {
+    const container = document.getElementById('student-list');
+    container.innerHTML = '';
+    
+    mockStudents.forEach(student => {
+        const div = document.createElement('div');
+        div.className = 'student-card';
+        if (presentStudents.has(student.id)) {
+            div.classList.add('present');
+        }
+        
+        div.innerHTML = `
+            <div class="avatar"></div>
+            <div class="student-info">
+                <div class="student-name">${student.name}</div>
+                <div class="student-belt">${student.belt} • ${student.degree}</div>
+            </div>
+            <div class="check-icon">✓</div>
+        `;
+        
+        div.onclick = () => togglePresence(student.id);
+        container.appendChild(div);
+    });
+    
+    updateCount();
+}
+
+function togglePresence(studentId) {
+    if (presentStudents.has(studentId)) {
+        presentStudents.delete(studentId);
+    } else {
+        presentStudents.add(studentId);
+    }
+    renderStudents();
+}
+
+function updateCount() {
+    document.getElementById('attendance-count').textContent = 
+        `${presentStudents.size}/${mockStudents.length}`;
+}
+
+function confirmAttendance() {
+    alert(`Chamada confirmada! ${presentStudents.size} alunos presentes.`);
+    showScreen('dashboard-screen');
+}
+
+// Allow Enter key to login
+document.getElementById('email-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleLogin();
+});
+</script>
+
+</body>
+</html>

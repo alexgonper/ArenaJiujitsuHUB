@@ -627,12 +627,14 @@ async function seed() {
                      nextDegree = 'Nenhum';
                  }
                  
+                 const beltClasses = currentBelt === 'Azul' ? 20 : (currentBelt === 'Roxa' ? 30 : (currentBelt === 'Marrom' ? 40 : 30));
+                 
                  await GraduationRule.create({
                     fromBelt: currentBelt,
                     fromDegree: currentDegree,
                     toBelt: nextBelt,
                     toDegree: nextDegree,
-                    classesRequired: 30, // Simplified
+                    classesRequired: (d === 4) ? beltClasses * 1.5 : beltClasses,
                     minDaysRequired: 60,
                     examFee: (d === 4) ? 100 : 0,
                     isActive: true

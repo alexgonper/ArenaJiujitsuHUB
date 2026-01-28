@@ -109,11 +109,17 @@ const studentController = {
      */
     login: async (req: Request, res: Response) => {
         try {
-            const { email } = req.body;
+            const { email, franchiseId } = req.body;
 
-            const student = await Student.findOne({
+            const query: any = {
                 email: { $regex: new RegExp(`^${email}$`, 'i') }
-            });
+            };
+
+            if (franchiseId) {
+                query.franchiseId = franchiseId;
+            }
+
+            const student = await Student.findOne(query);
 
             if (!student) {
                 return res.status(401).json({ success: false, message: 'Aluno não encontrado.' });
@@ -134,6 +140,49 @@ const studentController = {
         } catch (error) {
             console.error('Login error:', error);
             res.status(500).json({ success: false, message: 'Erro no servidor' });
+        }
+    },
+
+    /**
+     * Quick check for student belt (Public)
+     */
+    getStudentBeltByEmail: async (req: Request, res: Response) => {
+        try {
+            const { email, franchiseId } = req.query;
+            console.log(`🔍 [QuickCheck] email: ${email}, franchise: ${franchiseId}`);
+
+            if (!email) {
+                return res.status(400).json({ success: false, message: 'Email é obrigatório' });
+            }
+
+            // Escape special chars to prevent regex injection/errors
+            const escapedEmail = (email as string).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const query: any = {
+                email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }
+            };
+
+            if (franchiseId && mongoose.Types.ObjectId.isValid(franchiseId as string)) {
+                query.franchiseId = new mongoose.Types.ObjectId(franchiseId as string);
+            }
+
+            const student = await Student.findOne(query).select('belt degree name');
+
+            if (!student) {
+                console.warn(`⚠️ [QuickCheck] Student not found for email: ${email}`);
+                return res.status(200).json({ success: false, message: 'Aluno não encontrado' });
+            }
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    belt: student.belt,
+                    degree: student.degree,
+                    name: student.name
+                }
+            });
+        } catch (error: any) {
+            console.error('❌ [QuickCheck] Severe Error:', error.message);
+            res.status(500).json({ success: false, message: 'Erro interno no servidor', error: error.message });
         }
     },
 
@@ -317,6 +366,34 @@ const studentController = {
             res.status(400).json({ 
                 success: false, 
                 message: error.message || 'Erro ao processar check-in' 
+            });
+        }
+    },
+
+    /**
+     * Cancel Check-in / Presence (Student Revoke)
+     */
+    cancelCheckIn: async (req: Request, res: Response) => {
+        try {
+            const { studentId, classId } = req.body;
+
+            if (!studentId || !classId) {
+                return res.status(400).json({ success: false, message: 'Dados incompletos.' });
+            }
+
+            console.log(`❌ Request to Revoke Checkin. Student: ${studentId}, Class: ${classId}`);
+
+            await AttendanceService.revokeAttendance({ studentId, classId });
+
+            res.status(200).json({
+                success: true,
+                message: 'Check-in cancelado com sucesso.'
+            });
+        } catch (error: any) {
+            console.error('Cancel Check-in error:', error);
+            res.status(400).json({ 
+                success: false, 
+                message: error.message || 'Erro ao cancelar check-in.' 
             });
         }
     },

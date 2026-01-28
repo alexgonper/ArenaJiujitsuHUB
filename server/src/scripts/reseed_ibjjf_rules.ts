@@ -19,30 +19,31 @@ async function seedRules() {
 
     // =========================================================================
     // KIDS SYSTEM (4 - 15 Years)
+    // IBJJF: White -> Grey/White -> Grey -> Grey/Black -> Yellow/White -> ...
     // =========================================================================
-    // IBJJF: Monthly/Yearly progression based on age, but simplified here to degrees.
-    // Grey (4+), Yellow (7+), Orange (10+), Green (13+)
     
     const kidsBelts = [
-        { name: 'Cinza', minAge: 4, daysPerDegree: 240, classesPerDegree: 60 },
-        { name: 'Amarela', minAge: 7, daysPerDegree: 240, classesPerDegree: 60 },
-        { name: 'Laranja', minAge: 10, daysPerDegree: 240, classesPerDegree: 60 },
-        { name: 'Verde', minAge: 13, daysPerDegree: 240, classesPerDegree: 60 }
+        { name: 'Cinza', minAge: 4 },
+        { name: 'Amarela', minAge: 7 },
+        { name: 'Laranja', minAge: 10 },
+        { name: 'Verde', minAge: 13 }
     ];
 
+    // IBJJF Children's belts actually have more colors (White-stripe, Solid, Black-stripe)
+    // To keep it simple but compliant, we use degrees 1-4.
     for (let i = 0; i < kidsBelts.length; i++) {
         const current = kidsBelts[i];
         const next = i < kidsBelts.length - 1 ? kidsBelts[i + 1] : { name: 'Azul', minAge: 16 };
 
-        // Degrees within belt
+        // Degrees within belt (Standard: 3 months per stripe for kids)
         for (let j = 0; j < DEGREES.length - 1; j++) {
             rules.push({
                 fromBelt: current.name,
                 fromDegree: DEGREES[j],
                 toBelt: current.name,
                 toDegree: DEGREES[j + 1],
-                classesRequired: current.classesPerDegree,
-                minDaysRequired: current.daysPerDegree,
+                classesRequired: 24, // ~2 classes/week for 3 months
+                minDaysRequired: 90,
                 minAge: current.minAge,
                 examFee: 0
             });
@@ -54,9 +55,9 @@ async function seedRules() {
             fromDegree: '4º Grau',
             toBelt: next.name,
             toDegree: 'Nenhum',
-            classesRequired: current.classesPerDegree,
-            minDaysRequired: current.daysPerDegree, // Time from 4th degree to next belt
-            minAge: next.minAge, // Must meet age requirement for next belt
+            classesRequired: 24,
+            minDaysRequired: 90, 
+            minAge: next.minAge,
             examFee: 50
         });
     }
@@ -66,8 +67,6 @@ async function seedRules() {
     // =========================================================================
 
     // --- WHITE BELT (Branca) ---
-    // No minimum time by IBJJF, but we set a standard.
-    // White -> White Degrees
     for (let j = 0; j < DEGREES.length - 1; j++) {
         rules.push({
             fromBelt: 'Branca',
@@ -75,115 +74,147 @@ async function seedRules() {
             toBelt: 'Branca',
             toDegree: DEGREES[j+1],
             classesRequired: 30,
-            minDaysRequired: 90, // ~3 months per stripe
+            minDaysRequired: 60, // 2 months per stripe (Total ~8-10 months for Blue)
             minAge: 0,
             examFee: 0
         });
     }
-    // White -> Blue (Min Age 16)
     rules.push({
         fromBelt: 'Branca',
         fromDegree: '4º Grau',
         toBelt: 'Azul',
         toDegree: 'Nenhum',
-        classesRequired: 40,
-        minDaysRequired: 90,
-        minAge: 16, // CRITICAL IBJJF RULE
+        classesRequired: 30,
+        minDaysRequired: 60,
+        minAge: 16,
         examFee: 80
     });
 
     // --- BLUE BELT (Azul) ---
-    // IBJJF: Min 2 Years as Blue Belt before Purple.
-    // 2 Years = ~730 Days.
-    // 4 Stripes. So ~180 days per stripe.
+    // IBJJF: Min 2 Years total. 2 Years = 730 days.
+    // Divided by 5 (4 stripes + 1 belt jump) = ~146 days per step.
     for (let j = 0; j < DEGREES.length - 1; j++) {
         rules.push({
             fromBelt: 'Azul',
             fromDegree: DEGREES[j],
             toBelt: 'Azul',
             toDegree: DEGREES[j+1],
-            classesRequired: 50,
-            minDaysRequired: 180, // 6 months
+            classesRequired: 60,
+            minDaysRequired: 146, // ~5 months
             minAge: 16,
             examFee: 0
         });
     }
-    // Blue -> Purple
     rules.push({
         fromBelt: 'Azul',
         fromDegree: '4º Grau',
         toBelt: 'Roxa',
         toDegree: 'Nenhum',
-        classesRequired: 50,
-        minDaysRequired: 10, // Just a small buffer after 4th stripe, assuming total time is managed by stripe progression 
-        // OR better: enforce varying minDays for the *jump*? 
-        // In this simple engine, it checks time since *Last Graduation*. 
-        // If last grad was 4th stripe, then this is just the exam time.
-        // NOTE: Real strict enforcement requires checking total time in belt, not just since last stripe.
-        // For now, we assume consistent progression.
+        classesRequired: 60,
+        minDaysRequired: 146,
         minAge: 16,
         examFee: 120
     });
 
     // --- PURPLE BELT (Roxa) ---
-    // IBJJF: Min 1.5 Years (547 Days). ~136 Days per stripe
+    // IBJJF: Min 1.5 Years total. 547 days.
+    // Divided by 5 steps = ~110 days per step.
     for (let j = 0; j < DEGREES.length - 1; j++) {
         rules.push({
             fromBelt: 'Roxa',
             fromDegree: DEGREES[j],
             toBelt: 'Roxa',
             toDegree: DEGREES[j+1],
-            classesRequired: 60,
-            minDaysRequired: 135,
+            classesRequired: 70,
+            minDaysRequired: 110,
             minAge: 16,
             examFee: 0
         });
     }
-    // Purple -> Brown (Min Age 18)
     rules.push({
         fromBelt: 'Roxa',
         fromDegree: '4º Grau',
         toBelt: 'Marrom',
         toDegree: 'Nenhum',
-        classesRequired: 60,
-        minDaysRequired: 135,
-        minAge: 18, // CRITICAL IBJJF RULE
+        classesRequired: 70,
+        minDaysRequired: 110,
+        minAge: 18,
         examFee: 150
     });
 
     // --- BROWN BELT (Marrom) ---
-    // IBJJF: Min 1 Year (365 Days). ~90 Days per stripe
+    // IBJJF: Min 1 Year total. 365 days.
+    // Divided by 5 steps = 73 days per step.
     for (let j = 0; j < DEGREES.length - 1; j++) {
         rules.push({
             fromBelt: 'Marrom',
             fromDegree: DEGREES[j],
             toBelt: 'Marrom',
             toDegree: DEGREES[j+1],
-            classesRequired: 70,
-            minDaysRequired: 90,
+            classesRequired: 80,
+            minDaysRequired: 73,
             minAge: 18,
             examFee: 0
         });
     }
-    // Brown -> Black (Min Age 19)
     rules.push({
         fromBelt: 'Marrom',
         fromDegree: '4º Grau',
         toBelt: 'Preta',
         toDegree: 'Nenhum',
-        classesRequired: 100,
-        minDaysRequired: 90,
-        minAge: 19, // CRITICAL IBJJF RULE
+        classesRequired: 80,
+        minDaysRequired: 73,
+        minAge: 19,
         examFee: 300
     });
     
-    // --- BLACK BELT (Preta) ---
-    // IBJJF: Degrees by time only.
-    // 0 -> 1: 3 years
-    // 1 -> 2: 3 years
-    // 2 -> 3: 3 years
-    // 3 -> 4: 5 years
-    // ... Simplified here
+    // --- BLACK BELT SYSTEM (Preta) ---
+    const blackBeltDegrees = ['Nenhum', '1º Grau', '2º Grau', '3º Grau', '4º Grau', '5º Grau', '6º Grau'];
+    const yearsPerDegree = [3, 3, 3, 5, 5, 5]; 
+
+    for (let i = 0; i < blackBeltDegrees.length; i++) {
+        const isLastBlackDegree = i === blackBeltDegrees.length - 1;
+        const nextBelt = isLastBlackDegree ? 'Coral' : 'Preta';
+        const nextDegree = isLastBlackDegree ? '7º Grau' : blackBeltDegrees[i+1];
+        
+        rules.push({
+            fromBelt: 'Preta',
+            fromDegree: blackBeltDegrees[i],
+            toBelt: nextBelt,
+            toDegree: nextDegree,
+            classesRequired: 0, 
+            minDaysRequired: (yearsPerDegree[i] || 7) * 365,
+            minAge: isLastBlackDegree ? 50 : 19,
+            examFee: 500
+        });
+    }
+
+    // Master Belts
+    rules.push({
+        fromBelt: 'Coral',
+        fromDegree: '7º Grau',
+        toBelt: 'Coral',
+        toDegree: '8º Grau',
+        classesRequired: 0,
+        minDaysRequired: 7 * 365,
+        minAge: 57,
+        examFee: 1000
+    });
+
+    rules.push({
+        fromBelt: 'Coral',
+        fromDegree: '8º Grau',
+        toBelt: 'Vermelha',
+        toDegree: '9º Grau',
+        classesRequired: 0,
+        minDaysRequired: 10 * 365,
+        minAge: 67,
+        examFee: 2000
+    });
+
+    // --- RED BELT 9th DEGREE (Vermelha) ---
+    // 9th to 10th: Reserved for the Gracie Brothers (Pioneers). Unattainable for general public.
+    // We stop at 9th.
     
     console.log(`Inserting ${rules.length} IBJJF-aligned rules...`);
     await GraduationRule.insertMany(rules);

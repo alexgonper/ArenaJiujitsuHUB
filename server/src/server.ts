@@ -23,6 +23,8 @@ import authRoutes from './routes/authRoutes';
 import graduationRoutes from './routes/graduationRoutes';
 import classRoutes from './routes/classRoutes';
 import bookingRoutes from './routes/bookingRoutes';
+import uploadRoutes from './routes/uploadRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 // Initialize express app
 const app = express();
@@ -33,7 +35,8 @@ connectDB();
 // ===== SECURITY MIDDLEWARE =====
 app.use(helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // CORS configuration
@@ -59,6 +62,9 @@ app.use(compression({
 // Body parser
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Static folder for uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ===== LOGGING MIDDLEWARE =====
 if (process.env.NODE_ENV === 'development') {
@@ -113,6 +119,8 @@ app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/graduation`, graduationRoutes);
 app.use(`${API_PREFIX}/classes`, classRoutes);
 app.use(`${API_PREFIX}/bookings`, bookingRoutes);
+app.use(`${API_PREFIX}/upload`, uploadRoutes);
+app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 
 // Welcome route
 app.get('/', (req: Request, res: Response) => {

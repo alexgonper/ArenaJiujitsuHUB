@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arena BJJ | Login do Professor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-app: #0f172a;
+            --bg-card: #1e293b;
+            --brand-color: #f59e0b;
+            --brand-contrast: #000000;
+            --font-main: 'Roboto Condensed', sans-serif;
+        }
+
+        body { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: var(--font-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #f8fafc;
+        }
+
+        .phone-frame {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 640px) {
+            .phone-frame {
+                height: 850px;
+                border-radius: 2rem;
+                border: 8px solid #334155;
+                box-shadow: 0 0 0 2px #0f172a, 0 25px 50px -12px rgba(0,0,0,0.7);
+            }
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            width: 100%;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--brand-color);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+
+        .input-field::placeholder {
+            color: #64748b;
+        }
+
+        .btn-primary {
+            background: var(--brand-color);
+            color: var(--brand-contrast);
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(245, 158, 11, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .logo-glow {
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        
+        <!-- STATUS BAR -->
+        <div class="h-10 flex items-center justify-between px-6 pt-2 select-none z-20">
+            <span class="text-xs font-bold text-slate-200" id="clock">09:41</span>
+            <div class="flex gap-1.5 items-center text-slate-200 opacity-80">
+                <i class="fa-solid fa-signal text-[10px]"></i>
+                <i class="fa-solid fa-wifi text-[10px]"></i>
+                <i class="fa-solid fa-battery-full text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- LOGIN CONTENT -->
+        <div class="flex-1 flex flex-col items-center justify-center p-8 animate-up">
+            
+            <!-- Logo -->
+            <div id="login-logo-container" class="w-28 h-28 rounded-3xl bg-white flex items-center justify-center mb-6 logo-glow overflow-hidden">
+                <i id="login-logo-icon" class="hidden fa-solid fa-medal text-amber-500 text-5xl"></i>
+                <img id="login-logo-img" class="w-full h-full object-contain object-center p-2" src="arena-hub-logo.png" alt="Arena Hub">
+            </div>
+
+            <!-- Title -->
+            <h1 id="brand-title" class="text-3xl font-black text-white mb-2 uppercase tracking-tight">Arena BJJ</h1>
+            <p id="brand-subtitle" class="text-sm text-amber-500 mb-8 uppercase tracking-widest font-bold">Portal do Professor</p>
+
+            <!-- Subtitle -->
+            <div class="w-full max-w-sm mb-8 text-center bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                <i class="fa-solid fa-person-chalkboard text-amber-500 text-2xl mb-2"></i>
+                <h2 class="text-sm font-bold text-slate-200">Liderança & Controle</h2>
+                <p class="text-xs text-slate-400 mt-1">Gerencie suas aulas em tempo real</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="w-full max-w-sm space-y-5">
+                
+                <!-- Email Input -->
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">
+                        <i class="fa-solid fa-envelope mr-1"></i> E-mail do Instrutor
+                    </label>
+                    <input type="email" id="teacher-email" placeholder="mestre@arenajj.com" required class="input-field text-sm">
+                </div>
+
+                <!-- Error Message -->
+                <div id="error-message" class="hidden bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-xs">
+                    <i class="fa-solid fa-exclamation-circle mr-1"></i>
+                    <span id="error-text"></span>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" id="login-btn" class="w-full btn-primary flex items-center justify-center gap-2">
+                    <span>Entrar no Tatame</span>
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
+            </form>
+
+            <!-- Help Link -->
+            <div class="mt-8 text-center">
+                <p class="text-xs text-slate-500">
+                    Problemas no acesso?<br>
+                    Entre em contato com a administração da sua unidade
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-6 text-center">
+                <p class="text-xs text-slate-600">
+                    <i class="fa-solid fa-shield-halved mr-1"></i>
+                    Acesso exclusivo para instrutores
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-amber-500 text-black px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 opacity-0 transition-opacity z-50 pointer-events-none border-2 border-white">
+        <i class="fa-solid fa-check-circle text-black text-xl" id="toast-icon"></i>
+        <span class="text-xs font-bold uppercase tracking-wide" id="toast-msg">Sucesso</span>
+    </div>
+
+    <script src="api-config.js"></script>
+    <script>
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            const clock = document.getElementById('clock');
+            if (clock) clock.textContent = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Branding Logic
+        function applyLoginBranding(franchise) {
+            if (!franchise) return;
+            const b = franchise.branding || {};
+            const primaryColor = b.primaryColor || '#f59e0b';
+            const brandName = b.brandName || franchise.name;
+
+            console.log('🎨 Applying teacher branding:', { primaryColor, brandName });
+
+            document.documentElement.style.setProperty('--brand-color', primaryColor);
+            
+            if (brandName) {
+                const titleEl = document.getElementById('brand-title');
+                if (titleEl) titleEl.textContent = brandName;
+                document.title = `${brandName} | Portal do Professor`;
+            }
+
+            const logoImg = document.getElementById('login-logo-img');
+            const logoIcon = document.getElementById('login-logo-icon');
+            const logoContainer = document.getElementById('login-logo-container');
+
+            if (logoImg && logoIcon && logoContainer) {
+                let targetUrl = b.logoUrl;
+                const isPlaceholder = !targetUrl || targetUrl.includes('placeholder.com');
+                
+                if (isPlaceholder) targetUrl = 'arena-hub-logo.png';
+                if (targetUrl && targetUrl.includes('vio.placeholder.com')) {
+                    targetUrl = targetUrl.replace('vio.placeholder.com', 'via.placeholder.com');
+                }
+                
+                logoImg.onload = () => {
+                    logoImg.style.display = 'block';
+                    logoImg.classList.remove('hidden');
+                    logoIcon.classList.add('hidden');
+                    logoIcon.style.display = 'none';
+                    logoContainer.style.background = 'white';
+                };
+
+                logoImg.onerror = () => {
+                    if (targetUrl !== 'arena-hub-logo.png') {
+                        logoImg.src = 'arena-hub-logo.png';
+                    } else {
+                        logoImg.style.display = 'none';
+                        logoImg.classList.add('hidden');
+                        logoIcon.classList.remove('hidden');
+                        logoIcon.style.display = 'flex';
+                        logoContainer.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`;
+                    }
+                };
+
+                logoImg.src = targetUrl;
+            }
+
+            // Update Dynamic Styles
+            const oldStyle = document.getElementById('dynamic-branding');
+            if (oldStyle) oldStyle.remove();
+            const style = document.createElement('style');
+            style.id = 'dynamic-branding';
+            style.innerHTML = `
+                .btn-primary { background: ${primaryColor} !important; box-shadow: 0 10px 20px ${primaryColor}4d !important; }
+                .input-field:focus { border-color: ${primaryColor} !important; box-shadow: 0 0 0 3px ${primaryColor}33 !important; }
+                .logo-glow { box-shadow: 0 0 40px ${primaryColor}66 !important; }
+                .text-amber-500 { color: ${primaryColor} !important; }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Login form
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('teacher-email').value;
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            const btn = document.getElementById('login-btn');
+            
+            errorDiv.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Autenticando...</span>';
+            
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/teachers/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    // Update branding immediately if available in response
+                    if (data.data && data.data.franchiseId) {
+                        applyLoginBranding(data.data.franchiseId);
+                    }
+
+                    localStorage.setItem('arena_teacher', JSON.stringify(data.data));
+                    showToast('✅ Acesso autorizado!');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'teacher-mobile-complete.html';
+                    }, 1000);
+                } else {
+                    errorText.textContent = data.error || 'Credenciais inválidas';
+                    errorDiv.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Entrar no Tatame</span> <i class="fa-solid fa-right-to-bracket"></i>';
+                }
+            } catch (e) {
+                console.error('Login error:', e);
+                errorText.textContent = 'Erro de conexão com o servidor';
+                errorDiv.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<span>Entrar no Tatame</span> <i class="fa-solid fa-right-to-bracket"></i>';
+            }
+        });
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            if(!toast || !toastMsg) return;
+            toastMsg.textContent = msg;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>

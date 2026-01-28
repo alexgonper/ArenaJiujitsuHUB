@@ -14,6 +14,7 @@ interface IAttendanceRecord {
         className: string;
         teacherName: string;
         startTime: string;
+        endTime?: string; // Added for overlap check optimization
         category: string;
     };
 }
@@ -53,6 +54,7 @@ const attendanceSchema = new Schema<IAttendance>({
             className: String,
             teacherName: String,
             startTime: String,
+            endTime: String, // Added
             category: String
         }
     }],

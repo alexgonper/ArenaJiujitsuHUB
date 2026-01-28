@@ -239,6 +239,24 @@ window.changeSection = (id) => {
     if (btn) {
         btn.classList.add('sidebar-item-active');
         btn.classList.remove('text-slate-500', 'hover:bg-slate-50');
+    } else if (id === 'unit-detail') {
+        // Keep Network button active when in Unit Detail
+        const networkBtn = document.getElementById('btn-network');
+        if (networkBtn) {
+            networkBtn.classList.add('sidebar-item-active');
+            networkBtn.classList.remove('text-slate-500', 'hover:bg-slate-50');
+        }
+    }
+
+    // Hide submenu if not in unit detail
+    const submenu = document.getElementById('network-submenu');
+    if (submenu && id !== 'unit-detail') {
+        submenu.classList.add('hidden');
+    }
+    
+    // If going to network main view, ensure filtering is reset or handled if needed
+    if (id === 'network') {
+        // Optional: Reset any specific state
     }
 
     if (window.innerWidth < 1024) {
@@ -248,6 +266,12 @@ window.changeSection = (id) => {
             sidebar.classList.remove('sidebar-open');
             backdrop.classList.add('hidden');
         }
+    }
+
+    // Reset unit branding if leaving unit detail
+    if (id !== 'unit-detail') {
+        const brandingStyle = document.getElementById('unit-branding-style');
+        if (brandingStyle) brandingStyle.remove();
     }
 
     const titles = {
@@ -324,6 +348,11 @@ window.showConfirmModal = function(title, message, onConfirm) {
         panel.classList.remove('scale-95', 'opacity-0');
         panel.classList.add('scale-100', 'opacity-100');
     }, 10);
+};
+
+// Alias for widget-system.js compatibility
+window.showPortalConfirm = function(title, message, onConfirm, type) {
+    window.showConfirmModal(title, message, onConfirm);
 };
 
 window.closeConfirmModal = function() {
@@ -1447,11 +1476,97 @@ window.viewUnitDetail = (id) => {
 
     changeSection('unit-detail');
 
-    // Initialize Widget System for Detail View
+    // Populate Submenu
+    const submenu = document.getElementById('network-submenu');
+    
+    // Apply Branding
+    if (typeof applyUnitBranding === 'function') {
+        applyUnitBranding(franchise);
+    }
+
+    if (submenu) {
+        const menuItems = [
+            { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie' },
+            { id: 'students', label: 'Meus Alunos', icon: 'fa-users' },
+            { id: 'teachers', label: 'Professores', icon: 'fa-graduation-cap' },
+            { id: 'graduation', label: 'Graduações', icon: 'fa-medal' },
+            { id: 'reports', label: 'Relatórios', icon: 'fa-chart-line' },
+            { id: 'schedule', label: 'Grade de Horários', icon: 'fa-calendar-days' },
+            { id: 'settings', label: 'Configurações', icon: 'fa-gears' }
+        ];
+
+        submenu.innerHTML = `
+            <div class="px-2 py-2 mb-1">
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-2 truncate">${franchise.name}</p>
+            </div>
+            ${menuItems.map(item => `
+                <button onclick="switchUnitView('${item.id}', this)" 
+                    class="w-full text-left flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-500 hover:text-orange-500 hover:bg-orange-50 rounded-xl transition-all group submenu-item"
+                    id="submenu-btn-${item.id}">
+                    <i class="fa-solid ${item.icon} w-4 text-center"></i> ${item.label}
+                </button>
+            `).join('')}
+        `;
+        submenu.classList.remove('hidden');
+        
+        // Select first item
+        switchUnitView('dashboard');
+    }
+};
+
+window.switchUnitView = (viewId, btnElement) => {
+    // defaults
+    if (!viewId) viewId = 'dashboard';
+    
+    // Update active state in submenu
+    document.querySelectorAll('.submenu-item').forEach(b => {
+        b.classList.remove('text-orange-600', 'bg-orange-50');
+        b.classList.add('text-slate-500');
+    });
+
+    const activeBtn = btnElement || document.getElementById(`submenu-btn-${viewId}`);
+    if (activeBtn) {
+        activeBtn.classList.remove('text-slate-500');
+        activeBtn.classList.add('text-orange-600', 'bg-orange-50');
+    }
+
+    // Initialize Widget System with specific layout
+    // Layout naming convention: matrix-detail-[viewId]
+    const layoutName = `matrix-detail-${viewId}`;
+    
+    // Update Header subtitle context based on view
+    const subtitles = {
+        'dashboard': 'Visão Geral da Unidade',
+        'students': 'Gestão de Alunos da Unidade',
+        'teachers': 'Corpo Docente da Unidade',
+        'graduation': 'Gestão de Graduações',
+        'reports': 'Relatórios e Análises',
+        'schedule': 'Grade de Horários Semanal',
+        'settings': 'Configurações e White Label'
+    };
+    const subEl = document.getElementById('detail-subtitle');
+    const franchiseName = document.getElementById('detail-title')?.innerText || 'Unidade';
+    
+    if (subEl) {
+        // We might want to keep address or switch to functional subtitle.
+        // Let's append or replace. Replacing seems cleaner for "mode".
+        // But the address context is useful. Let's do: "Subtitle - Address" or just "Subtitle"
+        subEl.textContent = subtitles[viewId] || 'Gestão da Unidade';
+    }
+
+    if (window.innerWidth < 1024) {
+        const sidebar = document.getElementById('mobile-sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        if (sidebar && sidebar.classList.contains('sidebar-open')) {
+            sidebar.classList.remove('sidebar-open');
+            if (backdrop) backdrop.classList.add('hidden');
+        }
+    }
+
     if (typeof initWidgetSystem === 'function') {
         // Use a small timeout to ensure DOM is visible/ready
         setTimeout(() => {
-            initWidgetSystem('unit-widget-container', 'matrix-detail');
+            initWidgetSystem('unit-widget-container', layoutName);
         }, 50);
     }
 };
@@ -1494,6 +1609,32 @@ function calculateAge(birthDate) {
         age--;
     }
     return age;
+}
+
+// HELPER: Generate Consistent Profile Image
+function getProfileImage(person) {
+    if (person.photoUrl && person.photoUrl.trim() !== '') {
+        return person.photoUrl;
+    }
+
+    // Deterministic random based on ID or Name
+    const seed = person._id || person.name || 'default';
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const consistentId = Math.abs(hash % 70); // 0-69
+
+    const gender = (person.gender || 'Masculino').toLowerCase();
+    const age = calculateAge(person.birthDate) || 25;
+
+    // Logic for children
+    if (age < 14) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random&color=fff&size=100`;
+    }
+
+    const genderPath = (gender === 'feminino' || gender === 'female') ? 'women' : 'men';
+    return `https://randomuser.me/api/portraits/${genderPath}/${consistentId}.jpg`;
 }
 
 async function loadStudentsFromBackend() {
@@ -1602,6 +1743,9 @@ window.renderStudents = () => {
         return matchUnit && matchSearch && matchBelt && matchDegree && matchPayment;
     });
 
+    const badge = document.getElementById('matrix-students-count-badge');
+    if (badge) badge.innerText = filtered.length;
+
     // Sorting Logic
     filtered.sort((a, b) => {
         let valA = a[currentSort.key] || '';
@@ -1679,9 +1823,13 @@ window.renderStudents = () => {
             'Atrasada': 'bg-red-100 text-red-700 border-red-200'
         };
         const statusStyle = statusColors[status];
+        const photo = getProfileImage(s);
 
         return `
             <tr class="table-row border-b border-slate-50 transition-colors group hover:bg-slate-50/50">
+                <td class="py-4 px-2 w-12 text-center">
+                    <img src="${photo}" alt="${s.name}" class="w-10 h-10 rounded-full object-cover border border-slate-100 shadow-sm mx-auto">
+                </td>
                 <td class="py-4 px-2">
                     <div class="flex flex-col items-start gap-1">
                         <span class="font-bold text-slate-800">${s.name}</span>
@@ -1846,6 +1994,9 @@ window.renderTeachers = () => {
         filtered = filtered.filter(t => (t.degree || 'Nenhum') === degreeFilter);
     }
 
+    const badge = document.getElementById('matrix-teachers-count-badge');
+    if (badge) badge.innerText = filtered.length;
+
     if (filtered.length === 0) {
         listBody.innerHTML = '';
         noMsg?.classList.remove('hidden');
@@ -1870,9 +2021,13 @@ window.renderTeachers = () => {
 
     listBody.innerHTML = filtered.map(t => {
         const beltStyle = beltColors[t.belt] || 'bg-slate-100 text-slate-600';
+        const photo = getProfileImage(t);
 
         return `
             <tr class="hover:bg-slate-50 transition group">
+                <td class="py-4 px-2 w-12 text-center">
+                    <img src="${photo}" alt="${t.name}" class="w-10 h-10 rounded-full object-cover border border-slate-100 shadow-sm mx-auto">
+                </td>
                 <td class="py-4 px-2">
                     <div class="flex flex-col items-start gap-1">
                          <span class="font-bold text-slate-800">${(t.name || '').replace(/\s*\((Coral|Vermelha|Vermelho)\)/gi, '')}</span>
@@ -1881,11 +2036,15 @@ window.renderTeachers = () => {
                         </span>
                     </div>
                 </td>
-                <td class="py-4 px-2 text-slate-500 text-xs">
-                    ${t.gender || '-'}
+                <td class="py-4 px-2">
+                    <div class="text-[11px] font-bold text-slate-700">${t.phone || 'Sem contato'}</div>
+                    <div class="text-[10px] text-slate-400">
+                        ${t.gender || '-'} • 
+                        ${t.birthDate ? calculateAge(t.birthDate) + ' anos' : '-'}
+                    </div>
                 </td>
-                <td class="py-4 px-2 text-slate-500 text-xs">
-                    ${t.phone || '-'}
+                <td class="py-4 px-2">
+                    <div class="text-[11px] font-medium text-slate-500">${t.email || '-'}</div>
                 </td>
                 <td class="py-4 px-2 text-slate-500 text-xs max-w-[150px] truncate" title="${t.address || ''}">
                     ${t.address || '-'}
@@ -1931,6 +2090,20 @@ window.openTeacherForm = async (teacherId = null) => {
             
             <form id="teacher-form" class="space-y-4">
                 <input type="hidden" name="id" value="${teacher ? teacher._id : ''}">
+                
+                <!-- PHOTO UPLOAD -->
+                <div class="flex justify-center mb-2">
+                    <div class="relative group">
+                        <img id="preview-teacher-photo" src="${getProfileImage(teacher || {name:'Novo', gender:'Masculino'})}" 
+                             class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md">
+                        <label for="upload-teacher-photo" class="absolute bottom-0 right-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-orange-600 transition shadow-sm">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                        </label>
+                        <input type="file" id="upload-teacher-photo" class="hidden" accept="image/*" onchange="uploadImage(this, 'teacher-photo-url-input')">
+                        <input type="hidden" id="teacher-photo-url-input" name="photoUrl" value="${teacher && teacher.photoUrl ? teacher.photoUrl : ''}">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">Nome Completo *</label>
@@ -2171,6 +2344,20 @@ window.openStudentForm = async (studentId = null) => {
             
             <form id="student-form" class="space-y-4">
                 <input type="hidden" name="id" value="${student ? student._id : ''}">
+                
+                <!-- PHOTO UPLOAD -->
+                <div class="flex justify-center mb-2">
+                    <div class="relative group">
+                        <img id="preview-photo" src="${getProfileImage(student || {name:'Novo', gender:'Masculino'})}" 
+                             class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md">
+                        <label for="upload-student-photo" class="absolute bottom-0 right-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-orange-600 transition shadow-sm">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                        </label>
+                        <input type="file" id="upload-student-photo" class="hidden" accept="image/*" onchange="uploadImage(this, 'new-photo-url')">
+                        <input type="hidden" id="new-photo-url" name="photoUrl" value="${student && student.photoUrl ? student.photoUrl : ''}">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Atleta *</label>
@@ -3398,4 +3585,131 @@ window.copyQuickActionResult = async function(button) {
             alert('Não foi possível copiar o texto. Por favor, tente novamente.');
         }
     }
+};
+
+window.applyUnitBranding = (franchise) => {
+    const styleId = 'unit-branding-style';
+    let styleEl = document.getElementById(styleId);
+
+    if (!franchise || !franchise.branding) {
+        if (styleEl) styleEl.remove();
+        return;
+    }
+
+    const { primaryColor, secondaryColor } = franchise.branding;
+    if (!primaryColor) {
+        if (styleEl) styleEl.remove();
+        return;
+    }
+
+    const pColor = primaryColor;
+    // User requested strictly primary color, ignoring secondary for gradients
+    const sColor = primaryColor; 
+
+    // Helper to generate CSS
+    const css = `
+        /* Scope: Unit Detail Content */
+        #section-unit-detail .text-orange-500,
+        #section-unit-detail .text-orange-600,
+        #section-unit-detail .text-orange-700,
+        #page-title,
+        #page-subtitle {
+            color: ${pColor} !important;
+        }
+        
+        #section-unit-detail .bg-orange-500,
+        #section-unit-detail .bg-orange-600,
+        #section-unit-detail .bg-brand-500 {
+            background-color: ${pColor} !important;
+        }
+
+        #section-unit-detail .bg-orange-50,
+        #section-unit-detail .bg-orange-100 {
+            background-color: ${pColor}1A !important; /* 10% opacity */
+        }
+        
+        #section-unit-detail .border-orange-100,
+        #section-unit-detail .border-orange-200 {
+            border-color: ${pColor}33 !important; /* 20% opacity */
+        }
+        
+        #section-unit-detail .border-orange-500 {
+            border-color: ${pColor} !important;
+        }
+
+        #section-unit-detail .orange-gradient {
+            background: linear-gradient(135deg, ${pColor} 0%, ${pColor} 100%) !important;
+        }
+        
+        #section-unit-detail .focus\\:ring-orange-500:focus {
+            --tw-ring-color: ${pColor} !important;
+        }
+
+        /* Hover states in detail view */
+        #section-unit-detail .hover\\:text-orange-600:hover {
+            color: ${pColor} !important;
+        }
+        
+        #section-unit-detail .hover\\:bg-orange-50:hover {
+            background-color: ${pColor}1A !important;
+        }
+        
+        #section-unit-detail .hover\\:bg-orange-500:hover,
+        #section-unit-detail .hover\\:bg-orange-600:hover {
+            background-color: ${pColor} !important;
+            opacity: 0.9;
+        }
+        
+        #section-unit-detail .hover\\:border-orange-500:hover {
+            border-color: ${pColor} !important;
+        }
+
+        /* Scope: Submenu Sidebar Items */
+        #network-submenu .text-orange-600 {
+            color: ${pColor} !important;
+        }
+        
+        #network-submenu .bg-orange-50 {
+            background-color: ${pColor}1A !important;
+        }
+
+        #network-submenu .hover\\:text-orange-500:hover {
+            color: ${pColor} !important;
+        }
+
+        #network-submenu .hover\\:bg-orange-50:hover {
+            background-color: ${pColor}1A !important;
+        }
+        
+        /* Specific overrides for buttons if needed */
+        #section-unit-detail button.orange-gradient {
+             background: ${pColor} !important;
+        }
+
+        /* Scope: Global UI Modal (for Widget Info, etc) */
+        #ui-modal .orange-gradient {
+            background: ${pColor} !important;
+        }
+        
+        #ui-modal .bg-orange-50 {
+            background-color: ${pColor}1A !important;
+        }
+        
+        #ui-modal .text-orange-500 {
+            color: ${pColor} !important;
+        }
+        
+        #ui-modal .shadow-orange-200 {
+            --tw-shadow-color: ${pColor}33 !important; /* using hex opacity */
+            box-shadow: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -2px var(--tw-shadow-color) !important;
+        }
+    `;
+
+    if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = styleId;
+        document.head.appendChild(styleEl);
+    }
+
+    styleEl.textContent = css;
 };

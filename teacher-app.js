@@ -14,12 +14,62 @@ let currentAttendanceClassId = null;
 // (Logic was moved to bottom or integrated)
 
 
+// HELPER: Calculate Age
+const calculateAge = (birthDate) => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+};
+
+// HELPER: Generate Consistent Profile Image
+const getProfileImage = (person) => {
+    if (person.photoUrl && person.photoUrl.trim() !== '') {
+        return person.photoUrl;
+    }
+
+    // Deterministic random based on ID or Name
+    const seed = person._id || person._id || person.name || 'default';
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const consistentId = Math.abs(hash % 70); // 0-69
+
+    const gender = (person.gender || 'Masculino').toLowerCase();
+    const age = calculateAge(person.birthDate) || 25;
+
+    // Logic for children
+    if (age < 14) {
+         return `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random&color=fff&size=100`;
+    }
+
+    const genderPath = (gender === 'feminino' || gender === 'female') ? 'women' : 'men';
+    return `https://randomuser.me/api/portraits/${genderPath}/${consistentId}.jpg`;
+};
+
 function updateHeaderAndProfile() {
     const nameEl = document.getElementById('teacher-name-header');
     if (nameEl) nameEl.textContent = currentTeacher.name;
 
     const nameSidebar = document.getElementById('teacher-name-sidebar');
     if (nameSidebar) nameSidebar.textContent = currentTeacher.name;
+
+    // Update page title with teacher name
+    const teacherNameTitle = document.getElementById('teacher-name-title');
+    if (teacherNameTitle) teacherNameTitle.textContent = currentTeacher.name;
+
+    // Update subtitle with academy name
+    const pageSubtitle = document.getElementById('page-subtitle');
+    if (pageSubtitle && currentTeacher.franchiseId) {
+        const academyName = currentTeacher.franchiseId.name || currentTeacher.franchiseId.branding?.name || 'Arena São Paulo';
+        pageSubtitle.textContent = academyName;
+    }
 
     const pName = document.getElementById('profile-name');
     if (pName) pName.textContent = currentTeacher.name;
@@ -64,12 +114,20 @@ function updateHeaderAndProfile() {
     const pAddress = document.getElementById('profile-address');
     if (pAddress) pAddress.textContent = currentTeacher.address || '--';
 
-    // Avatar initial
+    // Avatar (Using getProfileImage deterministic logic)
+    const photoUrl = getProfileImage(currentTeacher);
+
     const avatar = document.getElementById('profile-avatar');
-    if (avatar) avatar.textContent = currentTeacher.name.charAt(0);
+    if (avatar) {
+        avatar.innerHTML = `<img src="${photoUrl}" class="w-full h-full rounded-full object-cover">`;
+        avatar.classList.remove('orange-gradient', 'text-white');
+    }
 
     const avatarLarge = document.getElementById('profile-avatar-large');
-    if (avatarLarge) avatarLarge.textContent = currentTeacher.name.charAt(0);
+    if (avatarLarge) {
+        avatarLarge.innerHTML = `<img src="${photoUrl}" class="w-full h-full rounded-full object-cover">`;
+        avatarLarge.classList.remove('orange-gradient', 'text-white');
+    }
 
     // Render Graduation History
     renderGraduationHistoryTable(currentTeacher.graduationHistory || []);
@@ -114,6 +172,7 @@ window.openEditProfileModal = function() {
     if (!modal) return;
 
     // Populate Fields
+    document.getElementById('edit-teacher-photo').value = currentTeacher.photoUrl || '';
     document.getElementById('edit-teacher-name').value = currentTeacher.name || '';
     document.getElementById('edit-teacher-email').value = currentTeacher.email || '';
     document.getElementById('edit-teacher-gender').value = currentTeacher.gender || 'Masculino';
@@ -154,6 +213,7 @@ window.saveProfileUpdates = async function(event) {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Salvando...';
 
     const payload = {
+        photoUrl: document.getElementById('edit-teacher-photo').value,
         name: document.getElementById('edit-teacher-name').value,
         email: document.getElementById('edit-teacher-email').value,
         gender: document.getElementById('edit-teacher-gender').value,
@@ -339,11 +399,25 @@ function autoSelectLiveClass() {
         return;
     }
 
-    const active = getActiveClass(agenda);
+    // Fix: check if we already have a selected class (e.g. after refresh)
+    let active = null;
+    if (currentAttendanceClassId) {
+        active = agenda.find(c => c._id === currentAttendanceClassId);
+    }
+
+    // Fallback if no selection or selection not in today's agenda
+    if (!active) {
+        active = getActiveClass(agenda);
+    }
+
     if (active) {
-        // Found a live or upcoming class
-        renderLiveClassMode(active);
-        // Auto load attendance
+        // Found a live or upcoming class (or preserved selection)
+        // Check if it's "live" time-wise for the badge status
+        const isLive = isClassCheckinOpen(active); 
+        renderLiveClassMode(active, isLive);
+        
+        // Auto load attendance ONLY if it's a new selection or forced refresh needed
+        // But here we are refreshing dashboard, so re-fetch attendance is safer to sync correct counts
         loadClassAttendance(active._id, active.name);
     } else {
         // No active class now, maybe show the next one or empty state
@@ -420,20 +494,28 @@ function renderTimeline() {
     
     // Render Timeline
     timeline.innerHTML = sorted.map(cls => {
-        const isNow = currentAttendanceClassId === cls._id; // We'll need to re-render when selection changes if we want highlight
+        const isNow = currentAttendanceClassId === cls._id; 
+        
+        // Define dynamic styles for selected state
+        const selectedStyle = isNow ? 'background-color: var(--brand-primary, #ea580c); border-color: var(--brand-primary, #ea580c);' : '';
+        const hoverClass = isNow ? '' : 'hover:border-slate-300'; // Removed hardcoded orange hover for neutrality or need specific brand hover handling
+
         return `
         <div onclick="selectTimelineClass('${cls._id}')" 
-             class="min-w-[150px] cursor-pointer snap-start rounded-2xl p-4 transition-all hover:scale-105 active:scale-95 border
-             ${isNow ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 border-orange-400' : 'bg-white border-slate-200 text-slate-600 hover:border-orange-300'}">
+             style="${selectedStyle}"
+             class="min-w-[150px] cursor-pointer snap-start rounded-2xl p-4 transition-all hover:scale-105 active:scale-95 border relative overflow-hidden
+             ${isNow ? 'text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 ' + hoverClass}">
              
-            <p class="text-[10px] font-black uppercase tracking-widest ${isNow ? 'text-white/80' : 'text-slate-400'} mb-1">
+            ${isNow ? '<div class="absolute inset-0 bg-white/10 pointer-events-none"></div>' : ''}
+
+            <p class="text-[10px] font-black uppercase tracking-widest ${isNow ? 'text-white/80' : 'text-slate-400'} mb-1 relative z-10">
                 ${cls.startTime}
             </p>
-            <h4 class="font-black text-sm leading-tight mb-2 ${isNow ? 'text-white' : 'text-slate-800'}">
+            <h4 class="font-black text-sm leading-tight mb-2 ${isNow ? 'text-white' : 'text-slate-800'} relative z-10">
                 ${cls.name}
             </h4>
-            <div class="flex items-center gap-2">
-                <span class="text-[9px] font-bold px-2 py-0.5 rounded-lg ${isNow ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}">
+            <div class="flex items-center gap-2 relative z-10">
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-lg ${isNow ? 'bg-black/20 text-white' : 'bg-slate-100 text-slate-500'}">
                     ${cls.category || 'Geral'}
                 </span>
             </div>
@@ -606,9 +688,10 @@ function renderInlineStudentsList() {
         let actionBtn = '';
         if (isConfirmed) {
             actionBtn = `
-                <div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center border border-green-100 shadow-sm">
+                <button onclick="quickConfirm('${sData._id}', '${student.classId || currentAttendanceClassId}', this)" 
+                    class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center border border-green-100 shadow-sm hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all active:scale-95" title="Toque para cancelar presença">
                     <i class="fa-solid fa-check"></i>
-                </div>
+                </button>
             `;
         } else if (!isOpen) { 
              actionBtn = `
@@ -728,7 +811,7 @@ window.quickConfirm = async function(studentId, classId, btn) {
                     filteredStudents[studentIdx].checkInTime = new Date().toISOString();
                     
                     // Visual Success
-                    btn.className = "w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg transform scale-110 transition-all";
+                    btn.className = "w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center border border-green-100 shadow-sm hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all active:scale-95";
                     btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                     
                     // Increment Count
@@ -745,7 +828,7 @@ window.quickConfirm = async function(studentId, classId, btn) {
 
             // Background Refresh 
             setTimeout(() => {
-                fetchDashboardData(); 
+                fetchDashboardData().then(() => renderDashboard()); 
             }, 1000);
         } else {
             const errorMsg = result.message || result.error || 'Erro na operação';
@@ -820,7 +903,10 @@ window.confirmAllAttendance = async function() {
         showToast('Todos confirmados!', 'success');
         
         // Background sync
-        setTimeout(() => loadClassAttendance(currentAttendanceClassId), 1000);
+        setTimeout(() => {
+            loadClassAttendance(currentAttendanceClassId);
+            fetchDashboardData().then(() => renderDashboard());
+        }, 1200);
     });
 };
 
@@ -855,6 +941,18 @@ if (searchInput) {
 let selectedStudentForAttendance = null;
 
 // --- ALL STUDENTS LIST LOGIC ---
+let allStudentsSort = { key: 'name', direction: 'asc' };
+
+window.setAllStudentsSort = (key) => {
+    if (allStudentsSort.key === key) {
+        allStudentsSort.direction = allStudentsSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        allStudentsSort.key = key;
+        allStudentsSort.direction = 'asc';
+    }
+    renderAllStudentsList();
+};
+
 function renderAllStudentsList() {
     const list = document.getElementById('all-students-list');
     if (!list) return;
@@ -862,19 +960,44 @@ function renderAllStudentsList() {
     const searchTerm = document.getElementById('all-students-search')?.value.toLowerCase() || '';
     const beltFilter = document.getElementById('all-students-belt-filter')?.value || 'Todas';
 
-    const displayStudents = students.filter(s => {
+    let displayStudents = students.filter(s => {
         const matchesSearch = s.name.toLowerCase().includes(searchTerm);
         const matchesBelt = beltFilter === 'Todas' || s.belt === beltFilter;
         return matchesSearch && matchesBelt;
     });
 
+    // Update count badge
+    const badge = document.getElementById('all-students-count-badge');
+    if (badge) badge.innerText = displayStudents.length;
+
+    // Sorting logic
+    displayStudents.sort((a, b) => {
+        let valA = a[allStudentsSort.key] || '';
+        let valB = b[allStudentsSort.key] || '';
+
+        // Special handling for some keys
+        if (allStudentsSort.key === 'registrationDate') {
+            valA = a.registrationDate || a.createdAt || '';
+            valB = b.registrationDate || b.createdAt || '';
+        }
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return allStudentsSort.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return allStudentsSort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
     if (displayStudents.length === 0) {
         list.innerHTML = `
-            <div class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-40">
-                <i class="fa-solid fa-users-slash text-4xl mb-4"></i>
-                <p class="text-sm font-bold uppercase">Nenhum aluno encontrado</p>
-                <p class="text-xs italic">Tente mudar o filtro ou termo de busca.</p>
-            </div>
+            <tr>
+                <td colspan="5" class="py-20 text-center opacity-40">
+                    <i class="fa-solid fa-users-slash text-4xl mb-4 block"></i>
+                    <p class="text-sm font-bold uppercase">Nenhum aluno encontrado</p>
+                    <p class="text-xs italic">Tente mudar o filtro ou termo de busca.</p>
+                </td>
+            </tr>
         `;
         return;
     }
@@ -884,8 +1007,11 @@ function renderAllStudentsList() {
         const degreeFormatted = rawDegree.toUpperCase().includes('GRAU') ? rawDegree : `${rawDegree}º Grau`;
         const degreeText = student.degree && student.degree !== 'Nenhum' ? ` • ${degreeFormatted}` : '';
         const beltStyle = getBeltStyle(student.belt);
-        const statusClass = student.paymentStatus === 'Paga' ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50';
-        const statusText = student.paymentStatus === 'Paga' ? 'Em Dia' : 'Atrasada';
+        
+        // Match Franchise Aesthetics for status
+        const isPaid = student.paymentStatus === 'Paga';
+        const statusClass = isPaid ? 'text-emerald-700 bg-emerald-100 border-emerald-200' : 'text-red-700 bg-red-100 border-red-200';
+        const statusText = isPaid ? 'Em Dia' : 'Atrasada';
 
         // Calculate age
         let ageText = '';
@@ -897,43 +1023,51 @@ function renderAllStudentsList() {
             if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
             ageText = `${age} anos`;
         }
+        
+        // Format Join Date
+        const joinDateRaw = student.registrationDate || student.createdAt;
+        const joinDate = joinDateRaw ? new Date(joinDateRaw).toLocaleDateString('pt-BR') : 'Data n/d';
+
+        // Get Profile Image
+        const photo = getProfileImage(student);
 
         return `
-            <div class="bg-white rounded-3xl border border-slate-100 p-5 flex items-center justify-between hover:border-orange-200 transition-all group">
-                <div class="flex items-center gap-6 flex-1 min-w-0">
-                    <div class="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-400 text-xl transition-all group-hover:scale-105 shadow-sm">
-                        ${student.name.charAt(0)}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h4 class="text-base font-black text-slate-800 tracking-tight mb-1 truncate">${student.name}</h4>
-                        <div class="flex items-center gap-2">
-                             <span class="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border shadow-sm" style="background: ${beltStyle.bg}; color: ${beltStyle.text}; border-color: ${beltStyle.border}">
+            <tr class="hover:bg-slate-50 transition-all group border-b border-slate-50">
+                <!-- Col 1: Photo -->
+                <td class="py-4 px-4 text-center">
+                    <img src="${photo}" alt="${student.name}" class="w-10 h-10 rounded-full object-cover border border-slate-100 shadow-sm mx-auto group-hover:scale-110 transition-transform">
+                </td>
+
+                <!-- Col 2: Aluno/Faixa -->
+                <td class="py-4 px-4">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-black text-slate-800 tracking-tight">${student.name}</span>
+                        <div class="mt-1">
+                            <span class="inline-block px-2 py-0.5 rounded text-[8px] font-black uppercase border whitespace-nowrap" style="background: ${beltStyle.bg}; color: ${beltStyle.text}; border-color: ${beltStyle.border}">
                                 ${student.belt}${degreeText}
                             </span>
                         </div>
                     </div>
-                </div>
+                </td>
 
-                <div class="flex items-center gap-8 px-8 border-x border-slate-50 hidden lg:flex">
-                    <div class="text-right">
-                        <p class="text-[10px] font-black text-slate-800 uppercase tracking-wider mb-0.5">${student.phone || 'Sem Telefone'}</p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${student.gender || 'Não Inf.'} • ${ageText}</p>
-                    </div>
-                </div>
+                <!-- Col 3: Contato -->
+                <td class="py-4 px-4">
+                    <div class="text-[10px] font-black text-slate-800 uppercase tracking-wider mb-0.5">${student.phone || 'Sem Telefone'}</div>
+                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${student.gender || 'ND'} • ${ageText}</div>
+                </td>
 
-                <div class="flex items-center gap-6 pl-8">
-                    <div class="text-center hidden sm:block">
-                        <span class="text-[8px] font-black uppercase text-slate-300 block mb-1">Financeiro</span>
-                        <span class="text-[9px] font-black ${statusClass} px-3 py-1 rounded-full border shadow-sm">
-                            ${statusText.toUpperCase()}
-                        </span>
-                    </div>
-                    <button onclick="openAttendanceModal('${student._id}', '${student.name.replace(/'/g, "\\'")}')" 
-                        class="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center hover:bg-brand-500 hover:text-white transition-all shadow-sm active:scale-95 group/btn">
-                        <i class="fa-solid fa-user-check text-lg group-hover/btn:animate-pulse"></i>
-                    </button>
-                </div>
-            </div>
+                <!-- Col 4: Desde -->
+                <td class="py-4 px-4">
+                    <span class="text-[10px] font-black text-slate-800 uppercase tracking-wider">${joinDate}</span>
+                </td>
+
+                <!-- Col 5: Status -->
+                <td class="py-4 px-4 text-right">
+                    <span class="inline-block text-[9px] font-black ${statusClass} px-3 py-1 rounded-full border shadow-sm uppercase tracking-tighter">
+                        ${statusText}
+                    </span>
+                </td>
+            </tr>
         `;
     }).join('');
 }
@@ -1232,6 +1366,7 @@ function applyBranding(franchise) {
             .bg-brand-500 { background-color: ${primaryColor} !important; }
             .btn-primary { background-color: ${primaryColor} !important; }
             .btn-primary:hover { box-shadow: 0 8px 16px ${primaryColor}33 !important; }
+            #page-title, #page-subtitle { color: ${primaryColor} !important; }
 
             /* Selected Card Branding */
             .brand-ring { box-shadow: 0 0 0 2px ${primaryColor} !important; }
@@ -1240,13 +1375,19 @@ function applyBranding(franchise) {
     }
 
     // 2. Logo
-    const logoImg = document.getElementById('logo-img');
-    const logoIcon = document.getElementById('logo-icon');
+    const logoImg = document.getElementById('logo-img-sidebar');
+    const logoText = document.getElementById('logo-text-sidebar');
+    // const logoIcon = document.getElementById('logo-icon'); // Not used in teacher sidebar currently
+
     if (b.logoUrl && logoImg) {
         logoImg.src = b.logoUrl;
         logoImg.classList.remove('hidden');
-        if (logoIcon) logoIcon.classList.add('hidden');
-        document.getElementById('logo-container').classList.remove('bg-gradient-to-br');
+        // if (logoIcon) logoIcon.classList.add('hidden');
+        document.getElementById('portal-logo-container').classList.remove('bg-gradient-to-br');
+    }
+    
+    if (logoText) {
+        logoText.textContent = brandName.toUpperCase();
     }
 
     // 3. Favicon & Title
@@ -1320,12 +1461,12 @@ function renderTeacherSchedule() {
 
             col.innerHTML += `
                 <div onclick="openClassBookingsModal('${cls._id || cls.id}', '${cls.name}', '${targetDateStr}')" 
-                    class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative cursor-pointer active:scale-95 ${isMyClass ? 'ring-2 ring-orange-200' : ''}">
-                    <div class="flex justify-between items-start mb-0.5">
-                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-${categoryColor}-50 text-${categoryColor}-600 border border-${categoryColor}-100">
+                    class="bg-${categoryColor}-50 border border-${categoryColor}-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative cursor-pointer active:scale-95 ${isMyClass ? 'ring-2 ring-orange-200' : ''}">
+                    <div class="flex justify-between items-center mb-1 gap-1">
+                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-white text-${categoryColor}-600 border border-${categoryColor}-200 truncate shadow-sm">
                             ${cls.category || 'Geral'}
                         </span>
-                        ${isMyClass ? '<span class="text-[8px] font-bold uppercase text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">Minha</span>' : ''}
+                        ${isMyClass ? '<span class="text-[8px] font-bold uppercase text-orange-600 bg-white px-1.5 py-0.5 rounded border border-orange-200 shrink-0 shadow-sm">Minha</span>' : ''}
                     </div>
                     
                     <div class="mb-1.5">
@@ -1334,9 +1475,9 @@ function renderTeacherSchedule() {
                         </span>
                     </div>
 
-                    <h4 class="font-bold text-slate-700 text-xs mb-0.5 leading-tight">${cls.name}</h4>
-                    <p class="text-[10px] text-slate-400 mb-2 truncate">${teacherName}</p>
-                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
+                    <h4 class="font-bold text-slate-800 text-xs mb-0.5 leading-tight truncate" title="${cls.name}">${cls.name}</h4>
+                    <p class="text-[10px] text-slate-500 mb-2 truncate">${teacherName}</p>
+                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-white/60 px-2 py-1 rounded-lg border border-${categoryColor}-100">
                         <i class="fa-regular fa-clock text-slate-400"></i>
                         ${cls.startTime} - ${cls.endTime}
                     </div>

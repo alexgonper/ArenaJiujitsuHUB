@@ -387,7 +387,7 @@ export const getStudentsForAttendance = async (req: Request, res: Response, next
             query._id = { $in: allMyStudentIds };
         }
 
-        const students = await Student.find(query).select('name belt degree paymentStatus phone gender birthDate');
+        const students = await Student.find(query).select('name belt degree paymentStatus phone gender birthDate email createdAt registrationDate');
 
         res.status(200).json({
             success: true,
@@ -399,6 +399,9 @@ export const getStudentsForAttendance = async (req: Request, res: Response, next
     }
 };
 
+/**
+ * @desc    Mark Student Attendance
+ */
 /**
  * @desc    Mark Student Attendance
  */
@@ -414,10 +417,9 @@ export const markAttendance = async (req: Request, res: Response, next: NextFunc
             checkInMethod: 'Professor'
         });
 
-        const startOfDay = new Date();
-        startOfDay.setHours(0,0,0,0);
-        const endOfDay = new Date();
-        endOfDay.setHours(23,59,59,999);
+        // Use Normalized UTC for Bookings (stored as T00:00:00.000Z)
+        const startOfDay = AttendanceService.getNormalizedToday();
+        const endOfDay = AttendanceService.getNormalizedEndOfDay();
 
         await ClassBooking.findOneAndUpdate(
             {
@@ -430,9 +432,7 @@ export const markAttendance = async (req: Request, res: Response, next: NextFunc
         );
 
         // Update ClassSession for Dashboard Stats (checkedInCount)
-        const sessionDate = new Date();
-        sessionDate.setHours(0,0,0,0);
-        
+        // Sessions are also stored with Normalized UTC dates
         await ClassSession.findOneAndUpdate(
             { 
                 classId: classId,
@@ -444,7 +444,7 @@ export const markAttendance = async (req: Request, res: Response, next: NextFunc
                     teacherId,
                     franchiseId,
                     startTime: new Date().toLocaleTimeString(), // Fallback
-                    date: new Date() // Fallback
+                    date: startOfDay // Ensure we use the normalized date on insert
                 }
             },
             { upsert: true }
@@ -474,16 +474,14 @@ export const removeAttendance = async (req: Request, res: Response, next: NextFu
             classId
         });
 
-        const startOfDay = new Date();
-        startOfDay.setHours(0,0,0,0);
-        const endOfDay = new Date();
-        endOfDay.setHours(23,59,59,999);
+        // Use Daily Query Window to catch late-night bookings (spillover)
+        const queryWindow = AttendanceService.getDailyQueryWindow();
 
         await ClassBooking.findOneAndUpdate(
             {
                 studentId,
                 classId,
-                date: { $gte: startOfDay, $lte: endOfDay },
+                date: { $gte: queryWindow.start, $lte: queryWindow.end },
                 status: 'confirmed'
             },
             { status: 'reserved' }
@@ -493,7 +491,7 @@ export const removeAttendance = async (req: Request, res: Response, next: NextFu
         await ClassSession.findOneAndUpdate(
             { 
                 classId: classId,
-                date: { $gte: AttendanceService.getNormalizedToday(), $lte: AttendanceService.getNormalizedEndOfDay() }
+                date: { $gte: queryWindow.start, $lte: queryWindow.end }
             },
             { $inc: { checkedInCount: -1 } }
         );
@@ -517,21 +515,23 @@ export const getClassAttendance = async (req: Request, res: Response, next: Next
     try {
         const { classId } = req.params;
 
-        const startOfDay = AttendanceService.getNormalizedToday();
-        const endOfDay = AttendanceService.getNormalizedEndOfDay();
+        // 1. Attendance Records query (Actual Check-ins)
+        // Must use the Daily Query Window (includes next-day UTC spillover) 
+        // because Attendance records store exact execution timestamp (new Date()).
+        const queryWindow = AttendanceService.getDailyQueryWindow();
 
         const attendanceAgg = await Attendance.aggregate([
             { 
                 $match: { 
                     "records.classId": new mongoose.Types.ObjectId(classId),
-                    "records.date": { $gte: startOfDay, $lte: endOfDay }
+                    "records.date": { $gte: queryWindow.start, $lte: queryWindow.end }
                 } 
             },
             { $unwind: "$records" },
             { 
                 $match: { 
                     "records.classId": new mongoose.Types.ObjectId(classId),
-                    "records.date": { $gte: startOfDay, $lte: endOfDay }
+                    "records.date": { $gte: queryWindow.start, $lte: queryWindow.end }
                 } 
             },
             {
@@ -560,28 +560,22 @@ export const getClassAttendance = async (req: Request, res: Response, next: Next
             }
         ]);
 
-        // Debug Log
-        console.log(`[getClassAttendance] ClassId: ${classId}`);
-        console.log(`[getClassAttendance] Window: ${startOfDay.toISOString()} - ${endOfDay.toISOString()}`);
-        console.log(`[getClassAttendance] Confirmed: ${attendanceAgg.length}`);
-
+        // 2. Booking Records query (Reservations)
+        // Use Query Window also for bookings to ensure consistency with attendance
+        
         const bookings = await ClassBooking.find({
             classId: classId,
-            date: { $gte: startOfDay, $lte: endOfDay },
-            status: { $in: ['reserved', 'confirmed'] } // Get ALL bookings to be safe
+            date: { $gte: queryWindow.start, $lte: queryWindow.end }, 
+            status: { $in: ['reserved', 'confirmed'] } 
         }).populate('studentId', 'name belt degree paymentStatus photo');
 
-        console.log(`[getClassAttendance] Bookings Found: ${bookings.length}`);
+        console.log(`[getClassAttendance] Attendance: ${attendanceAgg.length}, Bookings: ${bookings.length}`);
 
-        // Filter out bookings that are already in attendanceAgg (confirmed) to avoid duplicates
-        // We use string comparison of IDs
+        // Filter out bookings that are already in attendanceAgg (confirmed present TODAY) to avoid duplicates
         const confirmedStudentIds = new Set(attendanceAgg.map(a => a.studentId._id.toString()));
 
         const validBookings = bookings.filter(b => {
-             // 1. Must have a valid student populated
              if(!b.studentId) return false;
-             // 2. Must NOT be in the confirmed list already
-             // (If a student is in Attendance bucket, we show that record, not the booking record)
              return !confirmedStudentIds.has((b.studentId as any)._id.toString());
         });
 
@@ -596,8 +590,6 @@ export const getClassAttendance = async (req: Request, res: Response, next: Next
             }))
         ];
 
-        console.log(`[getClassAttendance] Final Mixed List: ${mixedList.length}`);
-
         res.status(200).json({
             success: true,
             count: mixedList.length,
@@ -609,5 +601,204 @@ export const getClassAttendance = async (req: Request, res: Response, next: Next
             success: false,
             message: 'Erro ao buscar lista de presença'
         });
+    }
+};
+
+/**
+ * @desc    Get Teacher Weekly Schedule
+ * @route   GET /api/v1/teachers/:id/schedule
+ * @access  Public
+ */
+export const getTeacherSchedule = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const teacher = await Teacher.findById(req.params.id);
+        
+        if (!teacher) {
+            return res.status(404).json({
+                success: false,
+                error: 'Professor não encontrado'
+            });
+        }
+
+        // Get all active classes for this teacher
+        const classes = await Class.find({
+            teacherId: teacher._id,
+            active: true
+        }).sort({ dayOfWeek: 1, startTime: 1 });
+
+        // Organize by day of week
+        const schedule: any = {
+            seg: [], // 1
+            ter: [], // 2
+            qua: [], // 3
+            qui: [], // 4
+            sex: [], // 5
+            sab: [], // 6
+            dom: []  // 0
+        };
+
+        const dayMap: any = {
+            0: 'dom',
+            1: 'seg',
+            2: 'ter',
+            3: 'qua',
+            4: 'qui',
+            5: 'sex',
+            6: 'sab'
+        };
+
+        for (const cls of classes) {
+            const dayKey = dayMap[cls.dayOfWeek];
+            
+            // Get current enrollment count
+            const enrolledCount = await ClassBooking.countDocuments({
+                classId: cls._id,
+                status: { $in: ['reserved', 'confirmed'] }
+            });
+
+            schedule[dayKey].push({
+                _id: cls._id,
+                time: cls.startTime,
+                name: cls.name,
+                level: cls.level || 'Todos',
+                category: cls.category,
+                targetAudience: cls.targetAudience,
+                capacity: cls.capacity,
+                enrolled: enrolledCount
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: schedule
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Get Teacher Graduations
+ * @route   GET /api/v1/teachers/:id/graduations
+ * @access  Public
+ */
+export const getTeacherGraduations = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const teacher = await Teacher.findById(req.params.id);
+        
+        if (!teacher) {
+            return res.status(404).json({
+                success: false,
+                error: 'Professor não encontrado'
+            });
+        }
+
+        // Get all students from teacher's franchise
+        const students = await Student.find({
+            franchiseId: teacher.franchiseId,
+            active: true
+        }).select('name belt degree graduationHistory classesAttended');
+
+        // 1. Pending Graduations (students with pending graduation requests)
+        const pending = students
+            .filter(s => {
+                const lastGrad = s.graduationHistory?.[s.graduationHistory.length - 1];
+                return lastGrad && !lastGrad.approved && lastGrad.approved !== false;
+            })
+            .map(s => {
+                const lastGrad = s.graduationHistory![s.graduationHistory.length - 1];
+                return {
+                    _id: lastGrad._id,
+                    studentId: {
+                        _id: s._id,
+                        name: s.name
+                    },
+                    currentBelt: lastGrad.belt,
+                    currentDegree: lastGrad.degree,
+                    approved: false,
+                    date: lastGrad.date
+                };
+            });
+
+        // 2. Upcoming Graduations (students close to graduation requirements)
+        // Belt requirements (simplified - you can adjust based on your rules)
+        const beltRequirements: any = {
+            'Branca': { classes: 40, nextBelt: 'Azul' },
+            'Azul': { classes: 60, nextBelt: 'Roxa' },
+            'Roxa': { classes: 80, nextBelt: 'Marrom' },
+            'Marrom': { classes: 100, nextBelt: 'Preta' }
+        };
+
+        const upcoming = students
+            .filter(s => {
+                const req = beltRequirements[s.belt];
+                if (!req) return false;
+                
+                const attended = s.classesAttended || 0;
+                const remaining = req.classes - attended;
+                
+                // Show students within 10 classes of graduation
+                return remaining > 0 && remaining <= 10;
+            })
+            .map(s => {
+                const req = beltRequirements[s.belt];
+                const attended = s.classesAttended || 0;
+                const remaining = req.classes - attended;
+                
+                return {
+                    _id: s._id,
+                    name: s.name,
+                    belt: s.belt,
+                    degree: s.degree,
+                    classesUntilGrad: remaining,
+                    totalRequired: req.classes,
+                    nextBelt: req.nextBelt
+                };
+            })
+            .sort((a, b) => a.classesUntilGrad - b.classesUntilGrad)
+            .slice(0, 10); // Top 10 closest to graduation
+
+        // 3. Recent Graduation History (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const history: any[] = [];
+        
+        for (const student of students) {
+            if (student.graduationHistory && student.graduationHistory.length > 0) {
+                const recentGrads = student.graduationHistory.filter(g => 
+                    g.approved === true && 
+                    new Date(g.date) >= thirtyDaysAgo
+                );
+                
+                for (const grad of recentGrads) {
+                    history.push({
+                        _id: grad._id,
+                        studentId: {
+                            _id: student._id,
+                            name: student.name
+                        },
+                        currentBelt: grad.belt,
+                        currentDegree: grad.degree,
+                        approved: true,
+                        date: grad.date
+                    });
+                }
+            }
+        }
+
+        // Sort history by date (most recent first)
+        history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        res.status(200).json({
+            success: true,
+            data: {
+                pending,
+                upcoming,
+                history: history.slice(0, 10) // Last 10 graduations
+            }
+        });
+    } catch (error) {
+        next(error);
     }
 };

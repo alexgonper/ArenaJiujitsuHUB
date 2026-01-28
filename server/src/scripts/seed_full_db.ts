@@ -143,6 +143,9 @@ async function createIBJJFGraduationRules() {
         const current = fullLadder[i];
         const next = fullLadder[i + 1];
 
+        const beltClasses = current === 'Azul' ? 20 : (current === 'Roxa' ? 30 : 40);
+        const beltMinDays = current === 'Azul' ? 120 : (current === 'Roxa' ? 180 : 270);
+
         // Degrees
         for (let j = 0; j < DEGREES.length - 1; j++) {
             rules.push({
@@ -150,8 +153,8 @@ async function createIBJJFGraduationRules() {
                 fromDegree: DEGREES[j],
                 toBelt: current,
                 toDegree: DEGREES[j + 1],
-                classesRequired: i === 0 ? 50 : 80, 
-                minDaysRequired: i === 0 ? 120 : 180,
+                classesRequired: beltClasses, 
+                minDaysRequired: beltMinDays,
                 examFee: 0
             });
         }
@@ -161,7 +164,7 @@ async function createIBJJFGraduationRules() {
             fromDegree: DEGREES[DEGREES.length - 1], // 4º Grau
             toBelt: next,
             toDegree: 'Nenhum',
-            classesRequired: 100 + (i * 30),
+            classesRequired: beltClasses * 1.5, // Promotion slightly harder
             minDaysRequired: 365 * (i + 1), 
             examFee: 200 + (i * 50)
         });

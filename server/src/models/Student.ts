@@ -1,10 +1,12 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
 export interface IGraduation {
+    _id?: Types.ObjectId;
     belt: string;
     degree: string;
     date: Date;
     promotedBy?: Types.ObjectId;
+    approved?: boolean;
 }
 
 export interface IStudent extends Document {
@@ -23,6 +25,8 @@ export interface IStudent extends Document {
     address?: string;
     lastGraduationDate: Date;
     graduationHistory: IGraduation[];
+    classesAttended?: number;
+    photoUrl?: string;
     paymentStatusColor: string;
     age: number | null;
     createdAt: Date;
@@ -66,6 +70,8 @@ const studentSchema = new Schema<IStudent>({
         type: String,
         trim: true,
         lowercase: true,
+        unique: true,
+        sparse: true, // Permite que quem não tem e-mail (opcional) não conflite com nulos
         validate: {
             validator: function (v: string) {
                 if (!v || v === '') return true;
@@ -120,8 +126,17 @@ const studentSchema = new Schema<IStudent>({
         belt: String,
         degree: String,
         date: { type: Date, default: Date.now },
-        promotedBy: { type: Schema.Types.ObjectId, ref: 'Teacher' }
-    }]
+        promotedBy: { type: Schema.Types.ObjectId, ref: 'Teacher' },
+        approved: { type: Boolean, default: undefined }
+    }],
+    classesAttended: {
+        type: Number,
+        default: 0
+    },
+    photoUrl: {
+        type: String,
+        trim: true
+    }
 }, {
     timestamps: true,
     toJSON: { virtuals: true },

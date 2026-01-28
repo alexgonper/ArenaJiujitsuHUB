@@ -8,5 +8,6 @@ router.post('/', classController.createClass);
 router.delete('/:id', classController.deleteClass);
 router.put('/:id', classController.updateClass);
 router.post('/seed/:franchiseId', classController.seedClasses);
+router.get('/franchise/:franchiseId/technical-stats', classController.getTechnicalStats);
 
 export default router;

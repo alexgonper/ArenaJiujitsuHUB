@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Arena BJJ | Portal do Aluno</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CONFIGURAÇÃO DARK COMBAT --- */
+        :root {
+            --bg-app: #0f172a;
+            --bg-card: #1e293b;
+            --bg-header: #0f172a;
+            --bg-nav: #1e293b;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            
+            --brand-color: #3b82f6;
+            --brand-contrast: #ffffff;
+            
+            --radius-card: 0.5rem;
+            --radius-btn: 0.25rem;
+            
+            --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+            
+            --font-main: 'Roboto Condensed', sans-serif;
+            
+            --border-width: 1px;
+            --border-color: #334155;
+        }
+
+        body { 
+            background-color: #020617;
+            font-family: var(--font-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .phone-frame {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background-color: var(--bg-app);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 640px) {
+            .phone-frame {
+                height: 850px;
+                border-radius: 2rem;
+                border: 8px solid #334155;
+                box-shadow: 0 0 0 2px #0f172a, 0 25px 50px -12px rgba(0,0,0,0.7);
+            }
+        }
+
+        .theme-card {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            border: var(--border-width) solid var(--border-color);
+        }
+
+        .theme-text-primary { color: var(--text-primary); }
+        .theme-text-secondary { color: var(--text-secondary); }
+        
+        .theme-btn-primary {
+            background-color: var(--brand-color);
+            color: var(--brand-contrast);
+            border-radius: var(--radius-btn);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .theme-header {
+            background-color: var(--bg-header);
+            color: var(--text-primary);
+            border-bottom: var(--border-width) solid var(--border-color);
+        }
+
+        .theme-nav {
+            background-color: var(--bg-nav);
+            border-top: var(--border-width) solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .theme-nav-active { color: var(--brand-color); }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .screen-enter { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .belt-visual {
+            position: relative;
+            border-radius: 0.25rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .belt-stripe {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+            padding: 2px;
+            background: #000;
+            border-radius: 0 0.25rem 0.25rem 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-frame" class="phone-frame">
+        
+        <!-- STATUS BAR -->
+        <div class="h-10 flex items-center justify-between px-6 pt-2 select-none z-20 theme-header border-b-0 bg-transparent">
+            <span class="text-xs font-bold theme-text-primary" id="clock">09:41</span>
+            <div class="flex gap-1.5 items-center theme-text-primary opacity-80">
+                <i class="fa-solid fa-signal text-[10px]"></i>
+                <i class="fa-solid fa-wifi text-[10px]"></i>
+                <i class="fa-solid fa-battery-full text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- APP HEADER -->
+        <header class="px-5 py-4 flex items-center justify-between z-10 sticky top-0 theme-header shadow-lg shadow-black/20">
+            <div class="flex items-center gap-3">
+                <div id="header-logo-container" class="w-10 h-10 bg-white rounded flex items-center justify-center text-lg shadow-sm overflow-hidden">
+                    <i id="header-logo-icon" class="hidden fa-solid fa-dumbbell"></i>
+                    <img id="header-logo-img" class="w-full h-full object-contain object-center p-1" src="arena-hub-logo.png" alt="Arena Hub">
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight theme-text-primary tracking-wide" id="student-name-header">ALUNO</h1>
+                    <p class="text-[10px] font-bold tracking-widest theme-text-secondary uppercase" id="academy-name-header">Arena BJJ</p>
+                </div>
+            </div>
+            <button onclick="navTo('profile')" id="header-profile-btn" class="w-10 h-10 rounded-full flex items-center justify-center theme-card relative hover:bg-slate-700 transition-colors border border-slate-700 overflow-hidden">
+                <i id="header-profile-icon" class="fa-regular fa-user text-sm theme-text-primary"></i>
+                <img id="header-profile-img" src="" alt="Perfil" class="w-full h-full object-cover hidden" />
+            </button>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <main id="app-content" class="flex-1 overflow-y-auto pb-28 relative hide-scrollbar scroll-smooth">
+            
+            <!-- TELA 1: DASHBOARD -->
+            <div id="screen-dashboard" class="p-5 space-y-6 screen-enter">
+                
+                <!-- Check-in Hero Card -->
+                <div class="theme-btn-primary p-6 rounded-2xl relative overflow-hidden shadow-2xl">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="relative z-10 flex flex-col items-center text-center">
+                        <h2 class="text-2xl font-black text-white mb-6">Pronto para o Tatame?</h2>
+                        
+                        <button onclick="performCheckIn()" id="btn-checkin" class="w-full py-5 mb-6 bg-white text-[var(--brand-color)] font-black rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 uppercase group">
+                            <span class="text-3xl mb-1 group-hover:scale-110 transition-transform"><i class="fa-solid fa-location-dot"></i></span>
+                            <span class="text-lg tracking-tight">FAZER CHECK-IN</span>
+                            <span class="text-[9px] opacity-60 font-medium tracking-widest">Confirme sua presença</span>
+                        </button>
+                        
+                        <div class="flex gap-3 justify-center w-full">
+                            <div class="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 flex-1 max-w-[120px]">
+                                <p class="text-2xl font-black text-white" id="stat-attended">0</p>
+                                <p class="text-[9px] font-bold uppercase tracking-widest text-white/70">Treinos</p>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 flex-1 max-w-[120px]">
+                                <p class="text-2xl font-black text-yellow-300" id="stat-streak">0</p>
+                                <p class="text-[9px] font-bold uppercase tracking-widest text-white/70">Streak 🔥</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="theme-card p-5">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                            <i class="fa-solid fa-award"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black theme-text-primary">Minha Evolução</h3>
+                            <p class="text-[9px] theme-text-secondary uppercase font-bold tracking-widest">Caminho para graduação</p>
+                        </div>
+                    </div>
+
+                    <!-- Belt Journey -->
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex flex-col gap-2">
+                            <span class="text-[9px] font-bold theme-text-secondary uppercase tracking-widest">Atual</span>
+                            <div class="flex items-center gap-2">
+                                <div id="current-belt-visual" class="belt-visual h-8 w-12"></div>
+                                <div>
+                                    <h4 class="text-base font-black theme-text-primary" id="current-belt-name">Branca</h4>
+                                    <p class="text-[9px] font-bold theme-text-secondary uppercase" id="current-belt-degree">Nenhum</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <i class="fa-solid fa-arrow-right text-slate-600"></i>
+                        
+                        <div class="flex flex-col gap-2 items-end">
+                            <span class="text-[9px] font-bold theme-text-secondary uppercase tracking-widest">Próxima</span>
+                            <div class="flex items-center gap-2 flex-row-reverse opacity-60">
+                                <div id="next-belt-visual" class="belt-visual h-8 w-12"></div>
+                                <div class="text-right">
+                                    <h4 class="text-base font-black theme-text-primary" id="next-belt-name">Azul</h4>
+                                    <p class="text-[9px] font-bold theme-text-secondary uppercase">Meta</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Stats -->
+                    <div class="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p class="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-2">Faltam Apenas</p>
+                        <div class="text-5xl font-black theme-text-primary mb-2" id="classes-left">--</div>
+                        <p class="text-[10px] font-bold theme-text-secondary uppercase tracking-widest mb-4">Aulas para o próximo grau</p>
+                        
+                        <div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+                            <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-[9px] font-bold theme-text-secondary mt-2">
+                            <span>Progresso</span>
+                            <span id="progress-percent" class="text-blue-400">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-center">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-700">
+                            <div class="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-blue-400">
+                                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="text-[8px] theme-text-secondary font-bold uppercase tracking-widest">Total no Tatame</p>
+                                <p class="text-xs font-black theme-text-primary"><span id="total-classes">0</span> Aulas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Card -->
+                <div class="theme-card p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black theme-text-primary">Financeiro</h3>
+                                <p class="text-[9px] theme-text-secondary uppercase font-bold tracking-widest">Mensalidade</p>
+                            </div>
+                        </div>
+                        <div id="payment-status-badge"></div>
+                    </div>
+
+                    <div class="bg-slate-800/50 rounded-xl p-4 mb-4 text-center">
+                        <p class="text-[9px] font-black theme-text-secondary uppercase tracking-widest mb-1">Valor Mensal</p>
+                        <p class="text-2xl font-black theme-text-primary" id="monthly-amount">R$ --</p>
+                    </div>
+
+                    <button onclick="payTuition()" id="pay-btn" class="w-full py-4 theme-btn-primary text-white font-black rounded-xl shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 uppercase text-xs">
+                        <i class="fa-solid fa-credit-card"></i> Pagar Mensalidade
+                    </button>
+                </div>
+
+                <!-- Recent History -->
+                <div class="theme-card p-5">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black theme-text-primary">Meus Treinos</h3>
+                            <p class="text-[9px] theme-text-secondary uppercase font-bold tracking-widest">Histórico recente</p>
+                        </div>
+                    </div>
+                    <div id="history-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- TELA 2: EVOLUTION -->
+            <div id="screen-evolution" class="hidden p-5 space-y-6 screen-enter">
+                <h2 class="text-xl font-bold theme-text-primary border-l-4 border-[var(--brand-color)] pl-3 uppercase">Minha Evolução</h2>
+                
+                <!-- Detailed Progress (Same as dashboard but full screen) -->
+                <div class="theme-card p-5">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex flex-col gap-2">
+                            <span class="text-[9px] font-bold theme-text-secondary uppercase tracking-widest">Atual</span>
+                            <div class="flex items-center gap-2">
+                                <div id="evo-current-belt-visual" class="belt-visual h-10 w-16"></div>
+                                <div>
+                                    <h4 class="text-xl font-black theme-text-primary" id="evo-current-belt-name">Branca</h4>
+                                    <p class="text-[10px] font-bold theme-text-secondary uppercase" id="evo-current-belt-degree">Nenhum</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-2 items-end">
+                            <span class="text-[9px] font-bold theme-text-secondary uppercase tracking-widest">Próxima</span>
+                            <div class="flex items-center gap-2 flex-row-reverse opacity-60">
+                                <div id="evo-next-belt-visual" class="belt-visual h-10 w-16"></div>
+                                <div class="text-right">
+                                    <h4 class="text-xl font-black theme-text-primary" id="evo-next-belt-name">Azul</h4>
+                                    <p class="text-[10px] font-bold theme-text-secondary uppercase">Meta</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/50 rounded-xl p-6 text-center">
+                        <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">Faltam Apenas</p>
+                        <div class="text-7xl font-black theme-text-primary mb-2" id="evo-classes-left">--</div>
+                        <p class="text-xs font-bold theme-text-secondary uppercase tracking-widest mb-6">Aulas para o próximo grau</p>
+                        
+                        <div class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
+                            <div id="evo-progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] font-bold theme-text-secondary mt-2">
+                            <span>Progresso</span>
+                            <span id="evo-progress-percent" class="text-blue-400">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graduation History -->
+                <div class="theme-card p-5">
+                    <h3 class="text-lg font-black theme-text-primary mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-list-ul text-blue-400"></i>
+                        Histórico de Graduações
+                    </h3>
+                    <div id="graduation-history-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- TELA 3: SCHEDULE -->
+            <div id="screen-schedule" class="hidden p-5 space-y-5 screen-enter">
+                <h2 class="text-xl font-bold theme-text-primary border-l-4 border-[var(--brand-color)] pl-3 uppercase">Grade de Horários</h2>
+                
+                <div class="flex justify-between items-center p-3 theme-card bg-slate-800 border-slate-700">
+                    <div class="text-center flex-1">
+                        <span class="block text-sm font-bold theme-text-primary uppercase" id="current-week-display">Esta Semana</span>
+                    </div>
+                </div>
+
+                <!-- Filter -->
+                <div class="flex gap-2">
+                    <button onclick="filterSchedule('my')" id="filter-my" class="flex-1 px-4 py-2 theme-btn-primary text-xs font-bold rounded uppercase">Minhas Aulas</button>
+                    <button onclick="filterSchedule('all')" id="filter-all" class="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase">Todas</button>
+                </div>
+
+                <!-- Day Tabs -->
+                <div class="flex gap-1 w-full pb-2">
+                    <button onclick="showScheduleDay(0)" id="day-tab-0" class="flex-1 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded uppercase">DOM</button>
+                    <button onclick="showScheduleDay(1)" id="day-tab-1" class="flex-1 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded uppercase">SEG</button>
+                    <button onclick="showScheduleDay(2)" id="day-tab-2" class="flex-1 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded uppercase">TER</button>
+                    <button onclick="showScheduleDay(3)" id="day-tab-3" class="flex-1 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded uppercase">QUA</button>
+                    <button onclick="showScheduleDay(4)" id="day-tab-4" class="flex-1 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded uppercase">QUI</button>
+                    <button onclick="showScheduleDay(5)" id="day-tab-5" class="flex-1 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded uppercase">SEX</button>
+                    <button onclick="showScheduleDay(6)" id="day-tab-6" class="flex-1 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded uppercase">SÁB</button>
+                </div>
+
+                <div id="schedule-day-container" class="space-y-3"></div>
+            </div>
+
+            <!-- TELA 4: FINANCE -->
+            <div id="screen-finance" class="hidden p-5 space-y-6 screen-enter">
+                <h2 class="text-xl font-bold theme-text-primary border-l-4 border-[var(--brand-color)] pl-3 uppercase">Financeiro</h2>
+                
+                <div class="theme-card p-5">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black theme-text-primary">Status</h3>
+                                <p class="text-[10px] theme-text-secondary uppercase font-bold tracking-widest">Mensalidade</p>
+                            </div>
+                        </div>
+                        <div id="fin-payment-status-badge"></div>
+                    </div>
+
+                    <div class="bg-slate-800/50 rounded-xl p-6 mb-6 text-center">
+                        <p class="text-[10px] font-black theme-text-secondary uppercase tracking-widest mb-2">Valor Mensal</p>
+                        <p class="text-4xl font-black theme-text-primary" id="fin-monthly-amount">R$ --</p>
+                        <div class="h-px bg-slate-700 my-4"></div>
+                        <p class="text-[10px] font-black theme-text-secondary uppercase tracking-widest mb-2">Último Pagamento</p>
+                        <p class="text-lg font-bold theme-text-secondary" id="fin-last-payment">--</p>
+                    </div>
+
+                    <button onclick="payTuition('fin-pay-btn')" id="fin-pay-btn" class="w-full py-5 theme-btn-primary text-white font-black rounded-xl shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-3 uppercase text-xs">
+                        <i class="fa-solid fa-credit-card"></i> Pagar Mensalidade
+                    </button>
+                </div>
+
+                <div class="theme-card p-5">
+                    <h3 class="text-lg font-black theme-text-primary mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-orange-400"></i>
+                        Histórico de Pagamentos
+                    </h3>
+                    <div id="payment-history" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- TELA 5: PROFILE -->
+            <div id="screen-profile" class="hidden p-0 screen-enter">
+                <div class="theme-header pt-12 pb-16 px-6 text-center relative border-b border-slate-800 bg-gradient-to-b from-slate-900 to-slate-800">
+                    <div class="w-28 h-28 rounded-full p-1 mx-auto mb-4 border-2 border-[var(--brand-color)] bg-slate-900 shadow-2xl flex items-center justify-center overflow-hidden relative">
+                        <img id="profile-photo-img" src="" alt="Foto do perfil" class="w-full h-full object-cover rounded-full hidden absolute inset-0 z-10" />
+                        <div class="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-4xl font-black relative z-0" id="profile-avatar-mobile">A</div>
+                    </div>
+                    <h2 class="text-2xl font-bold theme-text-primary uppercase italic tracking-wide" id="profile-name-mobile">Aluno</h2>
+                    <p class="text-[var(--brand-color)] text-xs font-bold uppercase tracking-widest mt-1" id="profile-belt-mobile">Faixa Branca</p>
+                </div>
+                
+                <div class="px-5 -mt-8 grid grid-cols-2 gap-3 mb-8">
+                    <div class="p-4 theme-card text-center shadow-lg bg-slate-800 border-t-2 border-[var(--brand-color)]">
+                        <span class="block text-[10px] theme-text-secondary uppercase font-bold tracking-widest">Treinos</span>
+                        <span class="block text-xl font-bold theme-text-primary mt-1" id="profile-total-classes">0</span>
+                    </div>
+                    <div class="p-4 theme-card text-center shadow-lg bg-slate-800 border-t-2 border-[var(--brand-color)]">
+                        <span class="block text-[10px] theme-text-secondary uppercase font-bold tracking-widest">Streak</span>
+                        <span class="block text-xl font-bold theme-text-primary mt-1" id="profile-streak">0</span>
+                    </div>
+                </div>
+
+                <div class="px-5 space-y-3">
+                    <div class="theme-card p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fa-solid fa-envelope text-[var(--brand-color)]"></i>
+                            <span class="text-xs font-bold theme-text-primary uppercase">Email</span>
+                        </div>
+                        <p class="text-sm theme-text-secondary pl-8" id="profile-email">--</p>
+                    </div>
+                    
+                    <div class="theme-card p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fa-solid fa-phone text-[var(--brand-color)]"></i>
+                            <span class="text-xs font-bold theme-text-primary uppercase">Telefone</span>
+                        </div>
+                        <p class="text-sm theme-text-secondary pl-8" id="profile-phone">--</p>
+                    </div>
+
+                    <div class="theme-card p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fa-solid fa-building text-[var(--brand-color)]"></i>
+                            <span class="text-xs font-bold theme-text-primary uppercase">Academia</span>
+                        </div>
+                        <p class="text-sm theme-text-secondary pl-8" id="profile-franchise">--</p>
+                    </div>
+
+                    <button onclick="handleLogout()" class="w-full mt-6 bg-red-900/20 border border-red-900/50 p-4 rounded flex items-center justify-center gap-2 text-red-500 font-bold text-sm hover:bg-red-900/40 uppercase tracking-wide">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair da Conta
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- BOTTOM NAV -->
+        <nav class="theme-nav px-6 py-2 pb-5 flex justify-between items-center z-20 shadow-2xl shadow-black">
+            <button onclick="navTo('dashboard')" id="tab-dashboard" class="flex flex-col items-center gap-1 w-12 theme-nav-active transition-colors">
+                <i class="fa-solid fa-house text-xl mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Home</span>
+            </button>
+            <button onclick="navTo('evolution')" id="tab-evolution" class="flex flex-col items-center gap-1 w-12 hover:text-white transition-colors">
+                <i class="fa-solid fa-chart-line text-xl mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Evolução</span>
+            </button>
+            <div class="relative -top-6">
+                <button onclick="navTo('schedule')" class="w-16 h-16 theme-btn-primary rounded-full flex items-center justify-center shadow-lg shadow-blue-500/20 active:scale-95 transition-transform border-8 border-[var(--bg-app)]">
+                    <i class="fa-solid fa-calendar-days text-2xl"></i>
+                </button>
+            </div>
+            <button onclick="navTo('finance')" id="tab-finance" class="flex flex-col items-center gap-1 w-12 hover:text-white transition-colors">
+                <i class="fa-solid fa-wallet text-xl mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Pagar</span>
+            </button>
+            <button onclick="navTo('profile')" id="tab-profile" class="flex flex-col items-center gap-1 w-12 hover:text-white transition-colors">
+                <i class="fa-solid fa-user text-xl mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Perfil</span>
+            </button>
+        </nav>
+
+        <!-- TOAST -->
+        <div id="toast" class="absolute top-20 left-1/2 transform -translate-x-1/2 bg-[var(--brand-color)] text-white px-6 py-3 rounded shadow-xl flex items-center gap-3 opacity-0 transition-opacity z-50 pointer-events-none min-w-[200px] justify-center border-2 border-white">
+            <i class="fa-solid fa-check-circle text-white text-xl"></i>
+            <span class="text-xs font-bold uppercase tracking-wide" id="toast-msg">Sucesso</span>
+        </div>
+
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div id="ui-confirm-modal" class="hidden relative z-50">
+        <!-- Backdrop -->
+        <div id="confirm-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        
+        <!-- Panel -->
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div id="confirm-panel" class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl transform scale-95 opacity-0 transition-all duration-300 p-6 relative">
+                
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4 text-[var(--brand-color)]">
+                        <i class="fa-solid fa-circle-question text-xl"></i>
+                    </div>
+                    <h3 id="confirm-title" class="text-lg font-bold text-white mb-2">Confirmação</h3>
+                    <p id="confirm-msg" class="text-sm text-slate-400 mb-6 leading-relaxed">Tem certeza que deseja continuar?</p>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="closeConfirmModal()" class="flex-1 py-3 rounded-xl bg-slate-700 text-slate-300 font-bold text-xs uppercase hover:bg-slate-600 transition-colors">
+                            Cancelar
+                        </button>
+                        <button id="btn-confirm-yes" class="flex-1 py-3 rounded-xl theme-btn-primary text-white font-bold text-xs uppercase hover:brightness-110 transition-colors shadow-lg">
+                            Confirmar
+                        </button>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script src="api-config.js"></script>
+    <script src="payment-api.js"></script>
+    <script>
+        console.log('🚀 Script loaded!');
+        console.log('🔧 API_BASE_URL:', window.API_BASE_URL);
+        
+        // GLOBAL STATE
+        let studentData = null;
+        let dashboardData = null;
+        let allWeeklyClasses = [];
+        let currentScheduleDay = new Date().getDay();
+        let currentScheduleFilter = 'my';
+        let studentActiveBookings = [];
+        let studentAttendedClassIds = [];
+
+        // Belt Colors
+        const beltColors = {
+            'Branca': { bg: '#F8FAFC', text: '#334155', border: '#CBD5E1' },
+            'Cinza': { bg: '#6B7280', text: '#FFFFFF', border: '#6B7280' },
+            'Amarela': { bg: '#FCD34D', text: '#713F12', border: '#FCD34D' },
+            'Laranja': { bg: '#FF6B00', text: '#FFFFFF', border: '#FF6B00' },
+            'Verde': { bg: '#22C55E', text: '#FFFFFF', border: '#22C55E' },
+            'Azul': { bg: '#3B82F6', text: '#FFFFFF', border: '#3B82F6' },
+            'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
+            'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
+            'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' }
+        };
+
+        // Initialize
+        async function init() {
+            console.log('🎬 Init function called');
+            let stored = localStorage.getItem('studentData');
+            console.log('💾 Stored student data raw:', stored);
+            
+            if (!stored || stored === 'undefined' || stored === 'null') {
+                console.log('❌ No valid student data, redirecting to login');
+                window.location.href = 'aluno-mobile-login.html';
+                return;
+            }
+
+            try {
+                studentData = JSON.parse(stored);
+                console.log('👤 Student data object:', studentData);
+                
+                const studentId = studentData.id || studentData._id || studentData.studentId;
+                if (!studentData || !studentId) {
+                    console.error('❌ VALIDATION FAILED: Student object is missing ID key. Keys present:', Object.keys(studentData || {}));
+                    throw new Error('No student ID found in session data');
+                }
+                
+                if (!studentData.id) studentData.id = studentId;
+
+                console.log('📡 Starting dashboard load...');
+                await loadDashboard();
+                console.log('⏰ Starting clock...');
+                updateClock();
+                setInterval(updateClock, 1000);
+                console.log('📅 Setting initial schedule day...');
+                showScheduleDay(currentScheduleDay);
+                console.log('✅ Initialization complete!');
+            } catch (e) {
+                console.error('💥 CRITICAL INIT ERROR:', e);
+                // For now, don't redirect so the user can see the error in console
+                showToast('Erro ao carregar sessão: ' + e.message, 'error');
+                
+                // Backup redirect after 5 seconds if really needed
+                /*
+                setTimeout(() => {
+                    localStorage.removeItem('studentData');
+                    window.location.href = 'aluno-mobile-login.html';
+                }, 5000);
+                */
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                if (!studentData || !studentData.id) {
+                    console.error('❌ Cannot load dashboard: NO STUDENT DATA');
+                    return;
+                }
+
+                console.log('🔄 Loading dashboard for student:', studentData.id);
+                const baseUrl = window.API_BASE_URL || 'http://localhost:5000/api/v1';
+                const url = `${baseUrl}/students/${studentData.id}/dashboard?_t=${Date.now()}`;
+                console.log('📡 API URL:', url);
+                
+                const res = await fetch(url);
+                console.log('📥 Response status:', res.status);
+                
+                const data = await res.json();
+                console.log('📦 Raw API response:', data);
+                
+                if (data.success && data.data) {
+                    dashboardData = data.data;
+                    console.log('✅ Dashboard data loaded:', dashboardData);
+                    console.log('🏢 Franchise details:', dashboardData.franchise);
+                    console.log('🎨 Branding details:', (dashboardData.franchise && dashboardData.franchise.branding));
+                    renderDashboard();
+                } else {
+                    console.error('❌ API returned failure:', data);
+                    showToast('Erro ao carregar dados do aluno');
+                }
+            } catch (e) {
+                console.error('💥 Dashboard fetch error:', e);
+                showToast('Erro de conexão com o servidor', 'error');
+            }
+        }
+
+        function renderDashboard() {
+            if (!dashboardData) return;
+            
+            // Update header
+            const profile = dashboardData.profile || {};
+            const franchise = dashboardData.franchise || {};
+            
+            console.log('📊 Dashboard Data:', dashboardData);
+            console.log('🏢 Franchise Data:', franchise);
+            console.log('🎨 Branding Data:', franchise.branding);
+            
+            document.getElementById('student-name-header').textContent = (profile.name && profile.name.split(' ')[0]) || 'ALUNO';
+            document.getElementById('academy-name-header').textContent = franchise.name || 'Arena BJJ';
+            
+            // Update stats
+            const stats = dashboardData.stats || {};
+            document.getElementById('stat-attended').textContent = stats.classesAttended || 0;
+            document.getElementById('stat-streak').textContent = stats.streak || 0;
+
+            // Stats, Payment, History, Progress, and Profile are handled by their respective functions below
+            renderProgress();
+            renderPayment();
+            renderHistory(dashboardData.history || []);
+            renderGraduationHistory();
+            renderProfile();
+            
+            // Apply branding after DOM is ready
+            setTimeout(() => {
+                console.log('⏰ Applying branding after timeout...');
+                applyBranding(franchise);
+            }, 100);
+        }
+
+        // Apply white label branding
+        function applyBranding(franchise) {
+            if (!franchise) return;
+            const b = franchise.branding || {};
+
+            const primaryColor = b.primaryColor || '#3b82f6';
+            const brandName = b.brandName || franchise.name;
+
+            console.log('🎨 Applying branding:', { primaryColor, brandName, branding: b });
+
+            // 1. Update CSS Variables
+            document.documentElement.style.setProperty('--brand-color', primaryColor);
+
+            // 2. Update header logo if provided with robust fallback
+            const logoImg = document.getElementById('header-logo-img');
+            const logoIcon = document.getElementById('header-logo-icon');
+            const logoContainer = document.getElementById('header-logo-container');
+
+            if (logoImg && logoIcon && logoContainer) {
+                // Determine which URL to use
+                let targetUrl = b.logoUrl;
+                const isPlaceholder = !targetUrl || targetUrl.includes('placeholder.com');
+                
+                // If it's a placeholder, use our nice local Arena logo instead
+                if (isPlaceholder) {
+                    console.log('ℹ️ Branded logo is placeholder, using default Arena logo');
+                    targetUrl = 'arena-hub-logo.png';
+                }
+
+                // Auto-fix common typo if it survived
+                if (targetUrl && targetUrl.includes('vio.placeholder.com')) {
+                    targetUrl = targetUrl.replace('vio.placeholder.com', 'via.placeholder.com');
+                }
+                
+                console.log('🖼️ Setting logo URL:', targetUrl);
+                
+                logoContainer.style.setProperty('background-color', 'white', 'important');
+                logoContainer.style.setProperty('background-image', 'none', 'important');
+                
+                logoImg.onload = () => {
+                    console.log('✅ Logo loaded successfully');
+                    logoImg.style.display = 'block';
+                    logoImg.classList.remove('hidden');
+                    logoIcon.classList.add('hidden');
+                    logoIcon.style.display = 'none';
+                };
+
+                logoImg.onerror = () => {
+                    console.error('❌ Failed to load logo:', targetUrl);
+                    if (targetUrl !== 'arena-hub-logo.png') {
+                        console.log('🔄 Retrying with fallback Arena logo...');
+                        logoImg.src = 'arena-hub-logo.png';
+                    } else {
+                        // Disaster fallback: use icon
+                        logoImg.style.display = 'none';
+                        logoImg.classList.add('hidden');
+                        logoIcon.classList.remove('hidden');
+                        logoIcon.style.display = 'block';
+                        logoContainer.classList.add('theme-btn-primary');
+                        logoContainer.style.removeProperty('background-color');
+                    }
+                };
+
+                logoImg.src = targetUrl;
+            }
+
+            // 3. Apply colors directly to elements
+            applyColorToElements(primaryColor);
+
+            // 4. Update dynamic styles with !important
+            const style = document.createElement('style');
+            style.id = 'dynamic-branding';
+            style.innerHTML = `
+                /* Primary buttons */
+                .theme-btn-primary,
+                button.theme-btn-primary,
+                nav button.theme-btn-primary {
+                    background-color: ${primaryColor} !important;
+                    background-image: none !important;
+                }
+
+                /* Special Check-in Button style */
+                #btn-checkin {
+                    background-color: #ffffff !important;
+                    color: ${primaryColor} !important;
+                }
+                
+                /* Check-in card gradient */
+                .theme-btn-primary.p-6 {
+                    background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%) !important;
+                }
+                
+                /* Navigation active state */
+                .theme-nav-active,
+                #tab-dashboard {
+                    color: ${primaryColor} !important;
+                }
+                
+                /* Text colors */
+                .text-blue-400,
+                .text-blue-500,
+                .text-blue-600 {
+                    color: ${primaryColor} !important;
+                }
+                
+                /* Icon backgrounds */
+                .bg-blue-500\\/20 {
+                    background-color: ${primaryColor}33 !important;
+                }
+                
+                /* Progress bars */
+                #progress-bar,
+                #evo-progress-bar {
+                    background: linear-gradient(to right, ${primaryColor}, ${primaryColor}dd) !important;
+                }
+                
+                /* Borders */
+                .border-\\[var\\(--brand-color\\)\\],
+                .border-t-2.border-\\[var\\(--brand-color\\)\\] {
+                    border-color: ${primaryColor} !important;
+                }
+                
+                /* Shadows */
+                .shadow-blue-500\\/20 {
+                    box-shadow: 0 10px 15px -3px ${primaryColor}33 !important;
+                }
+                
+                /* Check-in button text color - ensure specific targets inside also get it if needed */
+                #btn-checkin, #btn-checkin i, #btn-checkin span {
+                    color: ${primaryColor} !important;
+                }
+                
+                /* Profile icons */
+                i.text-\\[var\\(--brand-color\\)\\] {
+                    color: ${primaryColor} !important;
+                }
+                
+                /* Bottom nav center button */
+                nav .theme-btn-primary.rounded-full {
+                    background-color: ${primaryColor} !important;
+                    box-shadow: 0 10px 25px ${primaryColor}33 !important;
+                }
+            `;
+            
+            // Remove old style if exists
+            const oldStyle = document.getElementById('dynamic-branding');
+            if (oldStyle) oldStyle.remove();
+            document.head.appendChild(style);
+
+            // 5. Update document title
+            document.title = `${brandName} | Portal do Aluno`;
+
+            // 6. Update favicon if provided
+            if (b.faviconUrl) {
+                let link = document.querySelector("link[rel~='icon']");
+                if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    document.head.appendChild(link);
+                }
+                link.href = b.faviconUrl;
+            }
+        }
+
+        // Apply colors directly to specific elements
+        function applyColorToElements(color) {
+            console.log('🔧 Applying color to elements:', color);
+            
+            // Check-in hero card
+            const checkinCard = document.querySelector('.theme-btn-primary.p-6');
+            console.log('Check-in card found:', !!checkinCard);
+            if (checkinCard) {
+                checkinCard.style.setProperty('background', `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`, 'important');
+                console.log('✓ Check-in card styled');
+            }
+
+            // All primary buttons
+            const primaryButtons = document.querySelectorAll('.theme-btn-primary');
+            console.log('Primary buttons found:', primaryButtons.length);
+            primaryButtons.forEach(btn => {
+                btn.style.setProperty('background-color', color, 'important');
+                btn.style.setProperty('background-image', 'none', 'important');
+            });
+
+            // Navigation active
+            const navActive = document.querySelectorAll('.theme-nav-active');
+            console.log('Nav active found:', navActive.length);
+            navActive.forEach(nav => {
+                nav.style.setProperty('color', color, 'important');
+            });
+
+            // Progress bars
+            const progressBar = document.getElementById('progress-bar');
+            console.log('Progress bar found:', !!progressBar);
+            if (progressBar) {
+                progressBar.style.setProperty('background', `linear-gradient(to right, ${color}, ${color}dd)`, 'important');
+                console.log('✓ Progress bar styled');
+            }
+
+            const evoProgressBar = document.getElementById('evo-progress-bar');
+            if (evoProgressBar) {
+                evoProgressBar.style.setProperty('background', `linear-gradient(to right, ${color}, ${color}dd)`, 'important');
+            }
+
+            // Blue text elements
+            const blueTexts = document.querySelectorAll('.text-blue-400, .text-blue-500, .text-blue-600');
+            console.log('Blue text elements found:', blueTexts.length);
+            blueTexts.forEach(el => {
+                el.style.setProperty('color', color, 'important');
+            });
+
+            // Icon backgrounds
+            const iconBgs = document.querySelectorAll('.bg-blue-500\\/20');
+            console.log('Icon backgrounds found:', iconBgs.length);
+            iconBgs.forEach(el => {
+                el.style.setProperty('background-color', `${color}33`, 'important');
+            });
+
+            // Bottom nav center button
+            const centerNavBtn = document.querySelector('nav .theme-btn-primary.rounded-full');
+            if (centerNavBtn) {
+                centerNavBtn.style.setProperty('background-color', color, 'important');
+                centerNavBtn.style.setProperty('box-shadow', `0 10px 25px ${color}33`, 'important');
+            }
+
+            console.log('✅ Colors applied to', primaryButtons.length + navActive.length + blueTexts.length + iconBgs.length, 'elements');
+        }
+
+        function renderProgress() {
+            const stats = dashboardData.stats || {};
+            const profile = dashboardData.profile || {};
+            
+            const belt = profile.belt || 'Branca';
+            const degree = profile.degree || 'Nenhum';
+            const nextGoal = stats.nextGoal || { belt: belt, degree: 'Próximo Grau' };
+            
+            const classesLeft = Math.max(0, (stats.classesRequired || 0) - (stats.classesAttended || 0));
+            const progressPercent = stats.progressPercent || 0;
+            
+            // Dashboard
+            document.getElementById('current-belt-name').textContent = belt;
+            document.getElementById('current-belt-degree').textContent = degree === 'Nenhum' ? '0 Graus' : degree;
+            document.getElementById('next-belt-name').textContent = nextGoal.belt;
+            document.getElementById('classes-left').textContent = classesLeft;
+            document.getElementById('progress-percent').textContent = `${progressPercent}%`;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('total-classes').textContent = stats.classesAttended || 0;
+            
+            renderBeltVisual('current-belt-visual', belt, degree);
+            renderBeltVisual('next-belt-visual', nextGoal.belt, nextGoal.degree);
+            
+            // Evolution page
+            document.getElementById('evo-current-belt-name').textContent = belt;
+            document.getElementById('evo-current-belt-degree').textContent = degree === 'Nenhum' ? '0 Graus' : degree;
+            document.getElementById('evo-next-belt-name').textContent = nextGoal.belt;
+            document.getElementById('evo-classes-left').textContent = classesLeft;
+            document.getElementById('evo-progress-percent').textContent = `${progressPercent}%`;
+            document.getElementById('evo-progress-bar').style.width = `${progressPercent}%`;
+            
+            renderBeltVisual('evo-current-belt-visual', belt, degree);
+            renderBeltVisual('evo-next-belt-visual', nextGoal.belt, nextGoal.degree);
+        }
+
+        function renderBeltVisual(elementId, beltName, degree) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            
+            const colorData = beltColors[beltName] || beltColors['Branca'];
+            el.style.background = colorData.bg;
+            
+            let degreeCount = 0;
+            if (typeof degree === 'string') {
+                const match = degree.match(/(\d+)/);
+                if (match) degreeCount = parseInt(match[1]);
+            } else if (typeof degree === 'number') {
+                degreeCount = degree;
+            }
+            
+            let stripesHtml = '';
+            for (let i = 0; i < degreeCount; i++) {
+                stripesHtml += '<div class="bg-white w-full h-[2px] rounded-sm"></div>';
+            }
+            
+            el.innerHTML = `<div class="belt-stripe">${stripesHtml}</div>`;
+        }
+
+        function renderPayment() {
+            const payment = dashboardData.payment || {};
+            const status = payment.status || 'Paga';
+            const amount = payment.amount || 0;
+            const history = payment.history || [];
+            
+            // Status badges
+            const badgeClass = status === 'Paga' 
+                ? 'px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30'
+                : 'px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30';
+            const badgeText = status === 'Paga' ? '✓ Em Dia' : '⚠ Atrasada';
+            
+            ['payment-status-badge', 'fin-payment-status-badge'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.className = badgeClass;
+                    el.textContent = badgeText;
+                }
+            });
+            
+            // Amount
+            const amountText = `R$ ${amount.toFixed(2)}`;
+            document.getElementById('monthly-amount').textContent = amountText;
+            document.getElementById('fin-monthly-amount').textContent = amountText;
+            
+            // Last payment
+            let lastPaymentText = 'Nenhum';
+            if (history.length > 0) {
+                lastPaymentText = new Date(history[0].createdAt).toLocaleDateString('pt-BR');
+            }
+            document.getElementById('fin-last-payment').textContent = lastPaymentText;
+            
+            // Payment history
+            const container = document.getElementById('payment-history');
+            if (history.length > 0) {
+                container.innerHTML = history.slice(0, 5).map(p => {
+                    const statusColor = p.status === 'approved' ? 'text-green-400' : 
+                                       p.status === 'pending' ? 'text-yellow-400' : 'text-red-400';
+                    const statusText = p.status === 'approved' ? 'Aprovado' :
+                                      p.status === 'pending' ? 'Pendente' : 'Rejeitado';
+                    
+                    return `
+                        <div class="flex justify-between items-center p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                            <div>
+                                <p class="text-xs font-bold theme-text-primary">${p.description || 'Mensalidade'}</p>
+                                <p class="text-[10px] theme-text-secondary">${new Date(p.createdAt).toLocaleDateString('pt-BR')}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold theme-text-primary">R$ ${p.amount.toFixed(2)}</p>
+                                <p class="text-[10px] font-bold ${statusColor}">${statusText}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<p class="text-xs theme-text-secondary italic text-center py-4">Nenhum pagamento registrado</p>';
+            }
+        }
+
+        function renderHistory(items) {
+            const container = document.getElementById('history-list');
+            if (!container) return;
+            
+            if (items.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 theme-text-secondary text-xs">Nenhum treino registrado</div>';
+                return;
+            }
+            
+            container.innerHTML = items.slice(0, 5).map(item => {
+                const date = new Date(item.date);
+                const dateLabel = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+                
+                return `
+                    <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-orange-400">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold theme-text-primary text-sm">${item.classId && item.classId.name || 'Check-in'}</h4>
+                                <span class="text-xs theme-text-secondary capitalize">${dateLabel}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs font-black text-green-400">+1</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderGraduationHistory() {
+            const container = document.getElementById('graduation-history-list');
+            if (!container) return;
+
+            const profile = dashboardData.profile || {};
+            const history = profile.graduationHistory || [];
+
+            if (history.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 theme-text-secondary text-xs italic">Nenhum registro de graduação</div>';
+                return;
+            }
+
+            // Sort by date descending
+            const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = sorted.map(item => {
+                const date = new Date(item.date).toLocaleDateString('pt-BR');
+                const masterName = (typeof item.promotedBy === 'object' && item.promotedBy && item.promotedBy.name) 
+                                   ? item.promotedBy.name 
+                                   : 'Instrutor Arena';
+
+                return `
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-black theme-text-secondary uppercase tracking-widest">${date}</span>
+                            <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-tight">${masterName}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-8 rounded-full" style="background-color: ${beltColors[item.belt] ? beltColors[item.belt].bg : '#fff'}"></div>
+                            <div>
+                                <h4 class="text-sm font-black theme-text-primary uppercase tracking-tight">${item.belt}</h4>
+                                <p class="text-[10px] theme-text-secondary font-bold uppercase tracking-widest">${item.degree || 'Sem Grau'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // HELPER: Calculate Age
+        const calculateAge = (birthDate) => {
+            if (!birthDate) return 0;
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age;
+        };
+
+        // HELPER: Generate Consistent Profile Image
+        const getProfileImage = (person) => {
+            if (person.photo && person.photo.trim() !== '') return person.photo;
+            if (person.photoUrl && person.photoUrl.trim() !== '') return person.photoUrl;
+
+            // Deterministic random based on ID or Name
+            const seed = person._id || person._id || person.id || person.name || 'default';
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) {
+                hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const consistentId = Math.abs(hash % 70); // 0-69
+
+            const gender = (person.gender || 'Masculino').toLowerCase();
+            const age = calculateAge(person.birthDate) || 25;
+
+            // Logic for children
+            if (age < 14) {
+                 return `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random&color=fff&size=100`;
+            }
+
+            const genderPath = (gender === 'feminino' || gender === 'female') ? 'women' : 'men';
+            return `https://randomuser.me/api/portraits/${genderPath}/${consistentId}.jpg`;
+        };
+
+        function renderProfile() {
+            const profile = dashboardData.profile || {};
+            const stats = dashboardData.stats || {};
+            const franchise = dashboardData.franchise || {};
+            
+            const photoUrl = getProfileImage(profile);
+            
+            // Header Button Photo
+            const headerProfileImg = document.getElementById('header-profile-img');
+            const headerProfileIcon = document.getElementById('header-profile-icon');
+            if (headerProfileImg && headerProfileIcon) {
+                headerProfileImg.src = photoUrl;
+                headerProfileImg.classList.remove('hidden');
+                headerProfileIcon.classList.add('hidden');
+            }
+
+            // Main Profile Avatar
+            const avatarEl = document.getElementById('profile-avatar-mobile');
+            const photoImg = document.getElementById('profile-photo-img');
+            
+            if (photoImg && avatarEl) {
+                photoImg.src = photoUrl;
+                photoImg.classList.remove('hidden');
+                avatarEl.classList.add('hidden');
+            }
+
+            document.getElementById('profile-name-mobile').textContent = profile.name || 'Aluno';
+            document.getElementById('profile-belt-mobile').textContent = `${profile.belt || 'Branca'} • ${profile.degree || 'Nenhum'}`;
+            document.getElementById('profile-total-classes').textContent = stats.classesAttended || 0;
+            document.getElementById('profile-streak').textContent = stats.streak || 0;
+            document.getElementById('profile-email').textContent = profile.email || '--';
+            document.getElementById('profile-phone').textContent = profile.phone || '--';
+            document.getElementById('profile-franchise').textContent = franchise.name || '--';
+        }
+
+        // Check-in
+        async function performCheckIn() {
+            const btn = document.getElementById('btn-checkin');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Validando...';
+            
+            if (!navigator.geolocation) {
+                alert('Geolocalização não suportada');
+                resetCheckInBtn(btn);
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+                
+                try {
+                    const res = await fetch(`${window.API_BASE_URL}/students/checkin`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            studentId: studentData.id,
+                            location: { lat: latitude, lng: longitude }
+                        })
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                        showToast('✅ Presença confirmada! Bom treino!');
+                        loadDashboard();
+                    } else {
+                        showToast('❌ ' + data.message, 'error');
+                    }
+                } catch (e) {
+                    showToast('❌ Erro de conexão', 'error');
+                } finally {
+                    resetCheckInBtn(btn);
+                }
+            }, (error) => {
+                alert('⚠️ Por favor, autorize o acesso à localização');
+                resetCheckInBtn(btn);
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        }
+
+        function resetCheckInBtn(btn) {
+            btn.disabled = false;
+            btn.innerHTML = `
+                <span class="text-3xl mb-1 group-hover:scale-110 transition-transform"><i class="fa-solid fa-location-dot"></i></span>
+                <span class="text-lg tracking-tight">FAZER CHECK-IN</span>
+                <span class="text-[9px] opacity-60 font-medium tracking-widest">Confirme sua presença</span>
+            `;
+        }
+
+        // Payment
+        async function payTuition(btnId = 'pay-btn') {
+            const btn = document.getElementById(btnId);
+            const originalContent = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processando...';
+            
+            try {
+                const paymentData = {
+                    studentId: studentData.id,
+                    franchiseId: dashboardData.franchise.id,
+                    amount: dashboardData.payment.amount || 250,
+                    description: 'Mensalidade - ' + new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+                    type: 'Tuition'
+                };
+                
+                const result = await PaymentAPI.createCheckout(paymentData);
+                
+                if (result.initPoint || result.sandboxInitPoint) {
+                    window.location.href = result.sandboxInitPoint || result.initPoint;
+                } else {
+                    alert('Link de pagamento criado! ID: ' + result.preferenceId);
+                }
+            } catch (e) {
+                console.error('Payment error:', e);
+                showToast('Erro ao processar pagamento', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        // Schedule
+        async function loadSchedule() {
+            try {
+                if (!dashboardData && dashboardData.franchise) {
+                    setTimeout(loadSchedule, 500);
+                    return;
+                }
+                
+                const franchiseId = dashboardData.franchise.id || dashboardData.franchise._id;
+                const [scheduleRes, bookingsRes] = await Promise.all([
+                    fetch(`${window.API_BASE_URL}/classes/franchise/${franchiseId}?view=week&studentId=${studentData.id}&_t=${Date.now()}`),
+                    fetch(`${window.API_BASE_URL}/bookings/student/${studentData.id}?_t=${Date.now()}`)
+                ]);
+                
+                const scheduleData = await scheduleRes.json();
+                const bookingsData = await bookingsRes.json();
+                
+                if (scheduleData.success) {
+                    allWeeklyClasses = scheduleData.data || [];
+                    studentActiveBookings = bookingsData.success ? (bookingsData.data || []) : [];
+                    
+                    if (dashboardData.history) {
+                        studentAttendedClassIds = dashboardData.history.map(h => 
+                            h.classId && typeof h.classId === 'object' ? h.classId._id : h.classId
+                        ).filter(Boolean);
+                    }
+                    
+                    // Merge booking info
+                    allWeeklyClasses.forEach(cls => {
+                        const classId = cls._id || cls.id;
+                        const matchingBooking = studentActiveBookings.find(b => {
+                            const bClassId = b.classId && (b.classId._id || b.classId);
+                            return String(bClassId) === String(classId);
+                        });
+                        
+                        if (!cls.bookingInfo) cls.bookingInfo = { availableSlots: 30, capacity: 30 };
+                        
+                        // Force explicit boolean values to avoid filter confusion
+                        if (matchingBooking) {
+                            cls.bookingInfo.isBookedByMe = true;
+                            cls.bookingInfo.myBookingId = matchingBooking._id;
+                        } else {
+                            cls.bookingInfo.isBookedByMe = false;
+                            cls.bookingInfo.myBookingId = null;
+                        }
+                    });
+                    
+                    renderSchedule();
+                }
+            } catch (e) {
+                console.error('Schedule load error:', e);
+                showToast('Erro ao carregar grade', 'error');
+            }
+        }
+
+        function renderSchedule() {
+            const classesToShow = currentScheduleFilter === 'my'
+                ? allWeeklyClasses.filter(cls => {
+                    const classId = cls._id || cls.id;
+                    const hasAttended = studentAttendedClassIds.includes(classId);
+                    const isBooked = cls.bookingInfo && cls.bookingInfo.isBookedByMe;
+                    return hasAttended || isBooked;
+                })
+                : allWeeklyClasses;
+            
+            const dayClasses = classesToShow.filter(c => c.dayOfWeek === currentScheduleDay);
+            const container = document.getElementById('schedule-day-container');
+            
+            if (dayClasses.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 theme-text-secondary">Sem aulas neste dia</div>';
+                return;
+            }
+            
+            container.innerHTML = dayClasses.map(cls => {
+                const classId = cls._id || cls.id;
+                const hasAttended = studentAttendedClassIds.includes(classId);
+                const isBooked = cls.bookingInfo && cls.bookingInfo.isBookedByMe || false;
+                
+                // Unified status: Booked OR already in student's core classes (attended)
+                const isParticipating = isBooked || hasAttended;
+                
+                let displaySlots = cls.bookingInfo && cls.bookingInfo.availableSlots || 0;
+                if (hasAttended && !isBooked) {
+                    displaySlots = Math.max(0, displaySlots - 1);
+                }
+
+                const isFull = displaySlots <= 0;
+                const nextDate = cls.bookingInfo && cls.bookingInfo.nextDate || '';
+                
+                let btnHtml = '';
+                if (isParticipating) {
+                    const bookingId = (cls.bookingInfo && cls.bookingInfo.myBookingId) || '';
+                    btnHtml = `<button onclick="cancelBooking('${bookingId}')" class="w-full mt-2 py-2 rounded bg-red-500/20 text-red-400 text-xs font-bold uppercase border border-red-500/30">
+                        <i class="fa-solid fa-times-circle mr-1"></i> Cancelar
+                    </button>`;
+                } else if (isFull) {
+                    btnHtml = `<button disabled class="w-full mt-2 py-2 rounded bg-slate-700 text-slate-500 text-xs font-bold uppercase cursor-not-allowed">
+                        <i class="fa-solid fa-ban mr-1"></i> Esgotado
+                    </button>`;
+                } else {
+                    btnHtml = `<button onclick="reserveClass('${classId}', '${nextDate}')" class="w-full mt-2 py-2 rounded theme-btn-primary text-white text-xs font-bold uppercase">
+                        <i class="fa-regular fa-calendar-check mr-1"></i> Reservar
+                    </button>`;
+                }
+                
+                const borderClass = isParticipating ? 'border-2 border-green-500' : 'border border-slate-700';
+                
+                return `
+                    <div class="theme-card p-4 ${borderClass}">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <span class="text-xs font-bold text-blue-400 uppercase">${cls.category || 'Geral'}</span>
+                                ${isParticipating ? '<span class="ml-2 text-xs font-bold text-green-400">✓ Confirmado</span>' : ''}
+                                <h4 class="font-bold theme-text-primary text-base mt-1">${cls.name}</h4>
+                                <p class="text-xs theme-text-secondary mt-1">${cls.teacherId && cls.teacherId.name || 'Professor'}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs theme-text-secondary mb-3">
+                            <i class="fa-regular fa-clock"></i>
+                            <span>${cls.startTime} - ${cls.endTime}</span>
+                        </div>
+                        <div class="text-xs theme-text-secondary mb-2">
+                            <span class="${isFull ? 'text-red-400' : 'text-green-400'}">${displaySlots}/${cls.bookingInfo && cls.bookingInfo.capacity || 30} vagas</span>
+                        </div>
+                        ${btnHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showScheduleDay(day) {
+            currentScheduleDay = day;
+            for (let i = 0; i <= 6; i++) {
+                const tab = document.getElementById(`day-tab-${i}`);
+                if (tab) {
+                    tab.className = i === day 
+                        ? 'flex-1 py-2 theme-btn-primary text-[10px] font-bold rounded uppercase'
+                        : 'flex-1 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-bold rounded uppercase';
+                }
+            }
+            renderSchedule();
+        }
+
+        function filterSchedule(filter) {
+            currentScheduleFilter = filter;
+            ['my', 'all'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (btn) {
+                    btn.className = f === filter
+                        ? 'flex-1 px-4 py-2 theme-btn-primary text-xs font-bold rounded uppercase'
+                        : 'flex-1 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase';
+                }
+            });
+            renderSchedule();
+        }
+
+        function reserveClass(classId, dateStr) {
+            showConfirmModal(
+                'Reservar Vaga',
+                'Deseja reservar sua vaga nesta aula?',
+                async () => {
+                    try {
+                        const res = await fetch(`${window.API_BASE_URL}/bookings`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                classId,
+                                date: dateStr,
+                                studentId: studentData.id,
+                                franchiseId: dashboardData.franchise.id
+                            })
+                        });
+                        
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast('✅ Reserva confirmada!');
+                            loadSchedule();
+                        } else {
+                            // Show exact error from server
+                            showToast('❌ ' + (data.message || data.error || 'Erro na reserva'), 'error');
+                        }
+                    } catch (e) {
+                        showToast('Erro ao reservar', 'error');
+                    }
+                }
+            );
+        }
+
+        function cancelBooking(bookingId) {
+            showConfirmModal(
+                'Cancelar Reserva',
+                'Tem certeza que deseja cancelar sua reserva?',
+                async () => {
+                    try {
+                        const res = await fetch(`${window.API_BASE_URL}/bookings/${bookingId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast('✅ Reserva cancelada');
+                            loadSchedule();
+                        } else {
+                            showToast('❌ ' + data.message, 'error');
+                        }
+                    } catch (e) {
+                        showToast('Erro ao cancelar', 'error');
+                    }
+                }
+            );
+        }
+
+        // Navigation
+        function navTo(screenId) {
+            ['dashboard', 'evolution', 'schedule', 'finance', 'profile'].forEach(id => {
+                document.getElementById(`screen-${id}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${id}`);
+                if(btn) btn.classList.remove('theme-nav-active');
+            });
+
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+            const active = document.getElementById(`tab-${screenId}`);
+            if(active) active.classList.add('theme-nav-active');
+
+            if(screenId === 'schedule') loadSchedule();
+        }
+
+        function handleLogout() {
+            showConfirmModal(
+                'Sair da Conta',
+                'Deseja realmente encerrar sua sessão?',
+                () => {
+                    localStorage.removeItem('studentData');
+                    window.location.href = 'aluno-mobile-login.html';
+                }
+            );
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            
+            toastMsg.textContent = msg;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        // --- CUSTOM MODAL ---
+        function showConfirmModal(title, msg, onConfirm) {
+            const modal = document.getElementById('ui-confirm-modal');
+            const backdrop = document.getElementById('confirm-backdrop');
+            const panel = document.getElementById('confirm-panel');
+            const btnYes = document.getElementById('btn-confirm-yes');
+            
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-msg').textContent = msg;
+            
+            // Unbind previous onclick to prevent stacking
+            btnYes.onclick = () => {
+                closeConfirmModal();
+                if (onConfirm) onConfirm();
+            };
+
+            modal.classList.remove('hidden');
+            // Small delay for transition
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                if (panel) {
+                    panel.classList.remove('opacity-0', 'scale-95');
+                    panel.classList.add('opacity-100', 'scale-100');
+                }
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('ui-confirm-modal');
+            const backdrop = document.getElementById('confirm-backdrop');
+            const panel = document.getElementById('confirm-panel');
+            
+            backdrop.classList.add('opacity-0');
+            if (panel) {
+                panel.classList.add('opacity-0', 'scale-95');
+                panel.classList.remove('opacity-100', 'scale-100');
+            }
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

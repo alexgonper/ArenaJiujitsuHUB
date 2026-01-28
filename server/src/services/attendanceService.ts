@@ -2,6 +2,8 @@ import Attendance from '../models/Attendance';
 import Class from '../models/Class';
 import Student from '../models/Student';
 import mongoose from 'mongoose';
+import GraduationService from './graduationService';
+import ClassBooking from '../models/ClassBooking';
 
 /**
  * Attendance Service
@@ -44,6 +46,17 @@ class AttendanceService {
         const endOfDay = new Date(today);
         endOfDay.setUTCHours(23, 59, 59, 999);
         return endOfDay;
+    }
+
+    /**
+     * Get Query Window (Start of Day UTC to End of SP Day in UTC + Buffer)
+     * Effectively 00:00 UTC to 04:00 UTC next day to cover late night classes.
+     */
+    static getDailyQueryWindow(): { start: Date, end: Date } {
+        const start = this.getNormalizedToday();
+        const end = new Date(start);
+        end.setUTCHours(27, 59, 59, 999); // 03:59 AM next day
+        return { start, end };
     }
 
     /**
@@ -107,25 +120,66 @@ class AttendanceService {
      */
     static async revokeAttendance({ studentId, classId }: { studentId: string, classId: string }): Promise<any> {
         const startOfDay = this.getNormalizedToday();
-        const bucketKey = this.getBucketKey(); // Current Month
-
-        // Pull record from the bucket
-        const result = await Attendance.findOneAndUpdate(
-            { 
-                studentId, 
-                month: bucketKey,
-                "records.classId": classId,
-                "records.date": { $gte: startOfDay } // Ensure it's today's class
-            },
-            {
-                $pull: { records: { classId: classId, date: { $gte: startOfDay } } },
-                $inc: { totalPresent: -1 }
-            },
-            { new: true }
-        );
         
-        if(!result) {
-           throw new Error('Presença não encontrada para remover.');
+        // AGGREGATION LOOKUP STRATEGY
+        // Since `find` (Schema-based) is failing to locate the record that `aggregate` (Raw) sees,
+        // we use aggregation to pinpoint the Document ID and the Record itself.
+        const pipeline = [
+            { $match: { studentId: new mongoose.Types.ObjectId(studentId) } },
+            { $unwind: "$records" },
+            { $match: { 
+                "records.classId": new mongoose.Types.ObjectId(classId),
+                "records.date": { $gte: startOfDay }
+            }},
+            { $limit: 1 } // We only need one match to identify the bucket
+        ];
+
+        const matches = await Attendance.aggregate(pipeline);
+
+        if (!matches || matches.length === 0) {
+             console.warn(`Revoke failed: Aggregation could not find record. Student: ${studentId}, Class: ${classId}, Date >= ${startOfDay.toISOString()}`);
+             // Dump all records for this class from aggregation to see what IS there
+             const debug = await Attendance.aggregate([
+                { $match: { studentId: new mongoose.Types.ObjectId(studentId) } },
+                { $unwind: "$records" },
+                { $match: { "records.classId": new mongoose.Types.ObjectId(classId) } }
+             ]);
+             console.log('DEBUG: History for this class:', debug.map(d => d.records.date));
+             throw new Error('Presença não encontrada para remover.');
+        }
+
+        const match = matches[0];
+        const bucketId = match._id;
+        const recordDate = match.records.date;
+        // Use Record ID if available, otherwise strict match
+        const removalQuery = match.records._id 
+            ? { _id: match.records._id } 
+            : { classId: new mongoose.Types.ObjectId(classId), date: recordDate };
+
+        console.log(`Revoke: Found record in bucket ${bucketId}. Removing record via Pull.`);
+
+        // Pull the specific record from the specific bucket
+        const result = await Attendance.updateOne(
+            { _id: bucketId },
+            { 
+                $pull: { records: removalQuery },
+                $inc: { totalPresent: -1 }
+            }
+        );
+
+        // SYNC: Remove Booking if exists to free up the spot
+        try {
+            const queryWindow = this.getDailyQueryWindow();
+            await ClassBooking.findOneAndUpdate({
+                studentId,
+                classId,
+                date: { $gte: queryWindow.start, $lte: queryWindow.end }
+            }, { 
+                status: 'reserved',
+                checkInTime: null
+            });
+        } catch (err) {
+            console.error('Error syncing revoke to booking:', err);
         }
         
         return result;
@@ -174,29 +228,33 @@ class AttendanceService {
 
             // Iterate through today's records
             const todaysRecords = bucket.records.filter((r: any) => new Date(r.date) >= startOfDay);
-            
+
             for (const record of todaysRecords) {
-                 // We need the snapshot or class info. If snapshot exists, use it.
-                 // If not, we might skip or query class (expensive).
-                 // Assuming snapshot exists for robustness or we rely on 'snapshot' field.
-                 // If record comes from older schema without snapshot, we might miss it unless we populate.
-                 // But since we just pushed this architecture, snapshots should be there.
-                 
                  let exStart = 0;
                  let exEnd = 0;
                  let exName = 'Aula';
 
                  if (record.snapshot && record.snapshot.startTime) {
                      exStart = parseTime(record.snapshot.startTime);
-                     // Estimate end time if not stored (e.g. + 60 mins), 
-                     // BUT our snapshot doesn't store endTime currently unless we add it.
-                     // Service only stores className, teacherName, startTime, category.
-                     // We should rely on standard 60-90 mins or query class.
-                     // Optimization: Use startTime + 60 as default overlap check if endTime missing.
-                     exEnd = exStart + 90; // Assume 90 mins max for safety or we should add endTime to snapshot.
                      exName = record.snapshot.className;
+                     
+                     if (record.snapshot.endTime) {
+                         exEnd = parseTime(record.snapshot.endTime);
+                     } else {
+                         // Fallback: Fetch Class to get real duration (avoid guessing 90min)
+                         try {
+                             const oldClass = await Class.findById(record.classId);
+                             if (oldClass && oldClass.endTime) {
+                                 exEnd = parseTime(oldClass.endTime);
+                             } else {
+                                 exEnd = exStart + 60; // Conservative fallback (60 vs 90) to reduce false positives
+                             }
+                         } catch (err) {
+                             exEnd = exStart + 60;
+                         }
+                     }
                  } else {
-                     continue; // Skip legacy or incomplete records
+                     continue; 
                  }
 
                  if (newStart < exEnd && newEnd > exStart) {
@@ -219,6 +277,7 @@ class AttendanceService {
                 className: targetClass.name,
                 teacherName: (targetClass as any).teacherId ? ((targetClass as any).teacherId as any).name : 'Instrutor',
                 startTime: targetClass.startTime,
+                endTime: targetClass.endTime,
                 category: targetClass.category
             },
             metadata: {
@@ -240,6 +299,40 @@ class AttendanceService {
             },
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
+
+        // 5. SYNC: Ensure ClassBooking reflects this presence (Consumes a spot)
+        try {
+            // Use Normalized Date for the booking to ensure consistency if possible, 
+            // but range query covers timestamps. Let's use the Class Date logic if we can,
+            // otherwise use current date.
+            const bookingDate = new Date();
+            
+            await ClassBooking.findOneAndUpdate(
+                { 
+                    classId: classId,
+                    studentId: studentId,
+                    date: { 
+                        $gte: new Date(new Date().setHours(0,0,0,0)), 
+                        $lte: new Date(new Date().setHours(23,59,59,999)) 
+                    }
+                },
+                {
+                    franchiseId: tenantId || student.franchiseId,
+                    classId: classId,
+                    studentId: studentId,
+                    date: bookingDate,
+                    status: 'confirmed'
+                },
+                { upsert: true, new: true }
+            );
+        } catch (err) {
+            console.error('Error syncing attendance to booking:', err);
+            // Don't fail the request, just log
+        }
+
+        // 6. Trigger Graduation Check (Post-attendance event)
+        // Fire and forget to not block the response
+        GraduationService.checkAndNotifyEligibility(studentId).catch(err => console.error('Eligibility check error:', err));
 
         return updatedAttendance;
     }

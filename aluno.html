@@ -90,14 +90,12 @@
         class="sidebar-mobile-hidden fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-100 flex flex-col z-50 md:static transition-transform duration-300">
         <!-- Logo -->
         <div class="p-6 border-b border-slate-50">
-            <div id="logo-container" class="flex flex-col gap-1">
-                <div class="flex items-center gap-2">
-                    <img id="logo-img" class="hidden h-6 object-contain" src="" alt="Logo">
-                    <span id="logo-text"
-                        class="text-blue-600 font-black text-lg tracking-tighter brand-typography">ARENA</span>
+            <div id="logo-container" class="flex flex-col items-center gap-3">
+                <img id="logo-img" class="hidden h-12 object-contain" src="" alt="Logo">
+                <div class="text-center">
+                    <span id="logo-text" class="text-blue-600 font-black text-xl tracking-tighter brand-typography block">ARENA</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none block mt-1">PORTAL DO ALUNO</span>
                 </div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">PORTAL DO
-                    ALUNO</span>
             </div>
         </div>
 
@@ -177,8 +175,8 @@
                     title="Alternar Tema">
                     <i class="fa-solid fa-moon text-xs md:text-base theme-toggle-icon"></i>
                 </button>
-                <button
-                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-blue-500 shadow-sm transition-all">
+                <button id="btn-notifications"
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-blue-500 shadow-sm transition-all relative">
                     <i class="fa-solid fa-bell text-xs md:text-base"></i>
                 </button>
             </div>
@@ -193,40 +191,40 @@
 
                     <!-- Check-in Hero -->
                     <div id="checkin-card"
-                        class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] shadow-xl p-8 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div class="absolute top-0 right-0 p-8 opacity-10">
+                        class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2rem] md:rounded-[2.5rem] shadow-xl p-4 md:p-8 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
+                        <div class="absolute top-0 right-0 p-8 opacity-10 hidden md:block">
                             <i class="fa-solid fa-location-dot text-9xl"></i>
                         </div>
 
-                        <div class="relative z-10 text-center md:text-left">
-                            <h3 class="text-sm font-bold uppercase tracking-widest text-blue-200 mb-2">Check-in de Hoje
+                        <div class="relative z-10 text-center md:text-left w-full md:w-auto">
+                            <h3 class="text-xs md:text-sm font-bold uppercase tracking-widest text-blue-200 mb-2">Check-in de Hoje
                             </h3>
-                            <h2 class="text-2xl md:text-4xl font-black tracking-tight mb-4">Pronto para o Tatame?</h2>
-                            <p class="text-blue-100 text-sm max-w-xs opacity-80">Registre sua presença antes de começar
+                            <h2 class="text-xl md:text-4xl font-black tracking-tight mb-2 md:mb-4">Pronto para o Tatame?</h2>
+                            <p class="text-blue-100 text-xs md:text-sm max-w-xs opacity-80 mx-auto md:mx-0">Registre sua presença antes de começar
                                 o treino para contabilizar seus pontos.</p>
 
-                            <div class="flex gap-4 mt-8 justify-center md:justify-start">
-                                <div class="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/10">
-                                    <p class="text-2xl font-black" id="stat-attended">0</p>
-                                    <p class="text-[9px] font-bold uppercase tracking-widest text-blue-200">Treinos</p>
+                            <div class="flex gap-2 md:gap-4 mt-4 md:mt-8 justify-center md:justify-start">
+                                <div class="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl px-3 md:px-6 py-2 md:py-3 border border-white/10">
+                                    <p class="text-lg md:text-2xl font-black" id="stat-attended">0</p>
+                                    <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-blue-200">Treinos</p>
                                 </div>
-                                <div class="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/10">
-                                    <p class="text-2xl font-black text-yellow-300" id="stat-streak">0</p>
-                                    <p class="text-[9px] font-bold uppercase tracking-widest text-blue-200">Streak 🔥
+                                <div class="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl px-3 md:px-6 py-2 md:py-3 border border-white/10">
+                                    <p class="text-lg md:text-2xl font-black text-yellow-300" id="stat-streak">0</p>
+                                    <p class="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-blue-200">Streak 🔥
                                     </p>
                                 </div>
                             </div>
                         </div>
 
                         <button onclick="performCheckIn()" id="btn-checkin"
-                            class="relative w-48 h-48 bg-white rounded-full shadow-2xl flex flex-col items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300 group shrink-0 border-8 border-white/20">
+                            class="relative w-32 h-32 md:w-48 md:h-48 bg-white rounded-full shadow-2xl flex flex-col items-center justify-center gap-1 md:gap-2 hover:scale-105 active:scale-95 transition-all duration-300 group shrink-0 border-4 md:border-8 border-white/20">
                             <div
-                                class="w-16 h-16 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg transition-all duration-500">
+                                class="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-xl md:rounded-2xl flex items-center justify-center text-white text-2xl md:text-3xl shadow-lg transition-all duration-500">
                                 <i class="fa-solid fa-location-arrow"></i>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-xl font-black text-slate-800 tracking-tight">PRESENÇA</span>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bater
+                                <span class="text-sm md:text-xl font-black text-slate-800 tracking-tight">PRESENÇA</span>
+                                <span class="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest">Bater
                                     Ponto</span>
                             </div>
                         </button>
@@ -235,30 +233,30 @@
                     <!-- Main Stats Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <!-- Progress Card -->
-                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
-                            <div class="flex items-center gap-4 mb-8">
+                        <div class="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-slate-100 p-4 md:p-8">
+                            <div class="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
                                 <div
-                                    class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-xl">
+                                    class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-lg md:text-xl">
                                     <i class="fa-solid fa-award"></i>
                                 </div>
                                 <div>
-                                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Minha Evolução</h2>
-                                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Caminho
+                                    <h2 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight">Minha Evolução</h2>
+                                    <p class="text-[9px] md:text-[10px] text-slate-400 font-black uppercase tracking-widest">Caminho
                                         para a graduação</p>
                                 </div>
                             </div>
 
-                            <div class="space-y-8">
+                            <div class="space-y-6 md:space-y-8">
                                 <!-- Top Row: Journey -->
-                                <div class="flex items-center justify-between px-2 pt-2">
+                                <div class="flex items-center justify-between px-1 md:px-2 pt-2">
                                     <!-- Current -->
-                                    <div class="flex flex-col gap-2">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Atual</span>
-                                        <div class="flex items-center gap-3">
-                                            <div id="dash-visual-curr-belt" class="h-10 w-16 rounded shadow-sm relative transition-transform hover:scale-105 duration-300"></div>
+                                    <div class="flex flex-col gap-1 md:gap-2">
+                                        <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Atual</span>
+                                        <div class="flex items-center gap-2 md:gap-3">
+                                            <div id="dash-visual-curr-belt" class="h-8 w-12 md:h-10 md:w-16 rounded shadow-sm relative transition-transform hover:scale-105 duration-300"></div>
                                             <div>
-                                                <h3 class="text-xl font-black text-slate-900 leading-none tracking-tight" id="dash-current-belt">--</h3>
-                                                <p class="text-[10px] font-bold text-slate-500 uppercase mt-1" id="dash-current-degree">--</p>
+                                                <h3 class="text-base md:text-xl font-black text-slate-900 leading-none tracking-tight" id="dash-current-belt">--</h3>
+                                                <p class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase mt-1" id="dash-current-degree">--</p>
                                             </div>
                                         </div>
                                     </div>
@@ -270,36 +268,36 @@
                                     </div>
 
                                     <!-- Next -->
-                                    <div class="flex flex-col gap-2 items-end">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Próxima</span>
-                                        <div class="flex items-center gap-3 flex-row-reverse text-right opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 group cursor-help" title="Continue treinando para desbloquear!">
-                                            <div id="dash-visual-next-belt" class="h-10 w-16 rounded shadow-sm relative group-hover:scale-105 transition-transform"></div>
+                                    <div class="flex flex-col gap-1 md:gap-2 items-end">
+                                        <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Próxima</span>
+                                        <div class="flex items-center gap-2 md:gap-3 flex-row-reverse text-right opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 group cursor-help" title="Continue treinando para desbloquear!">
+                                            <div id="dash-visual-next-belt" class="h-8 w-12 md:h-10 md:w-16 rounded shadow-sm relative group-hover:scale-105 transition-transform"></div>
                                             <div>
-                                                <h3 class="text-xl font-black text-slate-900 leading-none tracking-tight" id="dash-next-belt">--</h3>
-                                                <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">META</p>
+                                                <h3 class="text-base md:text-xl font-black text-slate-900 leading-none tracking-tight" id="dash-next-belt">--</h3>
+                                                <p class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase mt-1">META</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Main Focus: Classes Left -->
-                                <div class="bg-gradient-to-br from-slate-50 to-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden text-center group">
+                                <div class="bg-gradient-to-br from-slate-50 to-white rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 border border-slate-100 shadow-sm relative overflow-hidden text-center group">
                                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-20"></div>
                                     
                                     <div class="relative z-10">
-                                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">FALTAM APENAS</p>
+                                        <p class="text-[9px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">FALTAM APENAS</p>
                                         <div class="flex items-center justify-center gap-2 mb-2 scale-100 group-hover:scale-110 transition-transform duration-300">
-                                            <span class="text-7xl md:text-8xl font-black text-slate-900 tracking-tighter" id="dash-classes-left-big">--</span>
+                                            <span class="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 tracking-tighter" id="dash-classes-left-big">--</span>
                                         </div>
-                                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">AULAS PARA O PRÓXIMO GRAU</p>
+                                        <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 md:mb-8">AULAS PARA O PRÓXIMO GRAU</p>
 
                                         <!-- Progress Bar Integrated -->
                                         <div class="w-full max-w-lg mx-auto relative">
-                                            <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">
+                                            <div class="flex justify-between text-[9px] md:text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">
                                                 <span>Progresso</span>
                                                 <span id="dash-percent-text-big" class="text-blue-600">--%</span>
                                             </div>
-                                            <div class="w-full bg-slate-100 rounded-full h-5 p-1 overflow-hidden shadow-inner">
+                                            <div class="w-full bg-slate-100 rounded-full h-4 md:h-5 p-1 overflow-hidden shadow-inner">
                                                 <div id="dash-progress-bar-big" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-1000 shadow-sm relative overflow-hidden" style="width: 0%">
                                                         <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
                                                 </div>
@@ -310,13 +308,13 @@
 
                                 <!-- Footer Stats -->
                                 <div class="flex justify-center">
-                                    <div class="inline-flex items-center gap-3 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500">
+                                    <div class="inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 bg-slate-50 rounded-xl md:rounded-2xl border border-slate-100">
+                                        <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500">
                                             <i class="fa-solid fa-clock-rotate-left text-xs"></i>
                                         </div>
                                         <div class="text-left">
-                                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Total no Tatame</p>
-                                            <p class="text-sm font-black text-slate-700"><span id="dash-total-classes-footer">--</span> Aulas</p>
+                                            <p class="text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest">Total no Tatame</p>
+                                            <p class="text-xs md:text-sm font-black text-slate-700"><span id="dash-total-classes-footer">--</span> Aulas</p>
                                         </div>
                                     </div>
                                 </div>
@@ -324,16 +322,16 @@
                         </div>
 
                         <!-- Finance Card -->
-                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex flex-col">
-                            <div class="flex justify-between items-start mb-8">
-                                <div class="flex items-center gap-4">
+                        <div class="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-slate-100 p-4 md:p-8 flex flex-col">
+                            <div class="flex justify-between items-start mb-6 md:mb-8">
+                                <div class="flex items-center gap-3 md:gap-4">
                                     <div
-                                        class="w-12 h-12 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-xl">
+                                        class="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-lg md:text-xl">
                                         <i class="fa-solid fa-wallet"></i>
                                     </div>
                                     <div>
-                                        <h2 class="text-2xl font-black text-slate-800 tracking-tight">Financeiro</h2>
-                                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                        <h2 class="text-xl md:text-2xl font-black text-slate-800 tracking-tight">Financeiro</h2>
+                                        <p class="text-[9px] md:text-[10px] text-slate-400 font-black uppercase tracking-widest">
                                             Status da mensalidade</p>
                                     </div>
                                 </div>
@@ -341,21 +339,21 @@
                             </div>
 
                             <div
-                                class="bg-slate-50 rounded-[2rem] p-6 mb-6 flex justify-between items-center border border-slate-100">
-                                <div>
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                class="bg-slate-50 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 mb-4 md:mb-6 flex flex-col sm:flex-row justify-between items-center gap-3 md:gap-0 border border-slate-100">
+                                <div class="text-center sm:text-left">
+                                    <p class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
                                         VALOR MENSAL</p>
-                                    <p class="text-3xl font-black text-slate-800" id="monthly-amount">R$ --</p>
+                                    <p class="text-2xl md:text-3xl font-black text-slate-800" id="monthly-amount">R$ --</p>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                <div class="text-center sm:text-right">
+                                    <p class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
                                         ÚLTIMO PGTO</p>
-                                    <p class="text-sm font-bold text-slate-600" id="last-payment">--</p>
+                                    <p class="text-xs md:text-sm font-bold text-slate-600" id="last-payment">--</p>
                                 </div>
                             </div>
 
                             <button onclick="payTuition()" id="pay-btn"
-                                class="w-full py-5 orange-gradient text-white font-black rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-[11px] tracking-widest brand-btn-bg">
+                                class="w-full py-4 md:py-5 orange-gradient text-white font-black rounded-full shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3 uppercase text-[10px] md:text-[11px] tracking-widest brand-btn-bg">
                                 <i class="fa-solid fa-credit-card"></i>
                                 PAGAR MENSALIDADE
                             </button>
@@ -661,9 +659,17 @@
                 <div id="section-profile" class="hidden animate-in pb-20">
                     <div class="max-w-full mx-auto">
                         <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 text-center">
-                            <div id="profile-avatar-large" class="w-24 h-24 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-4xl font-black shadow-xl mb-4">
+                        <div class="relative group w-24 h-24 mx-auto mb-4">
+                            <div id="profile-avatar-large" onclick="document.getElementById('student-photo-input').click()" 
+                                class="w-24 h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-4xl font-black shadow-xl cursor-pointer overflow-hidden transition-all hover:ring-4 hover:ring-blue-500/20">
                                 ?
                             </div>
+                            <button onclick="document.getElementById('student-photo-input').click()" 
+                                class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-blue-500 shadow-lg transition-all hover:scale-110 active:scale-95">
+                                <i class="fa-solid fa-camera text-xs"></i>
+                            </button>
+                            <input type="file" id="student-photo-input" class="hidden" accept="image/*" onchange="window.handleStudentPhotoUpload(event)">
+                        </div>
                             <h2 id="profile-name" class="text-2xl font-black text-slate-800 tracking-tight">...</h2>
                             <p id="profile-belt-badge" class="inline-block px-4 py-1.5 rounded-full text-[10px] font-black mt-2 uppercase tracking-widest border border-slate-100 bg-slate-50">
                                 BRANCA
@@ -843,6 +849,13 @@
             <!-- Form -->
             <form id="form-edit-profile" onsubmit="saveProfileUpdates(event)" class="p-8 space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Photo URL -->
+                    <div class="col-span-full space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Foto (URL)</label>
+                        <input type="text" id="edit-student-photo-url" placeholder="https://exemplo.com/foto.jpg"
+                            class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-300">
+                    </div>
+
                     <!-- Name (Read-only) -->
                     <div class="space-y-2 opacity-60">
                         <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Nome Completo (Apenas Leitura)</label>

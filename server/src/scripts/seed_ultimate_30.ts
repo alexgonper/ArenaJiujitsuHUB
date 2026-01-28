@@ -537,12 +537,14 @@ async function seed() {
                nextDegree = 'Nenhum';
             }
 
+            const beltClasses = ADULT_BELTS[i] === 'Azul' ? 20 : (ADULT_BELTS[i] === 'Roxa' ? 30 : (ADULT_BELTS[i] === 'Marrom' ? 40 : 20));
+
             await GraduationRule.create({
                 fromBelt: ADULT_BELTS[i],
                 fromDegree: currentDegree,
                 toBelt: nextBelt,
                 toDegree: nextDegree,
-                classesRequired: 20,
+                classesRequired: (d === 4) ? beltClasses * 1.5 : beltClasses,
                 minDaysRequired: 30,
                 isActive: true
             });

@@ -7,10 +7,6 @@ const bookingController = {
     /**
      * Create a new reservation
      */
-    /**
-     * Create a new reservation
-     * Uses ClassSession for optimistic concurrency control (Pro Recommendation)
-     */
     createBooking: async (req: Request, res: Response) => {
         try {
             const { classId, date, studentId, franchiseId } = req.body;
@@ -20,22 +16,47 @@ const bookingController = {
                 return res.status(404).json({ success: false, message: 'Aula não encontrada' });
             }
 
-            const encodingDate = new Date(date);
-            encodingDate.setUTCHours(0, 0, 0, 0);
+            // DYNAMIC IMPORT SERVICE FOR TIMEZONE LOGIC
+            const AttendanceService = (await import('../services/attendanceService')).default;
+            
+            // Normalize Date similar to AttendanceService:
+            // 1. If date is provided (e.g. from frontend), ensure we interpret it in SP context
+            // 2. OR fallback to "Today" normalized if date is close to now
+            
+            let encodingDate;
+            if(date) {
+                const d = new Date(date);
+                // Se a data já chegar como Meia-Noite UTC (00:00:00.000Z), ela já veio normalizada do nosso sistema.
+                // Não precisamos recalcular o fuso de SP, pois isso faria ela "voltar" para as 21h do dia anterior.
+                if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) {
+                    encodingDate = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+                } else {
+                    const formatter = new Intl.DateTimeFormat('pt-BR', {
+                        timeZone: 'America/Sao_Paulo',
+                        year: 'numeric', month: 'numeric', day: 'numeric'
+                    });
+                    const parts = formatter.formatToParts(d);
+                    const findPart = (type: string) => parts.find(p => p.type === type)?.value;
+                    const spDay = parseInt(findPart('day') || '1');
+                    const spMonth = parseInt(findPart('month') || '1');
+                    const spYear = parseInt(findPart('year') || '2024');
+                    encodingDate = new Date(Date.UTC(spYear, spMonth - 1, spDay, 0, 0, 0, 0));
+                }
+            } else {
+                encodingDate = AttendanceService.getNormalizedToday();
+            }
 
             const endOfDay = new Date(encodingDate);
             endOfDay.setUTCHours(23, 59, 59, 999);
 
             // 0. CHECK FOR OVERLAPPING BOOKINGS
-            // Get all active bookings for this student on this day
             const sameDayBookings = await ClassBooking.find({
                 studentId,
                 date: { $gte: encodingDate, $lte: endOfDay },
                 status: { $in: ['reserved', 'confirmed'] },
-                classId: { $ne: classId } // Exclude current class (handled by duplicate check later)
+                classId: { $ne: classId } 
             }).populate('classId');
 
-            // Parse new class times (HH:MM) to minutes
             const parseTime = (t: string) => {
                 const [h, m] = t.split(':').map(Number);
                 return h * 60 + m;
@@ -44,13 +65,12 @@ const bookingController = {
             const newEnd = parseTime(classDoc.endTime);
 
             for (const booking of sameDayBookings) {
-                const existingClass = booking.classId as any; // Populated
+                const existingClass = booking.classId as any; 
                 if (!existingClass.startTime || !existingClass.endTime) continue;
 
                 const exStart = parseTime(existingClass.startTime);
                 const exEnd = parseTime(existingClass.endTime);
 
-                // Check overlap: (StartA < EndB) and (EndA > StartB)
                 if (newStart < exEnd && newEnd > exStart) {
                     return res.status(400).json({ 
                         success: false, 
@@ -60,7 +80,6 @@ const bookingController = {
             }
 
             // 1. Ensure ClassSession exists (Atomic Upsert)
-            // Using dynamic import to avoid circular dep issues if any
             const ClassSessionModel = (await import('../models/ClassSession')).default;
             
             let classSession = await ClassSessionModel.findOneAndUpdate(
@@ -89,7 +108,7 @@ const bookingController = {
 
             if (existingBooking) {
                 if (existingBooking.status === 'cancelled') {
-                    // Reactivate: Try to increment capacity first
+                    // Reactivate
                     const updatedSession = await ClassSessionModel.findOneAndUpdate(
                         { 
                             _id: classSession._id, 
@@ -115,8 +134,7 @@ const bookingController = {
                 }
             }
 
-            // 3. Reserve Slot (Atomic Increment with Capacity Check)
-            // We only increment if bookedCount < capacity
+            // 3. Reserve Slot
             const sessionWithSlot = await ClassSessionModel.findOneAndUpdate(
                 { 
                     _id: classSession._id, 
@@ -142,7 +160,6 @@ const bookingController = {
 
                 res.status(201).json({ success: true, data: newBooking });
             } catch (createError: any) {
-                // COMPENSATION: Undo the slot reservation if booking creation failed
                 await ClassSessionModel.findOneAndUpdate(
                     { _id: classSession._id },
                     { $inc: { bookedCount: -1 } }
@@ -160,9 +177,6 @@ const bookingController = {
         }
     },
 
-    /**
-     * Cancel a reservation
-     */
     /**
      * Cancel a reservation
      */
@@ -184,6 +198,7 @@ const bookingController = {
             await booking.save();
 
             // 2. Return the slot (Decrement)
+            // Use same normalization for safety, though booking.date should be correct now
             const encodingDate = new Date(booking.date);
             encodingDate.setUTCHours(0, 0, 0, 0);
 
@@ -205,22 +220,50 @@ const bookingController = {
      */
     listBookings: async (req: Request, res: Response) => {
         try {
-            const { classId, date } = req.query;
-            if (!classId || !date) {
-                return res.status(400).json({ success: false, message: 'Parâmetros classId e date obrigatórios' });
+            const { classId } = req.query;
+            if (!classId) {
+                return res.status(400).json({ success: false, message: 'Parâmetro classId obrigatório' });
             }
 
-            const encodingDate = new Date(date as string);
-            encodingDate.setUTCHours(0, 0, 0, 0);
-
-            const endOfDay = new Date(encodingDate);
-            endOfDay.setUTCHours(23, 59, 59, 999);
-
+            // RECURRING MODEL UPDATE:
+            // DEBUG LOGS
+            console.log(`[listBookings] Looking for bookings of classId: ${classId}`);
+            
             const bookings = await ClassBooking.find({
                 classId,
-                date: { $gte: encodingDate, $lte: endOfDay },
+                // date: { $gte: encodingDate, $lte: endOfDay }, // Removed date filter
                 status: { $in: ['reserved', 'confirmed'] } 
             }).populate('studentId', 'name belt degree paymentStatus photo');
+
+            console.log(`[listBookings] Found ${bookings.length} bookings.`);
+            if (bookings.length === 0) {
+                 // FAIL-SAFE: If no bookings found by ID, maybe frontend has old ID of a duplicate?
+                 // Try finding active class with same semantics (Name + Day + Time)
+                 const originalClass = await Class.findById(classId);
+                 if (originalClass) {
+                     console.log(`[listBookings] Zero bookings. Checking for semantic duplicates of: ${originalClass.name}`);
+                     const semanticMatches = await Class.find({
+                         name: originalClass.name,
+                         dayOfWeek: originalClass.dayOfWeek,
+                         startTime: originalClass.startTime,
+                         _id: { $ne: classId }
+                     });
+                     
+                     if (semanticMatches.length > 0) {
+                         const altIds = semanticMatches.map(c => c._id);
+                         console.log(`[listBookings] Found alternatives: ${altIds}`);
+                         const altBookings = await ClassBooking.find({
+                             classId: { $in: altIds },
+                             status: { $in: ['reserved', 'confirmed'] }
+                         }).populate('studentId', 'name belt degree paymentStatus photo');
+                         
+                         if (altBookings.length > 0) {
+                             console.log(`[listBookings] Returning ${altBookings.length} bookings from alternative IDs.`);
+                             return res.status(200).json({ success: true, data: altBookings });
+                         }
+                     }
+                 }
+            }
 
             res.status(200).json({ success: true, data: bookings });
         } catch (error) {
@@ -236,7 +279,6 @@ const bookingController = {
          try {
             const { studentId } = req.params;
             
-            // Use AttendanceService to get correct timezone-aware midnight (UTC)
             const AttendanceService = (await import('../services/attendanceService')).default;
             const todayStart = AttendanceService.getNormalizedToday();
 

@@ -62,7 +62,7 @@ const paymentController = {
                                 currency_id: 'BRL'
                             }
                         ],
-                        marketplace_fee: Number(matrixFee.toFixed(2)), // AUTOMATIC SPLIT
+                        // marketplace_fee: Number(matrixFee.toFixed(2)), // AUTOMATIC SPLIT (Disabled for testing)
                         payer: {
                             name: student.name,
                             email: student.email || 'email@test.com',
@@ -73,9 +73,9 @@ const paymentController = {
                         },
                         external_reference: payment._id.toString(),
                         back_urls: {
-                            success: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=success`,
-                            failure: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=failure`,
-                            pending: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado.html?status=pending`
+                            success: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado-premium.html?status=success`,
+                            failure: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado-premium.html?status=failure`,
+                            pending: `${process.env.CORS_ORIGIN || 'http://localhost:8080'}/franqueado-premium.html?status=pending`
                         },
                         auto_return: 'approved',
                         notification_url: `${process.env.API_URL || 'https://arenahub.ngrok.io'}/api/v1/payments/webhook`,

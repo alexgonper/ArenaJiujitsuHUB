@@ -21,6 +21,7 @@ export interface ITeacher extends Document {
     active: boolean;
     age: number | null;
     formattedHireDate: string;
+    photoUrl?: string;
     graduationHistory: IGraduation[];
 }
 
@@ -30,6 +31,10 @@ const teacherSchema = new Schema<ITeacher>({
         required: [true, 'Nome do professor é obrigatório'],
         trim: true,
         maxlength: [100, 'Nome não pode exceder 100 caracteres']
+    },
+    photoUrl: {
+        type: String,
+        trim: true
     },
     birthDate: {
         type: Date,

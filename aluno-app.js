@@ -30,6 +30,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadDashboard();
 });
 
+// HELPER: Calculate Age
+const calculateAge = (birthDate) => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+};
+
+// HELPER: Generate Consistent Profile Image
+const getProfileImage = (person) => {
+    // Standardize field access (API often returns 'photo' in dashboard but model is 'photoUrl')
+    const photo = person.photoUrl || person.photo;
+    if (photo && photo.trim() !== '') {
+        return photo;
+    }
+
+    // Deterministic random based on ID or Name
+    const seed = person.id || person._id || person.name || 'default';
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const consistentId = Math.abs(hash % 70); // 0-69
+
+    const gender = (person.gender || 'Masculino').toLowerCase();
+    const age = calculateAge(person.birthDate) || 18;
+
+    // Logic for children
+    if (age < 14) {
+         return `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random&color=fff&size=100`;
+    }
+
+    const genderPath = (gender === 'feminino' || gender === 'female') ? 'women' : 'men';
+    return `https://randomuser.me/api/portraits/${genderPath}/${consistentId}.jpg`;
+};
+
 async function loadDashboard() {
     try {
         // Fetch dashboard data
@@ -96,6 +137,7 @@ async function loadDashboard() {
 function renderHeader() {
     const name = dashboardData.profile.name;
     const academy = dashboardData.franchise.name;
+    const photo = dashboardData.profile.photo;
 
     const nameEl = document.getElementById('student-name');
     if (nameEl) nameEl.textContent = `Olá, ${name.split(' ')[0]}`;
@@ -110,7 +152,12 @@ function renderHeader() {
     if (sidebarAcademy) sidebarAcademy.textContent = academy;
 
     const avatar = document.getElementById('profile-avatar-sidebar');
-    if (avatar) avatar.textContent = name.charAt(0);
+    if (avatar) {
+        const photoUrl = getProfileImage(dashboardData.profile);
+        avatar.innerHTML = `<img src="${photoUrl}" class="w-full h-full rounded-full object-cover">`;
+        avatar.classList.remove('bg-blue-600', 'text-white');
+        avatar.style.background = 'none';
+    }
 }
 
 function renderProgress() {
@@ -504,7 +551,7 @@ function applyBranding(franchise) {
                 color: ${primaryColor} !important;
             }
             .hover\\:text-blue-600:hover { color: ${primaryColor} !important; }
-            #profile-avatar-sidebar { background: ${primaryColor} !important; }
+            #profile-avatar-sidebar, #profile-avatar-large { background: ${primaryColor} !important; }
 
             /* Check-in Card (Hero) Branding */
             #checkin-card { background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%) !important; }
@@ -991,7 +1038,12 @@ function renderProfile() {
     if (franchiseEl) franchiseEl.textContent = dashboardData.franchise.name;
 
     const avatarEl = document.getElementById('profile-avatar-large');
-    if (avatarEl) avatarEl.textContent = p.name.charAt(0);
+    if (avatarEl) {
+        const photoUrl = getProfileImage(p);
+        avatarEl.innerHTML = `<img src="${photoUrl}" class="w-full h-full rounded-full object-cover shadow-inner">`;
+        avatarEl.classList.remove('bg-blue-600', 'text-white');
+        avatarEl.style.background = 'none';
+    }
 
     const beltBadge = document.getElementById('profile-belt-badge');
     if (beltBadge) {
@@ -1004,6 +1056,78 @@ function renderProfile() {
     }
 }
 
+// Student Photo Upload
+window.handleStudentPhotoUpload = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Show loading state on avatar
+    const avatarEl = document.getElementById('profile-avatar-large');
+    if (!avatarEl) return;
+    
+    const originalContent = avatarEl.innerHTML;
+    avatarEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-2xl text-white"></i>';
+    
+    // Ensure background is visible during upload if it was 'none'
+    if (avatarEl.style.background === 'none') {
+        avatarEl.classList.add('bg-blue-600');
+        avatarEl.style.background = '';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        // 1. Upload file
+        const uploadRes = await fetch(`${appConfig.apiBaseUrl}/uploads`, {
+            method: 'POST',
+            body: formData
+        });
+        const uploadResult = await uploadRes.json();
+
+        if (!uploadResult.success) throw new Error(uploadResult.error || 'Erro no upload');
+
+        const photoUrl = uploadResult.data.url;
+
+        // 2. Update student profile
+        const updateRes = await fetch(`${appConfig.apiBaseUrl}/students/${studentData.id}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('arena_token')}`
+            },
+            body: JSON.stringify({ photoUrl: photoUrl })
+        });
+
+        const updateResult = await updateRes.json();
+
+        if (updateResult.success) {
+            showToast('✅ Foto atualizada com sucesso!', 'success');
+            
+            // 3. Update local session data if needed
+            const stored = JSON.parse(localStorage.getItem('studentData'));
+            if (stored) {
+                stored.photo = photoUrl;
+                localStorage.setItem('studentData', JSON.stringify(stored));
+            }
+
+            // 4. Refresh Dashboard
+            await loadDashboard(); 
+        } else {
+            throw new Error(updateResult.message || 'Erro ao salvar foto no perfil');
+        }
+
+    } catch (error) {
+        console.error('Upload error:', error);
+        showToast('❌ Erro ao carregar foto.', 'error');
+        avatarEl.innerHTML = originalContent;
+        // Re-apply photo state if it fails
+        if (dashboardData.profile.photo) {
+             avatarEl.style.background = 'none';
+        }
+    }
+};
+
 // PROFILE EDIT LOGIC
 window.openEditProfileModal = function() {
     const modal = document.getElementById('modal-edit-profile');
@@ -1011,6 +1135,7 @@ window.openEditProfileModal = function() {
     if (!modal || !p) return;
 
     // Populate Fields
+    document.getElementById('edit-student-photo-url').value = p.photoUrl || p.photo || '';
     document.getElementById('edit-student-name').value = p.name || '';
     document.getElementById('edit-student-email').value = p.email || '';
     document.getElementById('edit-student-gender').value = p.gender || 'Masculino';
@@ -1057,6 +1182,7 @@ window.saveProfileUpdates = async function(event) {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Salvando...';
 
     const payload = {
+        photoUrl: document.getElementById('edit-student-photo-url').value,
         email: document.getElementById('edit-student-email').value,
         phone: document.getElementById('edit-student-phone').value,
         address: document.getElementById('edit-student-address').value

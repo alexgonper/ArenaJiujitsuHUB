@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Class from '../models/Class';
 import Teacher from '../models/Teacher';
 import ClassBooking from '../models/ClassBooking';
@@ -46,10 +47,11 @@ const classController = {
 
                 const bookedCount = await ClassBooking.countDocuments({
                     classId: cls._id,
-                    date: { 
-                        $gte: targetDate, 
-                        $lt: new Date(targetDate.getTime() + 24*60*60*1000) 
-                    },
+                    // date filter removed for recurring model
+                    // date: { 
+                    //    $gte: targetDate, 
+                    //    $lt: new Date(targetDate.getTime() + 24*60*60*1000) 
+                    // },
                     status: { $in: ['reserved', 'confirmed'] }
                 });
 
@@ -59,10 +61,11 @@ const classController = {
                     myBooking = await ClassBooking.findOne({
                         classId: cls._id, 
                         studentId: studentId as string,
-                        date: { 
-                            $gte: targetDate, 
-                            $lt: new Date(targetDate.getTime() + 24*60*60*1000) 
-                        },
+                        // date filter removed for recurring model
+                        // date: { 
+                        //    $gte: targetDate, 
+                        //    $lt: new Date(targetDate.getTime() + 24*60*60*1000) 
+                        // },
                         status: { $in: ['reserved', 'confirmed'] }
                     });
                     if (myBooking) {
@@ -170,6 +173,79 @@ const classController = {
             res.status(201).json({ success: true, message: 'Classes de teste criadas!' });
         } catch (error: any) {
             res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    /**
+     * Get technical stats for franchise (Analytics)
+     */
+    getTechnicalStats: async (req: Request, res: Response) => {
+        try {
+            const { franchiseId } = req.params;
+
+            if (!mongoose.Types.ObjectId.isValid(franchiseId)) {
+                return res.status(400).json({ success: false, message: 'ID da franquia inválido' });
+            }
+            
+            const stats = await ClassBooking.aggregate([
+                {
+                    $match: {
+                        franchiseId: new mongoose.Types.ObjectId(franchiseId),
+                        status: { $in: ['confirmed', 'reserved'] }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'classes',
+                        localField: 'classId',
+                        foreignField: '_id',
+                        as: 'classInfo'
+                    }
+                },
+                {
+                    $unwind: '$classInfo'
+                },
+                {
+                    $group: {
+                        _id: '$classInfo.category',
+                        totalPresences: { $sum: 1 },
+                        uniqueSessions: { 
+                            $addToSet: { 
+                                date: '$date', 
+                                classId: '$classId' 
+                            } 
+                        },
+                        uniqueStudents: { $addToSet: '$studentId' }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        category: '$_id',
+                        totalPresences: 1,
+                        sessionsCount: { $size: '$uniqueSessions' },
+                        studentCount: { $size: '$uniqueStudents' },
+                        avgAttendance: { 
+                            $cond: {
+                                if: { $eq: [{ $size: '$uniqueSessions' }, 0] },
+                                then: 0,
+                                else: { $divide: ['$totalPresences', { $size: '$uniqueSessions' }] }
+                            }
+                        }
+                    }
+                }
+            ]);
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    categories: stats
+                }
+            });
+
+        } catch (error) {
+            console.error('Error fetching technical stats:', error);
+            res.status(500).json({ success: false, message: 'Erro ao carregar estatísticas' });
         }
     }
 };

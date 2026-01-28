@@ -6,8 +6,13 @@ const router = express.Router();
 // ==========================
 // PORTAL ROUTES (PHASE 2)
 // ==========================
+router.get('/quick-check', (req, res, next) => {
+    console.log('DEBUG: Hit /quick-check route');
+    next();
+}, studentController.getStudentBeltByEmail);
 router.post('/login', studentController.login);
 router.post('/checkin', studentController.checkIn);
+router.delete('/checkin', studentController.cancelCheckIn);
 router.get('/dashboard/:studentId', studentController.getDashboard);
 router.get('/:studentId/dashboard', studentController.getDashboard);
 router.get('/ranking/:franchiseId', studentController.getLeaderboard);

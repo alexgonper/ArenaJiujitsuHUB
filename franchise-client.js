@@ -26,6 +26,24 @@ var myTeachers = [];
 var myMetrics = [];
 let currentSort = { key: 'name', direction: 'asc' };
 
+// Helper for fetch with timeout
+async function fetchWithTimeout(resource, options = {}) {
+    const { timeout = 15000 } = options;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(resource, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (error) {
+        clearTimeout(id);
+        throw error;
+    }
+}
+
 // ===== UTILITY FUNCTIONS =====
 // Format currency values with R$ prefix and 2 decimal places
 function formatCurrency(value) {
@@ -122,18 +140,25 @@ window.showPortalConfirm = function (title, message, onConfirm) {
     }, 10);
 };
 
+window.openModal = function (htmlContent) {
+    const modal = document.getElementById('ui-modal');
+    const content = document.getElementById('modal-content');
+    if (!modal || !content) {
+        console.error('Modal elements not found');
+        return;
+    }
+
+    content.innerHTML = htmlContent;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+};
+
 window.closeModal = function () {
     const modal = document.getElementById('ui-modal');
-    const panel = document.getElementById('modal-panel');
-    if (!modal) return;
-
-    panel.classList.remove('scale-100', 'opacity-100');
-    panel.classList.add('scale-95', 'opacity-0');
-
-    setTimeout(() => {
+    if (modal) {
         modal.classList.add('hidden');
         modal.style.display = 'none';
-    }, 300);
+    }
 };
 
 window.closeConfirmModal = function () {
@@ -239,7 +264,7 @@ async function loadLoginOptions() {
     const btn = document.getElementById('btn-login-action');
 
     try {
-        const res = await fetch(`${API_URL}/franchises`, {
+        const res = await fetchWithTimeout(`${API_URL}/franchises`, {
             headers: { 'Bypass-Tunnel-Reminder': 'true' }
         });
         if (!res.ok) throw new Error('Falha ao conectar servidor');
@@ -258,7 +283,7 @@ async function loadLoginOptions() {
             const selectedId = select.value;
             if (selectedId) {
                 try {
-                    const res = await fetch(`${API_URL}/franchises/${selectedId}`, {
+                    const res = await fetchWithTimeout(`${API_URL}/franchises/${selectedId}`, {
                         headers: { 'Bypass-Tunnel-Reminder': 'true' }
                     });
                     const json = await res.json();
@@ -322,7 +347,7 @@ window.handleLogin = async () => {
 
     try {
         // Fetch specific franchise details
-        const res = await fetch(`${API_URL}/franchises/${selectedId}`, {
+        const res = await fetchWithTimeout(`${API_URL}/franchises/${selectedId}`, {
             headers: { 'Bypass-Tunnel-Reminder': 'true' }
         });
         const json = await res.json();
@@ -632,6 +657,34 @@ const calculateAge = (birthDate) => {
     return age;
 };
 
+// HELPER: Generate Consistent Profile Image
+const getProfileImage = (person) => {
+    if (person.photoUrl && person.photoUrl.trim() !== '') {
+        return person.photoUrl;
+    }
+
+    // Deterministic random based on ID or Name
+    const seed = person._id || person.name || 'default';
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const consistentId = Math.abs(hash % 70); // 0-69
+
+    const gender = (person.gender || 'Masculino').toLowerCase();
+    const age = calculateAge(person.birthDate) || 25;
+
+    // Logic for children
+    if (age < 14) {
+        // Use styled initial or maybe a specific set if available (randomuser doesn't have kids reliably)
+        // using ui-avatars as fallback for kids to avoid adult photos
+         return `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random&color=fff&size=100`;
+    }
+
+    const genderPath = (gender === 'feminino' || gender === 'female') ? 'women' : 'men';
+    return `https://randomuser.me/api/portraits/${genderPath}/${consistentId}.jpg`;
+};
+
 // Update Gym Settings
 window.updateGymSettings = async function () {
     const nameField = document.getElementById('edit-gym-name');
@@ -764,6 +817,9 @@ window.renderStudents = () => {
         return matchBelt && matchSearch && matchFee && matchDegree;
     });
 
+    const badge = document.getElementById('students-count-badge');
+    if (badge) badge.innerText = filtered.length;
+
     // Sorting
     filtered.sort((a, b) => {
         let valA = a[currentSort.key] || '';
@@ -797,6 +853,7 @@ window.renderStudents = () => {
         const style = beltColors[belt] || beltColors['Branca'];
         const amount = Array.isArray(s.amount) ? s.amount[s.amount.length - 1] : (parseFloat(s.amount) || 0);
         const degree = (s.degree && s.degree !== 'Nenhum') ? ` • ${s.degree}` : '';
+        const photo = getProfileImage(s);
 
         // Payment Status Logic
         const status = s.paymentStatus === 'Paga' ? 'Paga' : 'Atrasada';
@@ -808,6 +865,9 @@ window.renderStudents = () => {
 
         return `
             <tr class="table-row border-b border-slate-50 transition-colors group hover:bg-slate-50/50">
+                <td class="py-4 px-2 w-12 text-center">
+                    <img src="${photo}" alt="${s.name}" class="w-10 h-10 rounded-full object-cover border border-slate-100 shadow-sm mx-auto">
+                </td>
                 <td class="py-4 px-2">
                     <div class="flex flex-col items-start gap-1">
                         <span class="font-bold text-slate-800">${s.name}</span>
@@ -962,6 +1022,9 @@ window.renderTeachers = () => {
         return matchBelt && matchSearch && matchDegree;
     });
 
+    const badge = document.getElementById('teachers-count-badge');
+    if (badge) badge.innerText = filtered.length;
+
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 italic">Nenhum professor encontrado com estes filtros.</td></tr>`;
         return;
@@ -971,9 +1034,13 @@ window.renderTeachers = () => {
         const belt = t.belt || 'Preta';
         const style = beltColors[belt] || beltColors['Preta'];
         const degreeText = (t.degree && t.degree !== 'Nenhum') ? ` • ${t.degree}` : '';
+        const photo = getProfileImage(t);
 
         return `
             <tr class="table-row border-b border-slate-50 transition-colors group hover:bg-slate-50/50">
+                <td class="py-4 px-2 w-12 text-center">
+                    <img src="${photo}" alt="${t.name}" class="w-10 h-10 rounded-full object-cover border border-slate-100 shadow-sm mx-auto">
+                </td>
                 <td class="py-4 px-2">
                     <div class="flex flex-col items-start gap-1">
                         <span class="font-bold text-slate-800">${(t.name || '').replace(/\s*\((Coral|Vermelha|Vermelho)\)/gi, '')}</span>
@@ -983,14 +1050,18 @@ window.renderTeachers = () => {
                         </span>
                     </div>
                 </td>
-                <td class="py-4 px-2 text-slate-500 text-[11px]">
-                    ${t.gender || '--'}
+                <td class="py-4 px-2">
+                    <div class="text-[11px] font-bold text-slate-700">${t.phone || 'Sem contato'}</div>
+                    <div class="text-[10px] text-slate-400">
+                        ${t.gender || '-'} • 
+                        ${t.birthDate ? calculateAge(t.birthDate) + ' anos' : '-'}
+                    </div>
                 </td>
-                <td class="py-4 px-2 text-slate-500 text-[11px]">
-                    ${t.phone || '--'}
+                <td class="py-4 px-2">
+                    <div class="text-[11px] font-medium text-slate-500">${t.email || '-'}</div>
                 </td>
                 <td class="py-4 px-2 text-slate-500 text-[11px] max-w-[150px] truncate" title="${t.address || ''}">
-                    ${t.address || '--'}
+                    ${t.address || '-'}
                 </td>
                 <td class="py-4 px-2 text-right">
                     <div class="flex items-center justify-end gap-1">
@@ -1121,6 +1192,19 @@ window.openStudentModal = async (id = null) => {
             <input type="hidden" id="edit-id" value="${student ? student._id : ''}">
 
             <div class="space-y-4">
+                <!-- PHOTO UPLOAD -->
+                <div class="flex justify-center mb-2">
+                    <div class="relative group">
+                        <img id="preview-photo" src="${getProfileImage(student || {name:'Novo', gender:gender})}" 
+                             class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md">
+                        <label for="upload-student-photo" class="absolute bottom-0 right-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-orange-600 transition shadow-sm">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                        </label>
+                        <input type="file" id="upload-student-photo" class="hidden" accept="image/*" onchange="uploadImage(this, 'new-photo-url')">
+                        <input type="hidden" id="new-photo-url" value="${student && student.photoUrl ? student.photoUrl : ''}">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Atleta *</label>
@@ -1246,8 +1330,9 @@ window.saveStudent = async () => {
         amount: amount, // Schema expects Number, not Array
         franchiseId: currentFranchiseId,
         paymentStatus: document.getElementById('new-payment-status').value,
-        registrationDate: document.getElementById('new-date').value, // Capture Date
-        address: document.getElementById('new-address').value
+        registrationDate: document.getElementById('new-date').value, 
+        address: document.getElementById('new-address').value,
+        photoUrl: document.getElementById('new-photo-url').value // Capture Photo
     };
 
     const btn = document.querySelector('#modal-content button');
@@ -1361,6 +1446,19 @@ window.openTeacherModal = async (id = null) => {
             <input type="hidden" id="teacher-edit-id" value="${teacher ? teacher._id : ''}">
 
             <div class="space-y-4">
+                <!-- PHOTO UPLOAD -->
+                <div class="flex justify-center mb-2">
+                    <div class="relative group">
+                        <img id="preview-teacher-photo" src="${getProfileImage(teacher || {name:'Novo', gender:'Masculino'})}" 
+                             class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md">
+                        <label for="upload-teacher-photo" class="absolute bottom-0 right-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-orange-600 transition shadow-sm">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                        </label>
+                        <input type="file" id="upload-teacher-photo" class="hidden" accept="image/*" onchange="uploadImage(this, 'teacher-photo-url')">
+                        <input type="hidden" id="teacher-photo-url" value="${teacher && teacher.photoUrl ? teacher.photoUrl : ''}">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-1">
                         <label class="block text-xs font-bold text-slate-700 mb-1">Nome Completo *</label>
@@ -1461,8 +1559,10 @@ window.saveTeacher = async () => {
         gender: document.getElementById('teacher-gender').value,
         phone: document.getElementById('teacher-phone').value,
         email: document.getElementById('teacher-email').value,
+        email: document.getElementById('teacher-email').value,
         address: document.getElementById('teacher-address').value,
-        franchiseId: currentFranchiseId
+        franchiseId: currentFranchiseId,
+        photoUrl: document.getElementById('teacher-photo-url').value // Capture Photo
     };
 
     const btn = document.querySelector('#modal-content button:last-child');
@@ -2045,17 +2145,17 @@ window.askSensei = async () => {
     if (!msg) return;
 
     const chat = document.getElementById('chat-messages');
-    chat.innerHTML += `< div class="bg-orange-500 text-white p-3 rounded-2xl ml-auto max-w-[85%] text-right mb-2 shadow-sm text-sm" > ${msg}</div > `;
+    chat.innerHTML += `<div class="bg-orange-500 text-white p-3 rounded-2xl ml-auto max-w-[85%] text-right mb-2 shadow-sm text-sm">${msg}</div>`;
     input.value = '';
     chat.scrollTop = chat.scrollHeight;
 
     // Loading Bubble
     const loadId = 'loading-' + Date.now();
     chat.innerHTML += `
-        < div id = "${loadId}" class="bg-white p-3 rounded-2xl border shadow-sm max-w-[85%] text-slate-500 mb-2 flex gap-2 items-center w-fit text-xs" >
+        <div id="${loadId}" class="bg-white p-3 rounded-2xl border shadow-sm max-w-[85%] text-slate-500 mb-2 flex gap-2 items-center w-fit text-xs">
             <i class="fa-solid fa-circle-notch animate-spin text-orange-500"></i>
             <span>Consultando Mestre...</span>
-        </div >
+        </div>
         `;
     chat.scrollTop = chat.scrollHeight;
 
@@ -2065,7 +2165,7 @@ window.askSensei = async () => {
         Dados da academia do usuário:
         - Nome: ${currentFranchise ? currentFranchise.name : 'Unidade'}
     - Total Alunos: ${myStudents.length}
-        Responda de forma curta, sábia(estilo mestre de artes marciais) e prática.
+        Responda de forma curta, sábia (estilo mestre de artes marciais) e prática.
         Pergunta do franqueado: "${msg}"
         `;
 
@@ -2076,9 +2176,9 @@ window.askSensei = async () => {
     if (loadEl) loadEl.remove();
 
     if (reply) {
-        chat.innerHTML += `< div class= "bg-white p-3 rounded-2xl border shadow-sm max-w-[85%] text-slate-700 mb-2 text-sm leading-relaxed" > ${reply}</div > `;
+        chat.innerHTML += `<div class="bg-white p-3 rounded-2xl border shadow-sm max-w-[85%] text-slate-700 mb-2 text-sm leading-relaxed">${reply}</div>`;
     } else {
-        chat.innerHTML += `< div class="bg-red-50 p-3 rounded-2xl border border-red-100 max-w-[85%] text-red-500 mb-2 text-sm" > O Mestre está meditando(Erro na API).</div > `;
+        chat.innerHTML += `<div class="bg-red-50 p-3 rounded-2xl border border-red-100 max-w-[85%] text-red-500 mb-2 text-sm">O Mestre está meditando (Erro na API).</div>`;
     }
     chat.scrollTop = chat.scrollHeight;
 };
@@ -2122,14 +2222,18 @@ function applyBranding(unit) {
             .text-orange-500 { color: ${primaryColor} !important; }
             .text-orange-600 { color: ${primaryColor} !important; }
             .bg-orange-500 { background-color: ${primaryColor} !important; }
+            .bg-orange-600 { background-color: ${primaryColor} !important; }
             .bg-orange-50 { background-color: ${primaryColor}10 !important; }
+            .bg-orange-100 { background-color: ${primaryColor}20 !important; }
             .border-orange-500 { border-color: ${primaryColor} !important; }
             .border-orange-200 { border-color: ${primaryColor}50 !important; }
             .hover\\:border-orange-500:hover { border-color: ${primaryColor} !important; }
             .hover\\:border-orange-200:hover { border-color: ${primaryColor}50 !important; }
             .hover\\:bg-orange-50:hover { background-color: ${primaryColor}10 !important; }
             .hover\\:bg-orange-500:hover { background-color: ${primaryColor} !important; }
+            .hover\\:bg-orange-600:hover { background-color: ${primaryColor} !important; }
             .shadow-orange-200 { shadow-color: ${primaryColor}50 !important; }
+            #page-title, #page-subtitle { color: ${primaryColor} !important; }
             
             /* Sidebar & Menu Branding */
             .sidebar-item-active {
@@ -2177,13 +2281,7 @@ function applyBranding(unit) {
     }
 
     if (portalBrandTitle) {
-        // Try to break name in two colors if it has spaces
-        const parts = brandName.split(' ');
-        if (parts.length > 1) {
-            portalBrandTitle.innerHTML = `<span class="text-brand-500">${parts.slice(0, -1).join(' ')}</span> <span class="text-black">${parts.slice(-1)}</span>`;
-        } else {
-            portalBrandTitle.innerHTML = `<span class="text-brand-500">${brandName}</span>`;
-        }
+        portalBrandTitle.textContent = brandName.toUpperCase();
     }
 
     // 3. Favicon & Document Title

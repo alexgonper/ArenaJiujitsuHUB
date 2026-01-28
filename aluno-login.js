@@ -108,6 +108,75 @@ function setupLoginForm() {
             btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> <span>Acessar Minha Área</span>';
         }
     });
+    
+    // Belt Color Magic
+    const emailInput = document.getElementById('email-input');
+    const franchiseSelect = document.getElementById('franchise-select');
+    let debounceTimer;
+
+    emailInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const email = emailInput.value.trim();
+        const franchiseId = franchiseSelect.value;
+
+        if (email.length > 5 && email.includes('@')) {
+            debounceTimer = setTimeout(async () => {
+                try {
+                    console.log(`Checking belt for email: ${email} in franchise: ${franchiseId}`);
+                    const response = await fetch(`${appConfig.apiBaseUrl}/students/quick-check?email=${encodeURIComponent(email)}&franchiseId=${franchiseId}`);
+                    const result = await response.json();
+                    console.log('Belt check result:', result);
+
+                    if (result.success && result.data.belt) {
+                        console.log('Updating widget for belt:', result.data.belt);
+                        updateWidgetForBelt(result.data.belt);
+                    } else {
+                        console.log('Belt check returned no success or no belt');
+                        resetWidgetBranding();
+                    }
+                } catch (error) {
+                    console.error('Belt check error:', error);
+                }
+            }, 500);
+        } else if (email.length === 0) {
+            resetWidgetBranding();
+        }
+    });
+
+    franchiseSelect.addEventListener('change', () => {
+        const email = emailInput.value.trim();
+        if (email) {
+            // Trigger check if franchise changes but email is already there
+            emailInput.dispatchEvent(new Event('input'));
+        }
+    });
+}
+
+function updateWidgetForBelt(belt) {
+    const style = window.getBeltStyle(belt);
+    const loginCard = document.getElementById('login-card');
+    
+    if (loginCard) {
+        console.log('Applying belt style to login card:', style);
+        // Smooth transition
+        loginCard.style.transition = 'all 0.5s ease-in-out';
+        
+        // Apply a subtle gradient background with the belt color
+        loginCard.style.background = `linear-gradient(135deg, ${style.bg} 0%, white 50%, ${style.bg} 100%)`;
+        loginCard.style.borderLeft = `6px solid ${style.border}`;
+        loginCard.style.boxShadow = `0 20px 60px -10px ${style.border}40, 0 0 0 1px ${style.border}20`;
+    }
+}
+
+function resetWidgetBranding() {
+    const loginCard = document.getElementById('login-card');
+    
+    // Reset login card only
+    if (loginCard) {
+        loginCard.style.background = '';
+        loginCard.style.borderLeft = '';
+        loginCard.style.boxShadow = '';
+    }
 }
 
 function showError(message) {

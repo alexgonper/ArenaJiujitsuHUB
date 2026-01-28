@@ -176,14 +176,12 @@
         class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-100 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300">
         <!-- Logo -->
         <div class="p-6 border-b border-slate-50">
-            <div id="portal-logo-container" class="flex flex-col gap-1">
-                <div class="flex items-center gap-2">
-                    <img id="logo-img-sidebar" class="hidden h-6 object-contain" src="" alt="Logo">
-                    <span id="logo-text-sidebar"
-                        class="text-orange-600 font-black text-lg tracking-tighter brand-typography">ARENA</span>
+            <div id="portal-logo-container" class="flex flex-col items-center gap-3">
+                <img id="logo-img-sidebar" class="hidden h-12 object-contain" src="" alt="Logo">
+                <div class="text-center">
+                    <span id="logo-text-sidebar" class="text-orange-600 font-black text-xl tracking-tighter brand-typography block">ARENA</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none block mt-1">PORTAL DO PROFESSOR</span>
                 </div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">PORTAL DO
-                    PROFESSOR</span>
             </div>
         </div>
 
@@ -243,11 +241,10 @@
                 </button>
                 <div>
                     <h1 id="page-title"
-                        class="text-base md:text-xl font-black text-slate-900 tracking-tight leading-none mb-1">Painel
-                        do Professor</h1>
+                        class="text-base md:text-xl font-black text-slate-900 tracking-tight leading-none mb-1">Olá, <span id="teacher-name-title">Professor</span></h1>
                     <p id="page-subtitle"
                         class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
-                        Visão Geral e Chamada</p>
+                        Arena São Paulo</p>
                 </div>
             </div>
 
@@ -262,13 +259,6 @@
                         class="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-orange-500 shadow-sm transition-all">
                         <i class="fa-solid fa-bell text-xs md:text-base"></i>
                     </button>
-                    <div class="hidden md:block w-px h-6 bg-slate-200 mx-1"></div>
-                    <div class="flex items-center gap-3">
-                        <div class="text-right hidden sm:block">
-                            <p id="teacher-name-header" class="text-xs font-bold text-slate-800 leading-none">...</p>
-                            <p class="text-[9px] text-orange-500 font-bold uppercase mt-1">Instrutor</p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </header>
@@ -478,14 +468,41 @@
                                 </div>
                             </div>
 
-                            <!-- Students Table/Grid -->
-                            <div id="all-students-list" class="flex flex-col gap-3">
-                                <!-- Will be populated via JS -->
-                                <div
-                                    class="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-40">
-                                    <i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i>
-                                    <p class="text-sm font-bold uppercase">Carregando Alunos...</p>
-                                </div>
+                            <!-- Students Table -->
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                         <tr class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                             <th class="pb-4 px-4 w-16 text-center">Foto</th>
+                                             <th class="pb-4 px-4 cursor-pointer hover:text-slate-600 transition-colors group" onclick="setAllStudentsSort('name')">
+                                                 Aluno / Faixa 
+                                                 <span id="all-students-count-badge" class="ml-1 px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold border border-slate-200">0</span>
+                                                 <i class="fa-solid fa-sort ml-1 opacity-20 group-hover:opacity-100 transition-opacity"></i>
+                                             </th>
+                                             <th class="pb-4 px-4 cursor-pointer hover:text-slate-600 transition-colors group" onclick="setAllStudentsSort('phone')">
+                                                 Contato
+                                                 <i class="fa-solid fa-sort ml-1 opacity-20 group-hover:opacity-100 transition-opacity"></i>
+                                             </th>
+                                             <th class="pb-4 px-4 cursor-pointer hover:text-slate-600 transition-colors group" onclick="setAllStudentsSort('registrationDate')">
+                                                 Desde
+                                                 <i class="fa-solid fa-sort ml-1 opacity-20 group-hover:opacity-100 transition-opacity"></i>
+                                             </th>
+                                             <th class="pb-4 px-4 text-right cursor-pointer hover:text-slate-600 transition-colors group" onclick="setAllStudentsSort('paymentStatus')">
+                                                 Status
+                                                 <i class="fa-solid fa-sort ml-1 opacity-20 group-hover:opacity-100 transition-opacity"></i>
+                                             </th>
+                                         </tr>
+                                    </thead>
+                                    <tbody id="all-students-list">
+                                        <!-- Will be populated via JS -->
+                                        <tr>
+                                            <td colspan="5" class="py-20 flex flex-col items-center justify-center text-center opacity-40">
+                                                <i class="fa-solid fa-spinner fa-spin text-4xl mb-4"></i>
+                                                <p class="text-sm font-bold uppercase">Carregando Alunos...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -850,6 +867,13 @@
 
                 <form id="form-edit-profile" onsubmit="saveProfileUpdates(event)" class="p-8 space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Photo URL -->
+                        <div class="col-span-full space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Foto (URL)</label>
+                            <input type="text" id="edit-teacher-photo" placeholder="https://exemplo.com/foto.jpg"
+                                class="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-orange-500 transition-all placeholder:text-slate-300">
+                        </div>
+
                         <!-- Name -->
                         <div class="space-y-2 opacity-60">
                             <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Nome Completo</label>

@@ -33,7 +33,7 @@ The project follows a **Client-Server** architecture, capable of running in a fu
     *   **Features**: Global network stats, heatmap visualization, "AI Auditors" for unit health, strategic communications (Matrix Hub).
 
 2.  **Franchisee Portal**
-    *   **Entry Point**: `franqueado.html`
+    *   **Entry Point**: `franqueado-premium.html`
     *   **User**: Unit Owners (Franchisees).
     *   **Features**: Unit-specific dashboard, Student/Teacher management, Financial overview, Message board.
 
@@ -157,10 +157,10 @@ The backend exposes a RESTful API at `http://localhost:5000/api/v1`.
 ```text
 ArenaHub/
 ├── index.html              # HQ Dashboard entry point
-├── franqueado.html         # Franchisee Portal entry point
+├── franqueado-premium.html # Franchisee Portal entry point
 ├── styles.css              # Global styles & Tailwind utilities
 ├── app.js                  # Main HQ frontend logic
-├── franqueado-app.js       # Franchisee frontend logic
+├── widgets-franchisee.js   # Franchisee frontend widgets
 ├── api-client.js           # Shared API wrapper class
 ├── config.js               # Global configuration
 ├── start-all.sh            # Master startup script

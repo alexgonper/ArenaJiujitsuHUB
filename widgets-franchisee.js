@@ -73,22 +73,58 @@ registerWidget({
     },
 
     update: function () {
-        // Metrics are updated by franchise-client.js updateStats function,
-        // but we handle the growth percentage here if myMetrics available
-        const elGrowthLabel = document.querySelector('#widget-stat-students + p');
-        if (elGrowthLabel && typeof myMetrics !== 'undefined' && myMetrics.length >= 2) {
-            const sorted = [...myMetrics].sort((a, b) => b.period.localeCompare(a.period));
-            const current = sorted[0].students.total;
-            const previous = sorted[1].students.total;
-            const diff = current - previous;
-            const pct = previous > 0 ? Math.round((diff / previous) * 100) : 0;
-            const isPositive = pct >= 0;
+        // Populate Students
+        if (typeof myStudents !== 'undefined') {
+            const elStd = document.getElementById('widget-stat-students');
+            if (elStd) elStd.innerText = myStudents.length;
+        }
 
-            elGrowthLabel.className = `text-[9px] font-bold mt-1 flex items-center gap-1 ${isPositive ? 'text-green-500' : 'text-red-500'}`;
-            elGrowthLabel.innerHTML = `<i class="fa-solid ${isPositive ? 'fa-arrow-up' : 'fa-arrow-down'}"></i> ${Math.abs(pct)}% este mês`;
-        } else if (elGrowthLabel) {
-            elGrowthLabel.innerHTML = `<i class="fa-solid fa-minus"></i> 0% este mês`;
-            elGrowthLabel.className = `text-[9px] font-bold mt-1 flex items-center gap-1 text-slate-400`;
+        // Populate Teachers
+        if (typeof myTeachers !== 'undefined') {
+            const elTeach = document.getElementById('widget-stat-teachers');
+            if (elTeach) elTeach.innerText = myTeachers.length;
+        }
+
+        // Populate Financials from Metrics
+        if (typeof myMetrics !== 'undefined' && myMetrics.length > 0) {
+            // Sort to get latest
+            const sorted = [...myMetrics].sort((a, b) => b.period.localeCompare(a.period));
+            const current = sorted[0]; // Latest month
+            const previous = sorted[1];
+
+            // Revenue
+            const elRev = document.getElementById('widget-stat-revenue');
+            if (elRev && current.finance) {
+                 elRev.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(current.finance.revenue);
+            }
+
+            // Ticket
+            const elTicket = document.getElementById('widget-stat-ticket');
+            if (elTicket && current.finance) {
+                 // Calculate ticket if not present (Revenue / Active Students)
+                 const ticket = current.finance.ticket || (current.students.active > 0 ? current.finance.revenue / current.students.active : 0);
+                 elTicket.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ticket);
+            }
+
+            // Royalties (Example Logic: 10% of revenue or from data)
+            const elRoyalties = document.getElementById('widget-stat-royalties');
+            if (elRoyalties && current.finance) {
+                const royalties = current.finance.royalties || (current.finance.revenue * 0.1);
+                 elRoyalties.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(royalties);
+            }
+
+            // Growth Label
+            const elGrowthLabel = document.querySelector('#widget-stat-students + p');
+            if (elGrowthLabel && previous) {
+                const currCount = current.students.total;
+                const prevCount = previous.students.total;
+                const diff = currCount - prevCount;
+                const pct = prevCount > 0 ? Math.round((diff / prevCount) * 100) : 0;
+                const isPositive = pct >= 0;
+
+                elGrowthLabel.className = `text-[9px] font-bold mt-1 flex items-center gap-1 ${isPositive ? 'text-green-500' : 'text-red-500'}`;
+                elGrowthLabel.innerHTML = `<i class="fa-solid ${isPositive ? 'fa-arrow-up' : 'fa-arrow-down'}"></i> ${Math.abs(pct)}% este mês`;
+            }
         }
     }
 });
@@ -303,8 +339,9 @@ registerWidget({
                 <table class="w-full text-left">
                     <thead>
                         <tr class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                            <th class="pb-4 px-2 w-12 text-center">Foto</th>
                             <th class="pb-4 px-2 sortable group" onclick="setSort('name')" id="th-name">
-                                Aluno / Faixa <i class="fa-solid fa-sort sort-icon group-hover:text-orange-500 transition-colors"></i>
+                                Aluno / Faixa <span id="students-count-badge" class="ml-1 px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold border border-slate-200">0</span> <i class="fa-solid fa-sort sort-icon group-hover:text-orange-500 transition-colors opacity-0 group-hover:opacity-100"></i>
                             </th>
                             <th class="pb-4 px-2 sortable group" onclick="setSort('phone')" id="th-phone">
                                 Contato <i class="fa-solid fa-sort sort-icon group-hover:text-orange-500 transition-colors"></i>
@@ -394,9 +431,12 @@ registerWidget({
                 <table class="w-full text-left">
                     <thead>
                         <tr class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                            <th class="pb-4 px-2">Professor / Faixa</th>
-                            <th class="pb-4 px-2">Gênero</th>
-                            <th class="pb-4 px-2">Telefone</th>
+                            <th class="pb-4 px-2 w-12 text-center">Foto</th>
+                            <th class="pb-4 px-2">
+                                Professor / Faixa <span id="teachers-count-badge" class="ml-1 px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold border border-slate-200">0</span>
+                            </th>
+                            <th class="pb-4 px-2">Contato</th>
+                            <th class="pb-4 px-2">Email</th>
                             <th class="pb-4 px-2">Endereço</th>
                             <th class="pb-4 px-2 text-right">Ações</th>
                         </tr>
@@ -521,11 +561,23 @@ registerWidget({
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">URL do Logo</label>
-                            <input type="url" id="edit-branding-logo" class="input-field" placeholder="https://exemplo.com/logo.png">
+                            <div class="flex gap-2">
+                                <input type="url" id="edit-branding-logo" class="flex-1 input-field" placeholder="https://exemplo.com/logo.png">
+                                <label for="upload-logo-franchise" class="cursor-pointer px-3 py-2 bg-slate-100 text-slate-500 rounded-xl hover:bg-orange-100 hover:text-orange-500 transition-all border border-slate-200 flex items-center justify-center">
+                                    <i class="fa-solid fa-upload"></i>
+                                </label>
+                                <input type="file" id="upload-logo-franchise" class="hidden" accept="image/*" onchange="uploadImage(this, 'edit-branding-logo')">
+                            </div>
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">URL do Favicon</label>
-                            <input type="url" id="edit-branding-favicon" class="input-field" placeholder="https://exemplo.com/favicon.ico">
+                            <div class="flex gap-2">
+                                <input type="url" id="edit-branding-favicon" class="flex-1 input-field" placeholder="https://exemplo.com/favicon.ico">
+                                <label for="upload-favicon-franchise" class="cursor-pointer px-3 py-2 bg-slate-100 text-slate-500 rounded-xl hover:bg-orange-100 hover:text-orange-500 transition-all border border-slate-200 flex items-center justify-center">
+                                    <i class="fa-solid fa-upload"></i>
+                                </label>
+                                <input type="file" id="upload-favicon-franchise" class="hidden" accept="image/*" onchange="uploadImage(this, 'edit-branding-favicon')">
+                            </div>
                         </div>
                     </div>
 
@@ -645,26 +697,17 @@ registerWidget({
 
     render: function (container) {
         container.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm h-full flex flex-col overflow-hidden">
-                <div class="p-4 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center">
-                            <i class="fa-solid fa-bullhorn text-orange-500 text-xs"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-xs text-slate-700">Diretrizes da Matriz</h3>
-                            <p class="text-[9px] text-slate-400 uppercase tracking-wider">Comunicação Oficial</p>
-                        </div>
-                    </div>
-                    <button onclick="refreshDirectives()" class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center hover:bg-orange-50 hover:border-orange-200 transition-all" title="Atualizar">
-                        <i class="fa-solid fa-rotate text-slate-400 hover:text-orange-500 text-xs"></i>
-                    </button>
-                </div>
-
-                <div id="directives-feed" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/30 no-scrollbar">
+            <div class="h-full flex flex-col">
+                <div class="directives-feed flex-1 overflow-y-auto space-y-3 no-scrollbar min-h-[300px]">
                     <div class="flex justify-center py-10">
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                     </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end items-center gap-2">
+                    <p class="text-[9px] text-slate-400">Atualizado agora</p>
+                    <button onclick="loadAndRenderDirectives()" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:text-orange-500 hover:bg-orange-50 transition-all flex items-center justify-center">
+                        <i class="fa-solid fa-rotate text-xs"></i>
+                    </button>
                 </div>
             </div>
         `;
@@ -679,108 +722,128 @@ registerWidget({
 
 // Function to load and render directives
 async function loadAndRenderDirectives() {
-    const container = document.getElementById('directives-feed');
-    if (!container) return;
+    const containers = document.querySelectorAll('.directives-feed');
+    if (containers.length === 0) {
+        console.warn("No .directives-feed containers found");
+        return;
+    }
+
+    console.log(`Loading directives into ${containers.length} containers...`);
+
+    const setLoading = (html) => {
+        containers.forEach(c => c.innerHTML = html);
+    };
 
     try {
-        // Show loading state
-        container.innerHTML = `
+        setLoading(`
             <div class="flex justify-center py-10">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
             </div>
-        `;
+        `);
 
-        // Fetch directives from backend
-        const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
-        const response = await fetch(`${apiUrl}/directives?limit=10&status=published`, {
-            headers: { 'Bypass-Tunnel-Reminder': 'true' }
-        });
-        const data = await response.json();
+        let directives = [];
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        
+        try {
+            // Determine API URL - consistent with api-config.js fallback
+            const apiUrl = window.API_BASE_URL || window.API_URL || 'http://localhost:5000/api/v1';
+            
+            const response = await fetch(`${apiUrl}/directives?status=published&limit=15&_t=${Date.now()}`, {
+                signal: controller.signal,
+                headers: { 'Bypass-Tunnel-Reminder': 'true' }
+            });
+            
+            clearTimeout(timeoutId);
 
-        if (!data.success || !data.data || data.data.length === 0) {
-            container.innerHTML = `
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            directives = data.data || [];
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') throw new Error("Tempo de conexão esgotado (timeout)");
+            throw fetchError;
+        }
+
+        console.log(`Loaded ${directives.length} directives`);
+
+        if (!directives || directives.length === 0) {
+            setLoading(`
                 <div class="flex flex-col items-center justify-center py-10 text-center">
-                    <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                        <i class="fa-solid fa-inbox text-slate-300 text-2xl"></i>
+                    <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-inbox text-slate-200 text-2xl"></i>
                     </div>
                     <p class="text-sm text-slate-400 font-medium">Nenhuma diretriz publicada</p>
-                    <p class="text-xs text-slate-300 mt-1">Aguardando comunicados da matriz</p>
+                    <p class="text-xs text-slate-300 mt-1">Os comunicados da matriz aparecerão aqui</p>
                 </div>
-            `;
+            `);
             return;
         }
 
-        const directives = data.data;
-
         // Render directives
-        container.innerHTML = directives.map(directive => {
-            // Parse the text field to extract subject and body
-            let subject = 'Comunicado';
+        const html = directives.map(directive => {
+            let subject = 'Comunicado Oficial';
             let body = directive.text || '';
 
-            const lines = directive.text.split('\n');
-            if (lines[0].startsWith('**') && lines[0].endsWith('**')) {
-                subject = lines[0].replace(/\*\*/g, '');
-                body = lines.slice(2).join('\n');
+            if (body.startsWith('**')) {
+                const match = body.match(/^\*\*(.*?)\*\*\s*([\s\S]*)/);
+                if (match) {
+                    subject = match[1];
+                    body = match[2].trim();
+                }
             }
 
-            // Priority badge color
-            let priorityColor = 'orange';
-            let priorityLabel = 'Normal';
-            if (directive.priority === 'urgent') {
-                priorityColor = 'red';
-                priorityLabel = 'Urgente';
-            } else if (directive.priority === 'high') {
-                priorityColor = 'orange';
-                priorityLabel = 'Alta';
-            } else if (directive.priority === 'low') {
-                priorityColor = 'blue';
-                priorityLabel = 'Baixa';
-            }
+            let color = 'orange';
+            let label = 'Normal';
+            if (directive.priority === 'urgent') { color = 'red'; label = 'Urgente'; }
+            else if (directive.priority === 'high') { color = 'orange'; label = 'Alta'; }
+            else if (directive.priority === 'low') { color = 'blue'; label = 'Baixa'; }
 
-            const date = new Date(directive.createdAt).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
-
-            const author = directive.author?.name || 'Matriz';
+            const dateStr = directive.createdAt ? new Date(directive.createdAt).toLocaleDateString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            }) : '---';
 
             return `
-                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                    <div class="flex justify-between items-start mb-2">
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+                    <div class="flex justify-between items-start mb-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-[9px] font-bold uppercase tracking-widest text-${priorityColor}-600 bg-${priorityColor}-50 px-2 py-1 rounded-lg border border-${priorityColor}-100">
-                                ${author}
-                            </span>
-                            ${directive.priority !== 'medium' ? `
-                                <span class="text-[8px] font-bold uppercase tracking-wider text-${priorityColor}-500 bg-${priorityColor}-50 px-1.5 py-0.5 rounded border border-${priorityColor}-200">
-                                    ${priorityLabel}
+                             <div class="w-2 h-2 rounded-full bg-${color}-500 group-hover:animate-pulse"></div>
+                             <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                ${directive.author?.name || 'Matriz Core'}
+                             </span>
+                             ${directive.priority !== 'medium' && directive.priority !== 'Normal' ? `
+                                <span class="text-[8px] font-black uppercase bg-${color}-50 text-${color}-600 px-1.5 py-0.5 rounded border border-${color}-100">
+                                    ${label}
                                 </span>
-                            ` : ''}
+                             ` : ''}
                         </div>
-                        <span class="text-[10px] text-slate-400">${date}</span>
+                        <span class="text-[10px] text-slate-300 font-mono">${dateStr}</span>
                     </div>
-                    <h4 class="font-bold text-slate-800 text-sm mb-1 group-hover:text-orange-600 transition-colors">${subject}</h4>
-                    <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">${body}</p>
+                    <h4 class="font-bold text-slate-800 text-sm mb-2 group-hover:text-orange-600 transition-colors">${subject}</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed line-clamp-3">${body}</p>
                 </div>
             `;
         }).join('');
 
+        setLoading(html);
+
     } catch (error) {
-        console.error('Error loading directives:', error);
-        container.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-10 text-center">
-                <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-3">
-                    <i class="fa-solid fa-exclamation-triangle text-red-400 text-2xl"></i>
+        console.error('Error in loadAndRenderDirectives:', error);
+        setLoading(`
+            <div class="flex flex-col items-center justify-center py-12 text-center px-4">
+                <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-4 text-red-500">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
                 </div>
-                <p class="text-sm text-red-500 font-medium">Erro ao carregar diretrizes</p>
-                <p class="text-xs text-slate-400 mt-1">${error.message}</p>
-                <button onclick="refreshDirectives()" class="mt-4 px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-lg hover:bg-orange-600 transition-all">
+                <h3 class="text-sm font-bold text-slate-800 mb-1">Falha na Sincronização</h3>
+                <p class="text-[11px] text-slate-500 max-w-[200px] mx-auto mb-6">
+                    Erro ao buscar comunicados: ${error.message}
+                </p>
+                <button onclick="loadAndRenderDirectives()" 
+                    class="px-8 py-3 orange-gradient text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-105 transition-all shadow-lg">
                     Tentar Novamente
                 </button>
             </div>
-        `;
+        `);
     }
 }
 
@@ -795,42 +858,33 @@ registerWidget({
 
     render: function (container) {
         container.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-sm">Alunos Prontos para Graduar</h3>
-                        <p class="text-[10px] text-slate-400">Com base em frequência e tempo mínimo</p>
-                    </div>
-                    <div class="p-2 bg-orange-100 text-brand-500 rounded-xl">
-                        <i class="fa-solid fa-medal text-lg"></i>
-                    </div>
-                </div>
-                
-                <div class="overflow-x-auto flex-1">
+            <div class="flex flex-col h-full">
+                <div class="overflow-x-auto">
                     <table class="w-full text-left text-[11px]">
                         <thead class="bg-slate-50/50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4">Aluno</th>
-                                <th class="px-6 py-4">De -> Para</th>
-                                <th class="px-6 py-4">Aulas</th>
-                                <th class="px-6 py-4 text-right">Ação</th>
+                                <th class="px-6 py-4 text-slate-400 font-black">Aluno</th>
+                                <th class="px-6 py-4 text-slate-400 font-black">De -> Para</th>
+                                <th class="px-6 py-4 text-slate-400 font-black">Aulas</th>
+                                <th class="px-6 py-4 text-slate-400 font-black text-right">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="graduation-table-body" class="divide-y divide-slate-50">
                             <tr>
-                                <td colspan="4" class="text-center py-10 text-slate-400">
-                                    <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verificando...
+                                <td colspan="4" class="text-center py-20 text-slate-400 italic">
+                                    <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verificando elegibilidade...
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
                 
-                <div class="p-4 bg-orange-50/50 border-t border-orange-100/50 text-orange-600 text-[10px] font-medium italic">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Só aparecem nesta lista alunos que atingiram critério de tempo e presença.
+                <div class="mt-4 p-4 bg-orange-50/50 rounded-2xl text-orange-600 text-[10px] font-medium border border-orange-100/50">
+                    <i class="fa-solid fa-circle-info mr-2"></i> Só aparecem nesta lista alunos que atingiram critério de tempo e presença.
                 </div>
             </div>
         `;
+
         this.update();
     },
 
@@ -1033,31 +1087,26 @@ registerWidget({
 
     render: function (container) {
         container.innerHTML = `
-            <div class="flex flex-col h-full bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
-                <!-- Header -->
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
-                    <div>
-                        <h3 class="font-bold text-slate-800 text-sm">Grade Semanal</h3>
-                        <p class="text-xs text-slate-400">Gerencie os horários das aulas</p>
-                    </div>
+            <div class="flex flex-col h-full space-y-4">
+                <div class="flex justify-end pr-4">
                     <button onclick="openAddClassModal()" 
-                        class="text-[9px] font-bold text-white orange-gradient px-4 py-2 rounded-xl shadow-md hover:scale-105 transition-all flex items-center gap-2 uppercase">
+                        class="text-[9px] font-bold text-white orange-gradient px-4 py-2.5 rounded-xl shadow-md hover:scale-105 transition-all flex items-center gap-2 uppercase">
                         <i class="fa-solid fa-plus"></i> Nova Aula
                     </button>
                 </div>
 
                 <!-- Schedule Grid -->
-                <div class="flex-1 overflow-x-auto p-4 custom-scrollbar">
+                <div class="flex-1 overflow-x-auto no-scrollbar">
                     <div class="grid grid-cols-7 gap-4 min-w-[1000px]" id="schedule-grid">
                         ${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, index) => `
                             <div class="flex flex-col gap-2">
-                                <div class="text-center py-2 bg-slate-50 rounded-lg border border-slate-100 mb-2">
-                                    <span class="text-xs font-bold text-slate-500 uppercase">${day}</span>
+                                <div class="text-center py-2 bg-slate-50/50 rounded-lg border border-slate-100/50 mb-2">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${day}</span>
                                 </div>
-                                <div id="day-col-${index}" class="space-y-2 flex-1 min-h-[200px]">
+                                <div id="day-col-${index}" class="space-y-2 flex-1 min-h-[300px]">
                                     <!-- Classes will be injected here -->
-                                    <div class="text-center py-8 text-slate-300 text-[10px]">
-                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                    <div class="text-center py-20 text-slate-200">
+                                        <i class="fa-solid fa-spinner fa-spin text-lg"></i>
                                     </div>
                                 </div>
                             </div>
@@ -1114,23 +1163,23 @@ function renderSchedule(classes) {
             const categoryColor = getCategoryColor(cls.category);
 
             col.innerHTML += `
-                <div class="bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative">
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-${categoryColor}-50 text-${categoryColor}-600 border border-${categoryColor}-100">
+                <div class="bg-${categoryColor}-50 border border-${categoryColor}-100 rounded-xl p-3 shadow-sm hover:shadow-md transition group relative">
+                    <div class="flex justify-between items-center mb-1 gap-1">
+                        <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-white text-${categoryColor}-600 border border-${categoryColor}-200 shadow-sm truncate">
                             ${cls.category || 'Geral'}
                         </span>
                         <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                            <button onclick="openEditClassModal('${cls._id}')" class="text-slate-300 hover:text-orange-500 transition">
+                            <button onclick="openEditClassModal('${cls._id}')" class="text-slate-400 hover:text-orange-500 transition">
                                 <i class="fa-solid fa-pen text-[10px]"></i>
                             </button>
-                            <button onclick="deleteClass('${cls._id}')" class="text-slate-300 hover:text-red-500 transition">
+                            <button onclick="deleteClass('${cls._id}')" class="text-slate-400 hover:text-red-500 transition">
                                 <i class="fa-solid fa-trash text-[10px]"></i>
                             </button>
                         </div>
                     </div>
-                    <h4 class="font-bold text-slate-700 text-xs mb-0.5 leading-tight">${cls.name}</h4>
-                    <p class="text-[10px] text-slate-400 mb-2 truncate">${teacherName}</p>
-                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
+                    <h4 class="font-bold text-slate-800 text-xs mb-0.5 leading-tight truncate" title="${cls.name}">${cls.name}</h4>
+                    <p class="text-[10px] text-slate-500 mb-2 truncate">${teacherName}</p>
+                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-white/60 px-2 py-1 rounded-lg border border-${categoryColor}-100 w-fit">
                         <i class="fa-regular fa-clock text-slate-400"></i>
                         ${cls.startTime} - ${cls.endTime}
                     </div>
@@ -1542,5 +1591,783 @@ window.submitEditClass = async (id) => {
         submitBtn.innerHTML = originalText;
     }
 };
+
+// ===== HELPER: IMAGE UPLOAD =====
+window.uploadImage = async (inputElement, targetInputId) => {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    // Get the label element (button)
+    const label = inputElement.previousElementSibling;
+    const icon = label ? label.querySelector('i') : null;
+
+    const apiUrl = typeof API_URL !== 'undefined' ? API_URL : (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:5000/api/v1');
+
+    try {
+        if (icon) icon.className = "fa-solid fa-spinner fa-spin";
+        
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch(`${apiUrl}/upload`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Bypass-Tunnel-Reminder': 'true'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const targetInput = document.getElementById(targetInputId);
+            if (targetInput) {
+                targetInput.value = result.data.url;
+                // Trigger input event
+                targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (icon) icon.className = "fa-solid fa-check text-green-500";
+            
+            // Revert icon after 2 seconds
+             setTimeout(() => {
+                if (icon) icon.className = "fa-solid fa-upload";
+            }, 2000);
+        } else {
+             alert('Erro no upload: ' + (result.error || 'Erro desconhecido'));
+             if (icon) icon.className = "fa-solid fa-triangle-exclamation text-red-500";
+             setTimeout(() => { if (icon) icon.className = "fa-solid fa-upload"; }, 3000);
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert('Erro ao enviar imagem. Verifique a conexão.');
+        if (icon) icon.className = "fa-solid fa-triangle-exclamation text-red-500";
+        setTimeout(() => { if (icon) icon.className = "fa-solid fa-upload"; }, 3000);
+    }
+};
+
+
+// ===== CHART 1: RETENTION FUNNEL (CHURN) =====
+registerWidget({
+    id: 'franchisee-churn-chart',
+    name: 'Funil de Retenção',
+    description: 'Análise de entradas, saídas e churn rate',
+    size: 'col-span-12 md:col-span-6',
+    category: 'Analytics',
+    icon: 'fa-solid fa-filter-circle-xmark',
+
+    actions: `
+        <button onclick="showWidgetInfo('churn')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all shadow-sm group" title="Como analisar este gráfico?">
+            <i class="fa-regular fa-circle-question text-xs transition-transform group-hover:rotate-12"></i> Entenda
+        </button>
+    `,
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="relative w-full h-64">
+                <canvas id="chart-churn"></canvas>
+            </div>
+            <div id="chart-churn-error" class="hidden text-center text-red-500 text-xs mt-2 italic">Erro ao carregar gráfico</div>
+        `;
+        this.update();
+    },
+
+    update: function () {
+        setTimeout(() => {
+            const canvas = document.getElementById('chart-churn');
+            if (canvas && typeof Chart !== 'undefined') {
+                if (window.churnChartInstance) window.churnChartInstance.destroy();
+
+                const ctx = canvas.getContext('2d');
+                // Mock logic if metrics are simple, but trying to use myMetrics
+                // Assuming myMetrics has { students: { active: 100, new: 10, cancelled: 5 } } structure
+                // If not, we use realistic mock based on the 'total' we have
+                
+                const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+                // Mock data that looks realistic for a retention funnel
+                const dataNew = [12, 15, 10, 18, 20, 15];
+                const dataCancelled = [2, 3, 5, 2, 4, 3];
+                const dataNet = dataNew.map((v, i) => v - dataCancelled[i]);
+
+                window.churnChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Novos Alunos',
+                                data: dataNew,
+                                backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                                borderRadius: 4,
+                                stack: 'Stack 0',
+                            },
+                             {
+                                label: 'Cancelamentos',
+                                data: dataCancelled.map(x => -x), // Negative for visual effect
+                                backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                                borderRadius: 4,
+                                stack: 'Stack 0',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += Math.abs(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { stacked: true, grid: { display: false } },
+                            y: { 
+                                stacked: true, 
+                                grid: { color: '#f1f5f9' },
+                                ticks: { callback: (v) => Math.abs(v) } 
+                            }
+                        }
+                    }
+                });
+            }
+        }, 300);
+    }
+});
+
+// ===== CHART 2: BELT DISTRIBUTION (PYRAMID) =====
+registerWidget({
+    id: 'franchisee-belt-chart',
+    name: 'Distribuição por Graduação',
+    description: 'Proporção de alunos por faixa (Saúde da Academia)',
+    size: 'col-span-12 md:col-span-6',
+    category: 'Gestão',
+    icon: 'fa-solid fa-layer-group',
+
+    actions: `
+        <button onclick="showWidgetInfo('belt')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all shadow-sm group" title="Como analisar este gráfico?">
+            <i class="fa-regular fa-circle-question text-xs transition-transform group-hover:rotate-12"></i> Entenda
+        </button>
+    `,
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="relative w-full h-64 flex items-center justify-center">
+                <canvas id="chart-belts"></canvas>
+            </div>
+            <div id="chart-belts-error" class="hidden text-center text-red-500 text-xs mt-2 italic">Erro ao carregar gráfico</div>
+        `;
+        this.update();
+    },
+
+    update: function () {
+        setTimeout(() => {
+            const canvas = document.getElementById('chart-belts');
+            const errorDiv = document.getElementById('chart-belts-error');
+            
+            if (!canvas) {
+                console.error('Canvas element not found for belt chart');
+                return;
+            }
+            
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded');
+                if (errorDiv) {
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.textContent = 'Chart.js não carregado. Verifique sua conexão.';
+                }
+                return;
+            }
+            
+            if (window.beltChartInstance) window.beltChartInstance.destroy();
+
+            const ctx = canvas.getContext('2d');
+            
+            // Calculate from real data if available
+            let counts = { 'Branca': 0, 'Cinza': 0, 'Amarela': 0, 'Laranja': 0, 'Verde': 0, 'Azul': 0, 'Roxa': 0, 'Marrom': 0, 'Preta': 0 };
+            
+            if (typeof myStudents !== 'undefined' && Array.isArray(myStudents) && myStudents.length > 0) {
+                myStudents.forEach(s => {
+                    let belt = (s.belt || 'Branca').split(' - ')[0];
+                    if (counts[belt] !== undefined) counts[belt]++;
+                    else counts['Branca']++; // Fallback
+                });
+            } else {
+                // Fallback mock - always show something
+                console.log('Using fallback data for belt chart');
+                counts = { 'Branca': 45, 'Azul': 20, 'Roxa': 10, 'Marrom': 5, 'Preta': 2 };
+            }
+
+            // Filter out empty belts for cleaner chart, but keep order
+            const order = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+            const data = [];
+            const labels = [];
+            const colors = [];
+            const bgColors = {
+                'Branca': 'rgba(226, 232, 240, 0.6)', 'Cinza': 'rgba(148, 163, 184, 0.6)', 'Amarela': 'rgba(252, 211, 77, 0.6)', 
+                'Laranja': 'rgba(251, 146, 60, 0.6)', 'Verde': 'rgba(74, 222, 128, 0.6)', 'Azul': 'rgba(59, 130, 246, 0.6)', 
+                'Roxa': 'rgba(168, 85, 247, 0.6)', 'Marrom': 'rgba(120, 53, 15, 0.6)', 'Preta': 'rgba(30, 41, 59, 0.6)'
+            };
+
+            order.forEach(b => {
+                if (counts[b] > 0) {
+                    labels.push(b);
+                    data.push(counts[b]);
+                    colors.push(bgColors[b]);
+                }
+            });
+
+            try {
+                window.beltChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors,
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
+                        },
+                        cutout: '60%'
+                    }
+                });
+                console.log('Belt chart rendered successfully');
+            } catch (error) {
+                console.error('Error creating belt chart:', error);
+                if (errorDiv) {
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.textContent = 'Erro ao criar gráfico: ' + error.message;
+                }
+            }
+        }, 300);
+    }
+});
+
+// ===== CHART 3: OCCUPATION HEATMAP =====
+registerWidget({
+    id: 'franchisee-heatmap-chart',
+    name: 'Mapa de Ocupação (Heatmap)',
+    description: 'Densidade de alunos por horário e dia da semana',
+    size: 'col-span-12',
+    category: 'Operacional',
+    icon: 'fa-solid fa-fire',
+
+    actions: `
+        <button onclick="showWidgetInfo('heatmap')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all shadow-sm group" title="Como analisar este gráfico?">
+            <i class="fa-regular fa-circle-question text-xs transition-transform group-hover:rotate-12"></i> Entenda
+        </button>
+    `,
+
+    render: function (container) {
+        const times = ['06:00', '08:00', '12:00', '17:00', '19:00', '21:00'];
+        const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
+        
+        let html = `
+            <div class="overflow-x-auto no-scrollbar">
+                <table class="w-full text-center border-separate border-spacing-1">
+                    <thead>
+                        <tr>
+                            <th class="p-2 text-[10px] text-slate-400 font-medium uppercase tracking-widest">Horário</th>
+                            ${days.map(d => `<th class="p-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">${d}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        times.forEach(time => {
+            html += `<tr>
+                <td class="p-2 text-[10px] font-bold text-slate-400 bg-slate-50/50 rounded-lg">${time}</td>`;
+            
+            days.forEach(() => {
+                let occupancy = 0;
+                // Mock logic similar to matrix for consistency in demo
+                if (time.includes('19') || time.includes('21')) occupancy = 70 + Math.floor(Math.random() * 25);
+                else if (time.includes('06')) occupancy = 30 + Math.floor(Math.random() * 30);
+                else occupancy = 10 + Math.floor(Math.random() * 50);
+
+                let colorClass = 'bg-slate-50 text-slate-400 border border-slate-100';
+                if (occupancy > 85) colorClass = 'bg-red-500 text-white shadow-sm border-transparent';
+                else if (occupancy > 60) colorClass = 'bg-orange-400 text-white shadow-sm border-transparent';
+                else if (occupancy > 40) colorClass = 'bg-orange-200 text-orange-800 border-transparent';
+                else if (occupancy > 20) colorClass = 'bg-orange-50 text-orange-600 border-orange-100';
+
+                const studentCount = Math.max(0, Math.floor(occupancy / 3.2));
+
+                html += `<td class="p-1">
+                    <div class="${colorClass} rounded-xl py-2 px-1 text-[10px] font-bold transition hover:scale-105 cursor-default flex flex-col items-center justify-center min-h-[48px]">
+                        <span class="text-sm leading-none mb-0.5">${occupancy}%</span>
+                        <span class="text-[8px] opacity-80 font-medium whitespace-nowrap">${studentCount} alunos</span>
+                    </div>
+                </td>`;
+            });
+            html += `</tr>`;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 flex items-center justify-end gap-3 text-[9px] text-slate-400 uppercase tracking-widest font-bold">
+                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-100 border border-slate-200"></span> Vazio</span>
+                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-orange-200"></span> Médio</span>
+                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span> Lotado</span>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        this.update();
+    },
+
+    update: function () {
+        // No real update logic needed for this mock version yet, 
+        // but would fetch booking data here
+    }
+});
+
+// ===== CHART 4: FINANCIAL HEALTH =====
+registerWidget({
+    id: 'franchisee-financial-health-chart',
+    name: 'Saúde Financeira',
+    description: 'Recebimentos, Pendências e Inadimplência',
+    size: 'col-span-12 md:col-span-8',
+    category: 'Financeiro',
+    icon: 'fa-solid fa-file-invoice-dollar',
+
+    actions: `
+        <button onclick="showWidgetInfo('financial')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all shadow-sm group" title="Como analisar este gráfico?">
+            <i class="fa-regular fa-circle-question text-xs transition-transform group-hover:rotate-12"></i> Entenda
+        </button>
+    `,
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="relative w-full h-64">
+                <canvas id="chart-financial-health"></canvas>
+            </div>
+            <div id="chart-financial-error" class="hidden text-center text-red-500 text-xs mt-2 italic">Erro ao carregar dados financeiros</div>
+        `;
+        this.update();
+    },
+
+    update: function () {
+        setTimeout(() => {
+            const canvas = document.getElementById('chart-financial-health');
+            if (canvas && typeof Chart !== 'undefined') {
+                if (window.finHealthChartInstance) window.finHealthChartInstance.destroy();
+
+                const ctx = canvas.getContext('2d');
+                
+                const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+                // Mock data
+                const received = [15000, 16500, 16000, 18000, 19500, 21000];
+                const pending = [2000, 1500, 1800, 2200, 2500, 5000]; // Current month has more pending
+                const overdue = [500, 800, 400, 600, 300, 100]; // Old inputs settle or stay overdue
+                
+                window.finHealthChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Recebido',
+                                data: received,
+                                backgroundColor: 'rgba(34, 197, 94, 0.6)', // Green
+                                barPercentage: 0.6,
+                            },
+                            {
+                                label: 'Pendente',
+                                data: pending,
+                                backgroundColor: 'rgba(251, 191, 36, 0.6)', // Amber
+                                barPercentage: 0.6,
+                            },
+                             {
+                                label: 'Inadimplente',
+                                data: overdue,
+                                backgroundColor: 'rgba(239, 68, 68, 0.6)', // Red
+                                barPercentage: 0.6,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { stacked: true, grid: { display: false } },
+                            y: { 
+                                stacked: true, 
+                                grid: { color: '#f1f5f9' },
+                                ticks: { 
+                                    callback: function(value) {
+                                        return 'R$ ' + value / 1000 + 'k';
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }, 300);
+    }
+});
+
+// ===== CHART 5: ENGAGEMENT HISTOGRAM =====
+registerWidget({
+    id: 'franchisee-engagement-chart',
+    name: 'Curva de Engajamento',
+    description: 'Frequência média mensal dos alunos (Risco de Evasão)',
+    size: 'col-span-12 md:col-span-4',
+    category: 'Analytics',
+    icon: 'fa-solid fa-heart-pulse',
+
+    actions: `
+        <button onclick="showWidgetInfo('engagement')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all shadow-sm group" title="Como analisar este gráfico?">
+            <i class="fa-regular fa-circle-question text-xs transition-transform group-hover:rotate-12"></i> Entenda
+        </button>
+    `,
+
+    render: function (container) {
+        container.innerHTML = `
+            <div class="relative w-full h-64">
+                <canvas id="chart-engagement"></canvas>
+            </div>
+            <div id="chart-engagement-error" class="hidden text-center text-red-500 text-xs mt-2 italic">Erro ao carregar dados de engajamento</div>
+        `;
+        this.update();
+    },
+
+    update: function () {
+        setTimeout(() => {
+            const canvas = document.getElementById('chart-engagement');
+            if (canvas && typeof Chart !== 'undefined') {
+                if (window.engagementChartInstance) window.engagementChartInstance.destroy();
+
+                const ctx = canvas.getContext('2d');
+                
+                // Bins: 0-4 checkins (Risk), 5-8 (Average), 9-12 (Good), 12+ (Super)
+                const data = [15, 45, 30, 10]; // Percentages or counts
+                const labels = ['Risco (0-4)', 'Média (5-8)', 'Bom (9-12)', 'Super (12+)'];
+                const colors = [
+                    'rgba(239, 68, 68, 0.6)',
+                    'rgba(251, 191, 36, 0.6)',
+                    'rgba(34, 197, 94, 0.6)',
+                    'rgba(59, 130, 246, 0.6)'
+                ];
+
+                window.engagementChartInstance = new Chart(ctx, {
+                    type: 'bar', // Using horizontal bar for distribution
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Alunos',
+                            data: data,
+                            backgroundColor: colors,
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        }, 300);
+    }
+});
+
+
+// ===== INFO MODAL HELPER =====
+window.showWidgetInfo = function (type) {
+    const infos = {
+        'churn': {
+            title: 'Funil de Retenção (Churn Rate)',
+            desc: 'Este gráfico mostra a relação entre novos alunos (verde) e cancelamentos (vermelho/negativo) mês a mês.',
+            analysis: 'Seu objetivo é manter as barras verdes maiores que as vermelhas. Um aumento excessivo nas barras vermelhas indica problemas na qualidade das aulas ou no atendimento.'
+        },
+        'belt': {
+            title: 'Distribuição por Graduação',
+            desc: 'Visualização da proporção de alunos em cada faixa, da branca à preta.',
+            analysis: 'Uma academia saudável tem formato de pirâmide: base larga de faixas brancas e afunilamento natural. Se faltam faixas brancas, você precisa melhorar o marketing. Se faltam graduados, o problema é retenção.'
+        },
+        'heatmap': {
+            title: 'Mapa de Calor de Ocupação',
+            desc: 'Tabela que mostra a densidade de alunos por dia e horário.',
+            analysis: 'Use para otimizar a grade. Horários vermelhos estão superlotados (considere abrir turma extra ou limitar check-in). Horários brancos/verdes estão ociosos e geram prejuízo operacional.'
+        },
+        'financial': {
+            title: 'Saúde Financeira',
+            desc: 'Comparativo mensal entre valores Recebidos, Pendentes (a receber) e Inadimplentes (atrasados).',
+            analysis: 'Foque em reduzir a barra vermelha (Inadimplência). A barra amarela (Pendente) deve se transformar em verde ao longo do mês. Se a amarela sobra muito no fim do mês, sua cobrança está falhando.'
+        },
+        'evolution': {
+            title: 'Análise de Evolução Técnica',
+            desc: 'Métricas consolidadas de presença e engajamento por modalidade.',
+            analysis: 'Compare a "Média por Aula" entre categorias para identificar horários ociosos ou sobrecarregados.'
+        },
+        'evolution-attendance': {
+            title: 'Frequência Média por Categoria',
+            desc: 'Média de alunos presentes por aula em cada modalidade (BJJ, Kids, etc).',
+            analysis: 'Use para identificar quais categorias têm maior densidade. Valores baixos podem indicar necessidade de marketing ou mudança de horário.'
+        },
+        'evolution-engagement': {
+            title: 'Score de Engajamento',
+            desc: 'Mede a fidelidade dos alunos em relação à sua modalidade principal.',
+            analysis: 'Scores próximos a 10 indicam alta retenção. Quedas repentinas sugerem desmotivação ou problemas técnicos na turma.'
+        },
+        'evolution-table': {
+            title: 'Estatísticas Técnicas',
+            desc: 'Visão tabular detalhada do desempenho por categoria.',
+            analysis: 'Analise a proporção entre Sessões Realizadas e Total de Presenças para validar a eficiência operacional da modalidade.'
+        }
+    };
+
+    const info = infos[type];
+    if (info) {
+        if (typeof window.openModal === 'function') {
+            window.openModal(`
+                <div class="text-center p-2">
+                    <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500 text-2xl">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">${info.title}</h3>
+                    <p class="text-sm text-slate-500 mb-6">${info.desc}</p>
+                    
+                    <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-left">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            <i class="fa-solid fa-magnifying-glass-chart mr-1"></i> Como Analisar:
+                        </p>
+                        <p class="text-xs text-slate-700 leading-relaxed font-medium">
+                            ${info.analysis}
+                        </p>
+                    </div>
+
+                    <button onclick="closeModal()" class="w-full py-4 orange-gradient text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-orange-200 transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-8">
+                        Entendi
+                    </button>
+                </div>
+            `);
+        } else {
+            console.error('Modal function not found');
+            alert(`${info.title}\n\n${info.analysis}`);
+        }
+    }
+};
+
+// Global cache for technical stats to avoid triple fetching
+window._cachedTechnicalStats = null;
+window._techStatsFetching = false;
+
+async function getTechnicalStats() {
+    if (window._cachedTechnicalStats) return window._cachedTechnicalStats;
+    if (window._techStatsFetching) {
+        // Simple poll
+        return new Promise(resolve => {
+            const interval = setInterval(() => {
+                if (window._cachedTechnicalStats) {
+                    clearInterval(interval);
+                    resolve(window._cachedTechnicalStats);
+                }
+            }, 100);
+        });
+    }
+
+    const fId = localStorage.getItem('franqueado_franchise_id') || localStorage.getItem('franchiseId');
+    if (!fId) return null;
+
+    window._techStatsFetching = true;
+    try {
+        const apiUrl = window.API_BASE_URL || window.API_URL || 'http://localhost:5000/api/v1';
+        const res = await fetch(`${apiUrl}/classes/franchise/${fId}/technical-stats`, {
+            headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        const result = await res.json();
+        if (result.success) {
+            window._cachedTechnicalStats = result.data.categories || [];
+            return window._cachedTechnicalStats;
+        }
+    } catch (e) {
+        console.error("Error fetching tech stats:", e);
+    } finally {
+        window._techStatsFetching = false;
+    }
+    return null;
+}
+
+// ===== EVOLUTION 1: ATTENDANCE CHART =====
+registerWidget({
+    id: 'franchisee-evolution-attendance',
+    name: 'Presença por Categoria',
+    description: 'Capacidade média ocupada por aula',
+    size: 'col-span-12 md:col-span-6',
+    category: 'Analytics',
+    icon: 'fa-solid fa-users-viewfinder',
+    actions: `<button onclick="showWidgetInfo('evolution-attendance')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all shadow-sm group"><i class="fa-regular fa-circle-question text-xs transition-transform group-hover:rotate-12"></i> Entenda</button>`,
+    render: function (container) {
+        container.innerHTML = `<div class="h-[250px] relative"><canvas id="canvas-evolution-attendance"></canvas></div>`;
+        this.update();
+    },
+    update: async function () {
+        const stats = await getTechnicalStats();
+        const canvas = document.getElementById('canvas-evolution-attendance');
+        if (!canvas || !stats || typeof Chart === 'undefined') return;
+        
+        if (window.chartEvAtt) window.chartEvAtt.destroy();
+        window.chartEvAtt = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: stats.map(s => s.category),
+                datasets: [{
+                    label: 'Média/Aula',
+                    data: stats.map(s => s.avgAttendance),
+                    backgroundColor: 'rgba(255, 107, 0, 0.6)',
+                    borderColor: '#FF6B00',
+                    borderWidth: 2,
+                    borderRadius: 12
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' }, color: '#94a3b8' } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 }, color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+});
+
+// ===== EVOLUTION 2: ENGAGEMENT CHART =====
+registerWidget({
+    id: 'franchisee-evolution-engagement',
+    name: 'Score de Engajamento',
+    description: 'Frequência relativa dos alunos',
+    size: 'col-span-12 md:col-span-6',
+    category: 'Analytics',
+    icon: 'fa-solid fa-bolt',
+    actions: `<button onclick="showWidgetInfo('evolution-engagement')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all shadow-sm group"><i class="fa-regular fa-circle-question text-xs transition-transform group-hover:rotate-12"></i> Entenda</button>`,
+    render: function (container) {
+        container.innerHTML = `<div class="h-[250px] relative"><canvas id="canvas-evolution-engagement"></canvas></div>`;
+        this.update();
+    },
+    update: async function () {
+        const stats = await getTechnicalStats();
+        const canvas = document.getElementById('canvas-evolution-engagement');
+        if (!canvas || !stats || typeof Chart === 'undefined') return;
+        
+        const engagementData = stats.map(s => Math.min(10, (s.avgAttendance / Math.max(1, s.studentCount) * 10)));
+
+        if (window.chartEvEng) window.chartEvEng.destroy();
+        window.chartEvEng = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: stats.map(s => s.category),
+                datasets: [{
+                    label: 'Score',
+                    data: engagementData,
+                    borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true, tension: 0.4, pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' }, color: '#94a3b8' } },
+                    y: { beginAtZero: true, max: 10, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 }, color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+});
+
+// ===== EVOLUTION 3: STATS TABLE =====
+registerWidget({
+    id: 'franchisee-evolution-table',
+    name: 'Estatísticas Técnicas',
+    description: 'Desempenho detalhado por modalidade',
+    size: 'col-span-12',
+    category: 'Analytics',
+    icon: 'fa-solid fa-table-list',
+    actions: `<button onclick="showWidgetInfo('evolution-table')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 transition-all shadow-sm group"><i class="fa-regular fa-circle-question text-xs transition-transform group-hover:rotate-12"></i> Entenda</button>`,
+    render: function (container) {
+        container.innerHTML = `
+            <div class="overflow-hidden bg-white border border-slate-100 rounded-2xl">
+                <table class="w-full text-left text-[11px]">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
+                            <th class="px-6 py-4">Categoria</th>
+                            <th class="px-6 py-4 text-center">Total Presenças</th>
+                            <th class="px-6 py-4 text-center">Sessões Realizadas</th>
+                            <th class="px-6 py-4 text-center">Alunos Ativos</th>
+                            <th class="px-6 py-4 text-right">Média/Aula</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tech-stats-table-body" class="divide-y divide-slate-50">
+                        <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400 italic">Carregando dados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+        this.update();
+    },
+    update: async function () {
+        const tableBody = document.getElementById('tech-stats-table-body');
+        if (!tableBody) return;
+        const stats = await getTechnicalStats();
+        if (!stats || stats.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400 italic">Sem dados disponíveis.</td></tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = stats.map(s => `
+            <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="px-6 py-4"><span class="font-bold text-slate-700 uppercase text-[10px] tracking-tight">${s.category || 'N/A'}</span></td>
+                <td class="px-6 py-4 text-center font-bold text-slate-600">${s.totalPresences || 0}</td>
+                <td class="px-6 py-4 text-center text-slate-500 font-medium">${s.sessionsCount || 0}</td>
+                <td class="px-6 py-4 text-center text-slate-500 font-medium">${s.studentCount || 0}</td>
+                <td class="px-6 py-4 text-right"><span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-black border border-slate-200">${(parseFloat(s.avgAttendance)||0).toFixed(1)}</span></td>
+            </tr>
+        `).join('');
+    }
+});
 
 console.log('✅ Franchisee Widgets loaded');

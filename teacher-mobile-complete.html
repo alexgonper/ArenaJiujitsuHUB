@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arena BJJ | Dark Combat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CONFIGURAÇÃO DARK COMBAT (HARDCODED) --- */
+        :root {
+            --bg-app: #0f172a;        /* Slate 900 */
+            --bg-card: #1e293b;       /* Slate 800 */
+            --bg-header: #0f172a;     /* Slate 900 */
+            --bg-nav: #1e293b;        /* Slate 800 */
+            
+            --text-primary: #f8fafc;  /* Slate 50 */
+            --text-secondary: #94a3b8;/* Slate 400 */
+            
+            --brand-color: #f59e0b;   /* Amber 500 (Combat feel) */
+            --brand-contrast: #000000;
+            
+            --radius-card: 0.5rem;    /* Bordas mais quadradas */
+            --radius-btn: 0.25rem;
+            
+            --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+            
+            --font-main: 'Roboto Condensed', sans-serif;
+            
+            --border-width: 1px;
+            --border-color: #334155;  /* Slate 700 */
+        }
+
+        /* --- APLICAÇÃO GERAL --- */
+        body { 
+            background-color: #020617; /* Fundo da página (fora do app) */
+            font-family: var(--font-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        /* Chassis do Celular */
+        .phone-frame {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background-color: var(--bg-app);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 640px) {
+            .phone-frame {
+                height: 850px;
+                border-radius: 2rem;
+                border: 8px solid #334155;
+                box-shadow: 0 0 0 2px #0f172a, 0 25px 50px -12px rgba(0,0,0,0.7);
+            }
+        }
+
+        /* Componentes de Tema */
+        .theme-card {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            border: var(--border-width) solid var(--border-color);
+        }
+
+        .theme-text-primary { color: var(--text-primary); }
+        .theme-text-secondary { color: var(--text-secondary); }
+        
+        .theme-btn-primary {
+            background-color: var(--brand-color);
+            color: var(--brand-contrast);
+            border-radius: var(--radius-btn);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .theme-header {
+            background-color: var(--bg-header);
+            color: var(--text-primary);
+            border-bottom: var(--border-width) solid var(--border-color);
+        }
+
+        .theme-nav {
+            background-color: var(--bg-nav);
+            border-top: var(--border-width) solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .theme-nav-active {
+            color: var(--brand-color);
+        }
+
+        /* Utilitários */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .screen-enter { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MOCKUP PHONE CONTAINER -->
+    <div id="app-frame" class="phone-frame">
+        
+        <!-- STATUS BAR -->
+        <div class="h-10 flex items-center justify-between px-6 pt-2 select-none z-20 theme-header border-b-0 bg-transparent">
+            <span class="text-xs font-bold theme-text-primary" id="clock">09:41</span>
+            <div class="flex gap-1.5 items-center theme-text-primary opacity-80">
+                <i class="fa-solid fa-signal text-[10px]"></i>
+                <i class="fa-solid fa-wifi text-[10px]"></i>
+                <i class="fa-solid fa-battery-full text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- APP HEADER -->
+        <header class="px-5 py-4 flex items-center justify-between z-10 sticky top-0 theme-header shadow-lg shadow-black/20">
+            <div class="flex items-center gap-3">
+                <div id="header-logo-container" class="w-10 h-10 bg-white rounded flex items-center justify-center text-lg shadow-sm overflow-hidden">
+                    <i id="header-logo-icon" class="hidden fa-solid fa-medal"></i>
+                    <img id="header-logo-img" class="w-full h-full object-contain object-center p-1" src="arena-hub-logo.png" alt="Arena Hub">
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight theme-text-primary tracking-wide" id="header-user-name">PROFESSOR</h1>
+                    <p class="text-[10px] font-bold tracking-widest theme-text-secondary uppercase" id="header-academy-name">Arena BJJ</p>
+                </div>
+            </div>
+            <button id="header-profile-btn" onclick="navTo('profile')" class="w-10 h-10 rounded-full flex items-center justify-center theme-card relative hover:bg-slate-700 transition-colors border-2 border-white shadow-lg overflow-hidden">
+                <i id="header-profile-icon" class="fa-regular fa-user text-sm theme-text-primary"></i>
+                <img id="header-profile-img" src="" alt="Perfil" class="w-full h-full object-cover hidden" />
+            </button>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <main id="app-content" class="flex-1 overflow-y-auto pb-28 relative hide-scrollbar scroll-smooth">
+            
+            <!-- TELA 1: DASHBOARD -->
+            <div id="screen-dashboard" class="p-5 space-y-6 screen-enter">
+                
+                <!-- Live Card (Now First) -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-sm theme-text-primary uppercase tracking-wide border-l-4 border-[var(--brand-color)] pl-2">Aula Ativa</h3>
+                        <span class="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded animate-pulse uppercase" id="live-badge">Ao Vivo</span>
+                    </div>
+                    
+                    <div class="theme-card overflow-hidden border-slate-700" id="live-class-container">
+                        <div class="p-5 relative overflow-hidden bg-slate-800 border-b border-slate-700">
+                            <!-- Background Image Mock -->
+                            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?q=80&w=500&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
+                            
+                            <div class="relative z-10">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--brand-color)] text-black mb-2 inline-block uppercase" id="live-class-category">Jiu-Jitsu</span>
+                                <h3 class="text-2xl font-bold text-white uppercase italic" id="live-class-name">Turma Avançada</h3>
+                                <div class="flex items-center gap-4 mt-3 text-slate-300 text-xs font-medium">
+                                    <span id="live-class-time"><i class="fa-regular fa-clock text-[var(--brand-color)] mr-1"></i> --:-- - --:--</span>
+                                    <span><i class="fa-solid fa-location-dot text-[var(--brand-color)] mr-1"></i> Tatame 1</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-slate-900/50">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <span class="text-3xl font-bold theme-text-primary" id="live-count">0</span>
+                                    <span class="text-xs theme-text-secondary font-medium uppercase">/ <span id="live-total">0</span> Confirmados</span>
+                                </div>
+                                <button onclick="confirmAll()" class="theme-btn-primary px-5 py-3 text-xs shadow-lg shadow-orange-500/20 hover:bg-orange-400 transition-colors">
+                                    Confirmar Todos
+                                </button>
+                            </div>
+                            <!-- Separator -->
+                            <div class="h-px bg-slate-700 mb-3"></div>
+                            <div class="space-y-2" id="live-list">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid (Now 3 Columns, No Scroll) -->
+                <div class="grid grid-cols-3 gap-2">
+                     <!-- Stat: Streak -->
+                    <div class="p-3 theme-card bg-gradient-to-br from-slate-800 to-slate-900 border border-orange-500/30 flex flex-col justify-between h-full">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-7 h-7 rounded bg-slate-700 flex items-center justify-center theme-text-primary text-orange-500">
+                                <i class="fa-solid fa-fire text-[10px]"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="theme-text-secondary text-[8px] font-bold uppercase tracking-wider leading-tight">Streak</p>
+                            <p class="text-xl font-bold text-orange-500 mt-0.5" id="streak-display">0 DIAS</p>
+                        </div>
+                    </div>
+
+                    <!-- Stat 1: Students -->
+                    <div class="p-3 theme-card bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col justify-between h-full">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-7 h-7 rounded bg-slate-700 flex items-center justify-center theme-text-primary">
+                                <i class="fa-solid fa-users text-[10px]"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-emerald-400" id="stat-delta">+0</span>
+                        </div>
+                        <div>
+                            <p class="theme-text-secondary text-[8px] font-bold uppercase tracking-wider leading-tight">Alunos Sem.</p>
+                            <p class="text-xl font-bold theme-text-primary mt-0.5" id="stat-week-total">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Stat 2: Attendance -->
+                    <div class="p-3 theme-card bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col justify-between h-full">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-7 h-7 rounded bg-slate-700 flex items-center justify-center theme-text-primary">
+                                <i class="fa-solid fa-check text-[10px]"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="theme-text-secondary text-[8px] font-bold uppercase tracking-wider leading-tight">Presença</p>
+                            <p class="text-xl font-bold theme-text-primary mt-0.5" id="stat-week-rate">0%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELA 2: STUDENTS -->
+            <div id="screen-students" class="hidden p-5 space-y-4 screen-enter">
+                <div class="sticky top-0 pt-2 pb-2 z-10 bg-[var(--bg-app)]">
+                    <h2 class="text-xl font-bold theme-text-primary mb-4 border-l-4 border-[var(--brand-color)] pl-3 uppercase">Alunos</h2>
+                    
+                    <div class="relative mb-4">
+                        <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-500 text-sm"></i>
+                        <input type="text" id="mobile-search" oninput="renderStudents()" placeholder="BUSCAR ALUNO..." class="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-[var(--brand-color)] placeholder-slate-600 uppercase font-bold tracking-wide">
+                    </div>
+                    
+                    <div class="flex gap-2 mb-4">
+                         <select onchange="filterStudentsScope(this.value)" id="scope-select-filter" class="flex-1 bg-slate-100 text-slate-700 text-[10px] font-bold uppercase py-2 px-3 rounded-xl border border-slate-200 focus:outline-none">
+                            <option value="Todos">Todos os Alunos</option>
+                            <option value="Meus">Meus Alunos</option>
+                        </select>
+                        <select onchange="filterStudentsBelt(this.value)" id="belt-select-filter" class="flex-1 bg-slate-100 text-slate-700 text-[10px] font-bold uppercase py-2 px-3 rounded-xl border border-slate-200 focus:outline-none">
+                            <option value="Todas">Todas as Faixas</option>
+                            <option value="Branca">Faixa Branca</option>
+                            <option value="Cinza">Faixa Cinza</option>
+                            <option value="Amarela">Faixa Amarela</option>
+                            <option value="Laranja">Faixa Laranja</option>
+                            <option value="Verde">Faixa Verde</option>
+                            <option value="Azul">Faixa Azul</option>
+                            <option value="Roxa">Faixa Roxa</option>
+                            <option value="Marrom">Faixa Marrom</option>
+                            <option value="Preta">Faixa Preta</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="students-list-mobile" class="space-y-3 pb-20"></div>
+            </div>
+
+            <!-- TELA 3: SCHEDULE -->
+            <div id="screen-schedule" class="hidden p-5 space-y-5 screen-enter">
+                <h2 class="text-xl font-bold theme-text-primary border-l-4 border-[var(--brand-color)] pl-3 uppercase">Grade Semanal</h2>
+                
+                <div class="flex justify-between items-center p-3 theme-card bg-slate-800 border-slate-700">
+                    <button onclick="changeWeekOffset(-1)" class="w-8 h-8 flex items-center justify-center theme-text-secondary hover:text-white"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div class="text-center">
+                        <span class="block text-[10px] theme-text-secondary uppercase tracking-widest">Hoje</span>
+                        <span class="block text-sm font-bold theme-text-primary uppercase" id="current-date-display">Sexta, 24 Jan</span>
+                    </div>
+                    <button onclick="changeWeekOffset(1)" class="w-8 h-8 flex items-center justify-center theme-text-secondary hover:text-white"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+
+                <!-- Day Tabs -->
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+                    <button onclick="showScheduleDay(0)" id="day-tab-0" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap">DOM</button>
+                    <button onclick="showScheduleDay(1)" id="day-tab-1" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap">SEG</button>
+                    <button onclick="showScheduleDay(2)" id="day-tab-2" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap">TER</button>
+                    <button onclick="showScheduleDay(3)" id="day-tab-3" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap">QUA</button>
+                    <button onclick="showScheduleDay(4)" id="day-tab-4" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap">QUI</button>
+                    <button onclick="showScheduleDay(5)" id="day-tab-5" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap">SEX</button>
+                    <button onclick="showScheduleDay(6)" id="day-tab-6" class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap">SÁB</button>
+                </div>
+
+                <div class="space-y-0 relative" id="schedule-day-container">
+                    <!-- Timeline vertical line (Hidden, handled per item now) -->
+                    <!-- <div class="absolute left-[2.3rem] top-4 bottom-4 w-px bg-slate-800"></div> -->
+
+                    <!-- Classes will be rendered here -->
+                </div>
+            </div>
+
+            <!-- TELA 4: GRADUATIONS -->
+            <div id="screen-graduations" class="hidden p-5 space-y-5 screen-enter">
+                <div class="theme-btn-primary p-6 relative overflow-hidden shadow-lg border-b-4 border-orange-700">
+                    <div class="relative z-10">
+                        <h2 class="text-2xl font-bold text-black uppercase italic">Graduações</h2>
+                        <p class="text-black/80 text-sm font-bold mt-1" id="eligible-count-display">0 ALUNOS ELEGÍVEIS</p>
+                    </div>
+                    <i class="fa-solid fa-certificate absolute -right-4 -bottom-6 text-9xl text-white/20 rotate-12"></i>
+                </div>
+                <div class="space-y-3" id="graduations-list-mobile"></div>
+            </div>
+
+            <!-- TELA 5: PROFILE -->
+            <div id="screen-profile" class="hidden p-0 screen-enter">
+                <div class="theme-header pt-12 pb-16 px-6 text-center relative border-b border-slate-800 bg-gradient-to-b from-slate-900 to-slate-800">
+                <div class="w-28 h-28 rounded-full p-1 mx-auto mb-4 border-2 border-white bg-slate-900 shadow-2xl flex items-center justify-center overflow-hidden relative">
+                    <img id="profile-photo-img" src="" alt="Foto do perfil" class="w-full h-full object-cover rounded-full hidden absolute inset-0 z-10" />
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-4xl font-black relative z-0" id="profile-avatar-mobile">P</div>
+                </div>
+                    <h2 class="text-2xl font-bold theme-text-primary uppercase italic tracking-wide" id="profile-name-mobile">Professor</h2>
+                    <p class="text-[var(--brand-color)] text-xs font-bold uppercase tracking-widest mt-1" id="profile-role-mobile">Head Coach • Arena Matriz</p>
+                </div>
+                
+                <div class="px-5 -mt-8 grid grid-cols-2 gap-3 mb-8">
+                    <div class="p-4 theme-card text-center shadow-lg bg-slate-800 border-t-2 border-[var(--brand-color)]">
+                        <span class="block text-[10px] theme-text-secondary uppercase font-bold tracking-widest">Faixa</span>
+                        <span class="block text-xl font-bold theme-text-primary mt-1" id="profile-belt-mobile">PRETA</span>
+                    </div>
+                    <div class="p-4 theme-card text-center shadow-lg bg-slate-800 border-t-2 border-[var(--brand-color)]">
+                        <span class="block text-[10px] theme-text-secondary uppercase font-bold tracking-widest">Grau</span>
+                        <span class="block text-xl font-bold theme-text-primary mt-1" id="profile-degree-mobile">2º DAN</span>
+                    </div>
+                </div>
+
+                <div class="px-5 space-y-3">
+                    <button class="w-full p-4 theme-card flex items-center justify-between hover:bg-slate-700 transition-colors group">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-user-pen text-[var(--brand-color)]"></i>
+                            <span class="text-sm font-bold theme-text-primary uppercase">Editar Dados</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs theme-text-secondary group-hover:text-white"></i>
+                    </button>
+                    <button class="w-full p-4 theme-card flex items-center justify-between hover:bg-slate-700 transition-colors group">
+                         <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-clock-rotate-left text-[var(--brand-color)]"></i>
+                            <span class="text-sm font-bold theme-text-primary uppercase">Histórico</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs theme-text-secondary group-hover:text-white"></i>
+                    </button>
+                    <button onclick="handleLogout()" class="w-full mt-6 bg-red-900/20 border border-red-900/50 p-4 rounded flex items-center justify-center gap-2 text-red-500 font-bold text-sm hover:bg-red-900/40 uppercase tracking-wide">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair da Conta
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- BOTTOM NAV -->
+        <nav class="theme-nav px-6 py-2 pb-5 flex justify-between items-center z-20 shadow-2xl shadow-black">
+            <button onclick="navTo('dashboard')" id="tab-dashboard" class="flex flex-col items-center gap-1 w-12 theme-nav-active transition-colors">
+                <i class="fa-solid fa-house text-xl mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Home</span>
+            </button>
+            <button onclick="navTo('students')" id="tab-students" class="flex flex-col items-center gap-1 w-12 hover:text-white transition-colors">
+                <i class="fa-solid fa-users text-xl mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Alunos</span>
+            </button>
+            <div class="relative -top-6">
+                <button onclick="openQRScanner()" class="w-16 h-16 theme-btn-primary rounded-full flex items-center justify-center shadow-lg shadow-orange-500/20 active:scale-95 transition-transform border-8 border-[var(--bg-app)]">
+                    <i class="fa-solid fa-qrcode text-2xl"></i>
+                </button>
+            </div>
+            <button onclick="navTo('schedule')" id="tab-schedule" class="flex flex-col items-center gap-1 w-12 hover:text-white transition-colors">
+                <i class="fa-solid fa-calendar-day text-xl mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Grade</span>
+            </button>
+            <button onclick="navTo('graduations')" id="tab-graduations" class="flex flex-col items-center gap-1 w-12 hover:text-white transition-colors relative">
+                <i class="fa-solid fa-medal text-xl mb-0.5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Graduar</span>
+                <span class="absolute top-0 right-2 w-2 h-2 bg-red-600 rounded-full border border-slate-900" id="graduation-badge"></span>
+            </button>
+        </nav>
+
+        <!-- TOAST -->
+        <div id="toast" class="absolute top-20 left-1/2 transform -translate-x-1/2 bg-[var(--brand-color)] text-black px-6 py-3 rounded shadow-xl flex items-center gap-3 opacity-0 transition-opacity z-50 pointer-events-none min-w-[200px] justify-center border-2 border-white">
+            <i class="fa-solid fa-check-circle text-black text-xl"></i>
+            <span class="text-xs font-bold uppercase tracking-wide" id="toast-msg">Sucesso</span>
+        </div>
+
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div id="ui-confirm-modal" class="hidden relative z-50">
+        <!-- Backdrop -->
+        <div id="confirm-backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        
+        <!-- Panel -->
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div id="confirm-panel" class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl transform scale-95 opacity-0 transition-all duration-300 p-6 relative">
+                
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4 text-[var(--brand-color)]">
+                        <i class="fa-solid fa-circle-question text-xl"></i>
+                    </div>
+                    <h3 id="confirm-title" class="text-lg font-bold text-white mb-2">Confirmação</h3>
+                    <p id="confirm-msg" class="text-sm text-slate-400 mb-6 leading-relaxed">Tem certeza que deseja continuar?</p>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="closeConfirmModal()" class="flex-1 py-3 rounded-xl bg-slate-700 text-slate-300 font-bold text-xs uppercase hover:bg-slate-600 transition-colors">
+                            Cancelar
+                        </button>
+                        <button id="btn-confirm-yes" class="flex-1 py-3 rounded-xl theme-btn-primary text-black font-bold text-xs uppercase hover:brightness-110 transition-colors shadow-lg">
+                            Confirmar
+                        </button>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script src="api-config.js"></script>
+    <script>
+        // GLOBAL STATE
+        let currentTeacher = null;
+        let dashboardData = null;
+        let allStudents = [];
+        let filteredStudents = [];
+        let currentBeltFilter = 'Todas';
+        let currentScopeFilter = 'Todos'; // 'Todos' or 'Meus'
+        let currentScheduleDay = new Date().getDay();
+        let allWeeklyClasses = {};
+        let eligibleGraduations = [];
+
+        // Belt Styles
+        function getBeltStyle(belt) {
+            const beltColors = {
+                'Branca': { bg: '#F8FAFC', text: '#334155', border: '#CBD5E1' },
+                'Cinza': { bg: '#6B7280', text: '#FFFFFF', border: '#6B7280' },
+                'Amarela': { bg: '#FCD34D', text: '#713F12', border: '#FCD34D' },
+                'Laranja': { bg: '#FF6B00', text: '#FFFFFF', border: '#FF6B00' },
+                'Verde': { bg: '#22C55E', text: '#FFFFFF', border: '#22C55E' },
+                'Azul': { bg: '#3B82F6', text: '#FFFFFF', border: '#3B82F6' },
+                'Roxa': { bg: '#A855F7', text: '#FFFFFF', border: '#A855F7' },
+                'Marrom': { bg: '#92400E', text: '#FFFFFF', border: '#92400E' },
+                'Preta': { bg: '#09090b', text: '#FFFFFF', border: '#000000' }
+            };
+            return beltColors[belt] || beltColors['Branca'];
+        }
+
+        // Navigation
+        function navTo(screenId) {
+            ['dashboard', 'students', 'schedule', 'graduations', 'profile'].forEach(id => {
+                document.getElementById(`screen-${id}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${id}`);
+                if(btn) {
+                    btn.classList.remove('theme-nav-active');
+                }
+            });
+
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+            const active = document.getElementById(`tab-${screenId}`);
+            if(active) {
+                active.classList.add('theme-nav-active');
+            }
+
+            // Load data on demand
+            if(screenId === 'students') loadStudents();
+            if(screenId === 'schedule') loadSchedule();
+            if(screenId === 'graduations') loadGraduations();
+        }
+
+        // Initialize
+        async function init() {
+            // Check auth
+            const stored = localStorage.getItem('arena_teacher');
+            if (!stored) {
+                window.location.href = 'teacher-login.html';
+                return;
+            }
+            currentTeacher = JSON.parse(stored);
+            
+            // Load dashboard
+            await loadDashboard();
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/teachers/${currentTeacher._id}/dashboard`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    dashboardData = data.data;
+                    if (dashboardData.teacher) {
+                        currentTeacher = dashboardData.teacher;
+                        localStorage.setItem('arena_teacher', JSON.stringify(currentTeacher));
+                        updateProfile();
+                    }
+                    renderDashboard();
+                }
+            } catch (e) {
+                console.error('Dashboard load error:', e);
+                showToast('Erro ao carregar dados', 'error');
+            }
+        }
+
+        function renderDashboard() {
+            if (!dashboardData) return;
+            
+            // Header updates
+            const firstName = (currentTeacher.name || 'Professor').split(' ')[0];
+            document.getElementById('header-user-name').textContent = firstName;
+            
+            const franchiseName = (currentTeacher.franchiseId && currentTeacher.franchiseId.name) ? currentTeacher.franchiseId.name : 'Arena BJJ';
+            document.getElementById('header-academy-name').textContent = franchiseName;
+            
+            // Update Branding if available
+            if (currentTeacher.franchiseId && currentTeacher.franchiseId.branding) {
+                applyBranding(currentTeacher.franchiseId);
+            }
+            
+            // Update stats
+            const stats = dashboardData.stats || {};
+            document.getElementById('stat-week-total').textContent = stats.weekTotal || 0;
+            document.getElementById('stat-week-rate').textContent = `${stats.weekRate || 0}%`;
+            document.getElementById('streak-display').textContent = `🔥 ${stats.streak || 0} DIAS`;
+            
+            // Update live class
+            const agenda = dashboardData.agenda || [];
+            if (agenda.length > 0) {
+                const liveClass = getActiveClass(agenda);
+                if (liveClass) {
+                    renderLiveClass(liveClass);
+                    loadClassAttendance(liveClass._id);
+                }
+            }
+        }
+
+        function getActiveClass(agenda) {
+            const now = new Date();
+            const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            return agenda.find(cls => currentTime >= cls.startTime && currentTime <= cls.endTime) || agenda[0];
+        }
+
+        function renderLiveClass(cls) {
+            document.getElementById('live-class-name').textContent = cls.name;
+            document.getElementById('live-class-category').textContent = cls.category || 'Geral';
+            document.getElementById('live-class-time').innerHTML = `<i class="fa-regular fa-clock text-[var(--brand-color)] mr-1"></i> ${cls.startTime} - ${cls.endTime}`;
+        }
+
+        async function loadClassAttendance(classId) {
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/teachers/classes/${classId}/attendance`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    filteredStudents = data.data || [];
+                    renderLiveList();
+                }
+            } catch (e) {
+                console.error('Attendance load error:', e);
+            }
+        }
+
+        function renderLiveList() {
+            const list = document.getElementById('live-list');
+            const presentCount = filteredStudents.filter(s => s.status === 'confirmed' || s.checkInTime).length;
+            
+            document.getElementById('live-count').textContent = presentCount;
+            document.getElementById('live-total').textContent = filteredStudents.length;
+            
+            if (filteredStudents.length === 0) {
+                list.innerHTML = '<div class="text-center py-4 theme-text-secondary text-xs">Nenhum aluno reservado</div>';
+                return;
+            }
+            
+            list.innerHTML = filteredStudents.map(student => {
+                const s = student.studentId || student;
+                const isPresent = student.status === 'confirmed' || !!student.checkInTime;
+                const initials = s.name.substring(0, 2).toUpperCase();
+                const beltStyle = getBeltStyle(s.belt || 'Branca');
+                
+                return `
+                    <div class="flex items-center justify-between p-3 rounded border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded border border-slate-600 flex items-center justify-center font-bold text-xs" style="background: ${beltStyle.bg}; color: ${beltStyle.text};">${initials}</div>
+                            <div>
+                                <p class="font-bold theme-text-primary text-sm uppercase tracking-wide">${s.name}</p>
+                                <span class="text-[10px] theme-text-secondary font-bold uppercase bg-slate-900 px-1.5 py-0.5 rounded inline-block mt-1 border border-slate-700">${s.belt} ${s.degree !== 'Nenhum' ? s.degree : ''}</span>
+                            </div>
+                        </div>
+                        ${isPresent 
+                            ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>' 
+                            : `<button onclick="checkIn('${s._id}')" class="w-8 h-8 rounded bg-slate-900 border border-slate-600 flex items-center justify-center text-slate-400 hover:text-[var(--brand-color)] hover:border-[var(--brand-color)] transition-all"><i class="fa-solid fa-check"></i></button>`
+                        }
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function checkIn(studentId) {
+            try {
+                const franchiseId = typeof currentTeacher.franchiseId === 'object' 
+                    ? currentTeacher.franchiseId._id 
+                    : currentTeacher.franchiseId;
+                
+                const classId = dashboardData.agenda[0]._id;
+                
+                const res = await fetch(`${window.API_BASE_URL}/teachers/attendance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId,
+                        classId,
+                        teacherId: currentTeacher._id,
+                        franchiseId
+                    })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Presença confirmada!');
+                    loadClassAttendance(classId);
+                }
+            } catch (e) {
+                console.error('Check-in error:', e);
+                showToast('Erro ao confirmar presença', 'error');
+            }
+        }
+
+        async function confirmAll() {
+            const toConfirm = filteredStudents.filter(s => !s.checkInTime);
+            if (toConfirm.length === 0) {
+                showToast('Todos já confirmados!');
+                return;
+            }
+            
+            try {
+                const franchiseId = typeof currentTeacher.franchiseId === 'object' 
+                    ? currentTeacher.franchiseId._id 
+                    : currentTeacher.franchiseId;
+                const classId = dashboardData.agenda[0]._id;
+                
+                const promises = toConfirm.map(s => {
+                    const sid = s.studentId && studentId._id || s.studentId || s._id;
+                    return fetch(`${window.API_BASE_URL}/teachers/attendance`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            studentId: sid,
+                            classId,
+                            teacherId: currentTeacher._id,
+                            franchiseId
+                        })
+                    });
+                });
+                
+                await Promise.all(promises);
+                showToast(`${toConfirm.length} alunos confirmados!`);
+                loadClassAttendance(classId);
+            } catch (e) {
+                console.error('Confirm all error:', e);
+                showToast('Erro ao confirmar todos', 'error');
+            }
+        }
+
+        // Students
+        async function loadStudents() {
+            try {
+                // Determine which endpoint to call based on scope
+                const endpoint = currentScopeFilter === 'Meus' 
+                    ? `${window.API_BASE_URL}/teachers/${currentTeacher._id}/students`
+                    : `${window.API_BASE_URL}/students?franchiseId=${currentTeacher.franchiseId._id || currentTeacher.franchiseId}`;
+
+                const res = await fetch(endpoint);
+                const data = await res.json();
+                
+                if (data.success) {
+                    allStudents = data.data || [];
+                    renderStudents();
+                }
+            } catch (e) {
+                console.error('Students load error:', e);
+            }
+        }
+
+        function filterStudentsScope(scope) {
+            currentScopeFilter = scope;
+            loadStudents(); // Reload from API because the dataset changes
+        }
+
+        function renderStudents() {
+            const searchTerm = document.getElementById('mobile-search').value.toLowerCase();
+            const filtered = allStudents.filter(s => {
+                const matchesSearch = s.name.toLowerCase().includes(searchTerm);
+                const matchesBelt = currentBeltFilter === 'Todas' || s.belt === currentBeltFilter;
+                return matchesSearch && matchesBelt;
+            });
+            
+            const container = document.getElementById('students-list-mobile');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 theme-text-secondary">Nenhum aluno encontrado</div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(s => {
+                const initials = s.name.substring(0, 2).toUpperCase();
+                const beltStyle = getBeltStyle(s.belt || 'Branca');
+                
+                return `
+                    <div class="theme-card p-4 flex items-center gap-4 bg-slate-800 border-slate-700">
+                        <div class="w-12 h-12 rounded border border-slate-600 flex items-center justify-center font-bold" style="background: ${beltStyle.bg}; color: ${beltStyle.text};">${initials}</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold theme-text-primary uppercase text-sm tracking-wide">${s.name}</h3>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <p class="text-[10px] theme-text-secondary uppercase font-bold">Ativo</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-3 py-1 rounded-full uppercase whitespace-nowrap shadow-sm" style="background-color: ${beltStyle.bg}; color: ${beltStyle.text}; border: 1px solid ${beltStyle.border};">
+                            ${s.belt}${s.degree && s.degree !== 'Nenhum' ? ' • ' + s.degree + 'º GRAU' : ''}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterStudentsBelt(belt) {
+            currentBeltFilter = belt;
+            
+            // Update button styles
+            ['Todas', 'Branca', 'Azul', 'Roxa'].forEach(b => {
+                const btn = document.getElementById(`filter-${b}`);
+                if (btn) {
+                    if (b === belt) {
+                        btn.className = 'px-4 py-1.5 theme-btn-primary text-xs whitespace-nowrap';
+                    } else {
+                        btn.className = 'px-4 py-1.5 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap';
+                    }
+                }
+            });
+            
+            renderStudents();
+        }
+
+        // Schedule
+        async function loadSchedule() {
+            try {
+                // Use the teacher-specific endpoint to get only relevant classes
+                const res = await fetch(`${window.API_BASE_URL}/teachers/${currentTeacher._id}/schedule`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    allWeeklyClasses = data.data || { seg:[], ter:[], qua:[], qui:[], sex:[], sab:[], dom:[] };
+                    // Ensure the UI tabs reflect the current day (initialized to Today)
+                    showScheduleDay(currentScheduleDay);
+                }
+            } catch (e) {
+                console.error('Schedule load error:', e);
+            }
+        }
+
+        function renderSchedule() {
+            const dayMap = { 0: 'dom', 1: 'seg', 2: 'ter', 3: 'qua', 4: 'qui', 5: 'sex', 6: 'sab' };
+            const dayKey = dayMap[currentScheduleDay];
+            const dayClasses = allWeeklyClasses[dayKey] || [];
+            
+            const container = document.getElementById('schedule-day-container');
+            
+            if (dayClasses.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 theme-text-secondary">Sem aulas neste dia</div>';
+                return;
+            }
+            
+            container.innerHTML = dayClasses.map(cls => {
+                // Since this endpoint returns only the teacher's classes, isMyClass is always true
+                const isMyClass = true; 
+                
+                return `
+
+                    <div class="flex gap-4 relative">
+                        <div class="flex flex-col items-center gap-1 z-10 pt-1">
+                            <span class="text-xs font-bold text-[var(--brand-color)] bg-[var(--bg-app)] px-1 relative z-20">${cls.time}</span>
+                            <div class="w-2 h-2 rounded-full bg-[var(--brand-color)]"></div>
+                            <div class="w-px bg-slate-800 flex-1 -my-1"></div>
+                        </div>
+                        <div class="flex-1 p-4 theme-card border-l-4 border-l-[var(--brand-color)] bg-slate-800/80 mb-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-[10px] font-bold text-[var(--brand-color)] uppercase bg-orange-900/30 px-2 py-0.5 rounded">Minha Aula</span>
+                                    <h3 class="font-bold theme-text-primary text-lg mt-1 italic uppercase">${cls.name}</h3>
+                                    <p class="text-xs theme-text-secondary mt-1">${cls.category} • ${cls.level}</p>
+                                </div>
+                                <i class="fa-solid fa-users text-slate-600"></i>
+                            </div>
+                            <div class="mt-3 w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-[var(--brand-color)] h-full" style="width: ${(cls.enrolled / cls.capacity) * 100 || 0}%"></div>
+                            </div>
+                            <p class="text-[10px] theme-text-secondary mt-1 text-right font-mono">${cls.enrolled}/${cls.capacity} OCUPADO</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showScheduleDay(day) {
+            currentScheduleDay = day;
+            
+            // Update tabs
+            for (let i = 0; i <= 6; i++) {
+                const tab = document.getElementById(`day-tab-${i}`);
+                if (tab) {
+                    if (i === day) {
+                        tab.className = 'px-4 py-2 theme-btn-primary text-xs whitespace-nowrap';
+                    } else {
+                        tab.className = 'px-4 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold rounded uppercase whitespace-nowrap';
+                    }
+                }
+            }
+            
+            renderSchedule();
+        }
+
+        // Graduations
+        async function loadGraduations() {
+            try {
+                const franchiseId = typeof currentTeacher.franchiseId === 'object' 
+                    ? currentTeacher.franchiseId._id 
+                    : currentTeacher.franchiseId;
+                
+                const res = await fetch(`${window.API_BASE_URL}/graduation/eligible/${franchiseId}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    eligibleGraduations = data.data || [];
+                    renderGraduations();
+                }
+            } catch (e) {
+                console.error('Graduations load error:', e);
+            }
+        }
+
+        function renderGraduations() {
+            document.getElementById('eligible-count-display').textContent = `${eligibleGraduations.length} ALUNOS ELEGÍVEIS`;
+            
+            const container = document.getElementById('graduations-list-mobile');
+            if (eligibleGraduations.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 theme-text-secondary">Nenhum aluno elegível no momento</div>';
+                document.getElementById('graduation-badge').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('graduation-badge').style.display = 'block';
+            
+            container.innerHTML = eligibleGraduations.map(s => {
+                const currentBelt = s.current || s.belt;
+                const nextBelt = s.next;
+                const currentStyle = getBeltStyle(currentBelt.split(' - ')[0]);
+                const nextStyle = getBeltStyle(nextBelt.split(' - ')[0]);
+                
+                return `
+                    <div class="theme-card p-4 bg-slate-800 border-slate-700 relative overflow-hidden">
+                         <div class="absolute right-0 top-0 w-16 h-16 bg-gradient-to-bl from-[var(--brand-color)]/20 to-transparent rounded-bl-full"></div>
+                        <div class="flex items-center gap-4 mb-4 relative z-10">
+                            <div class="w-12 h-12 rounded border border-slate-600 flex items-center justify-center font-bold" style="background: ${currentStyle.bg}; color: ${currentStyle.text};">${s.name.substring(0, 2).toUpperCase()}</div>
+                            <div>
+                                <h3 class="font-bold theme-text-primary text-sm uppercase">${s.name}</h3>
+                                <div class="flex items-center gap-2 text-xs mt-1">
+                                    <span class="theme-text-secondary font-bold uppercase text-[10px]">${currentBelt}</span>
+                                    <i class="fa-solid fa-arrow-right text-slate-600 text-[10px]"></i>
+                                    <span class="font-bold text-[var(--brand-color)] uppercase text-[10px] border border-[var(--brand-color)] px-1 rounded">${nextBelt}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="processGraduation('${s.id}', '${s.name}', '${nextBelt}')" class="w-full py-3 theme-btn-primary text-xs font-bold rounded shadow-lg shadow-orange-500/10 hover:brightness-110 transition-all relative z-10">
+                            CONFIRMAR GRADUAÇÃO
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function processGraduation(studentId, name, nextLevel) {
+            showConfirmModal(
+                'Confirmar Graduação',
+                `Confirmar graduação de ${name} para ${nextLevel}?`,
+                async () => {
+                    try {
+                        const res = await fetch(`${window.API_BASE_URL}/graduation/promote`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                studentId,
+                                teacherId: currentTeacher._id
+                            })
+                        });
+                        
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast(`${name} graduado com sucesso!`);
+                            loadGraduations();
+                        } else {
+                            showToast('Erro ao processar graduação', 'error');
+                        }
+                    } catch (e) {
+                        console.error('Graduation error:', e);
+                        showToast('Erro ao processar graduação', 'error');
+                    }
+                }
+            );
+        }
+
+        // HELPER: Calculate Age
+        const calculateAge = (birthDate) => {
+            if (!birthDate) return 0;
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age;
+        };
+
+        // HELPER: Generate Consistent Profile Image
+        const getProfileImage = (person) => {
+            if (person.photo && person.photo.trim() !== '') return person.photo;
+            if (person.photoUrl && person.photoUrl.trim() !== '') return person.photoUrl;
+
+            // Deterministic random based on ID or Name
+            const seed = person._id || person._id || person.id || person.name || 'default';
+            let hash = 0;
+            for (let i = 0; i < seed.length; i++) {
+                hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const consistentId = Math.abs(hash % 70); // 0-69
+
+            const gender = (person.gender || 'Masculino').toLowerCase();
+            const age = calculateAge(person.birthDate) || 25;
+
+            // Logic for children
+            if (age < 14) {
+                 return `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random&color=fff&size=100`;
+            }
+
+            const genderPath = (gender === 'feminino' || gender === 'female') ? 'women' : 'men';
+            return `https://randomuser.me/api/portraits/${genderPath}/${consistentId}.jpg`;
+        };
+
+        // Profile
+        function updateProfile() {
+            if (!currentTeacher) return;
+            
+            const photoUrl = getProfileImage(currentTeacher);
+            
+            // Header Button Photo
+            const headerProfileImg = document.getElementById('header-profile-img');
+            const headerProfileIcon = document.getElementById('header-profile-icon');
+            if (headerProfileImg && headerProfileIcon) {
+                headerProfileImg.onload = () => {
+                    headerProfileImg.classList.remove('hidden');
+                    headerProfileIcon.classList.add('hidden');
+                };
+                headerProfileImg.onerror = () => {
+                    headerProfileImg.classList.add('hidden');
+                    headerProfileIcon.classList.remove('hidden');
+                };
+                headerProfileImg.src = photoUrl;
+            }
+
+            // Main Profile Avatar
+            const avatarEl = document.getElementById('profile-avatar-mobile');
+            const photoImg = document.getElementById('profile-photo-img');
+            
+            if (photoImg && avatarEl) {
+                photoImg.onload = () => {
+                    photoImg.classList.remove('hidden');
+                    avatarEl.classList.add('hidden');
+                };
+                photoImg.onerror = () => {
+                    photoImg.classList.add('hidden');
+                    avatarEl.classList.remove('hidden');
+                };
+                photoImg.src = photoUrl;
+            }
+
+            document.getElementById('profile-name-mobile').textContent = currentTeacher.name;
+            document.getElementById('profile-belt-mobile').textContent = currentTeacher.belt || 'PRETA';
+            document.getElementById('profile-degree-mobile').textContent = currentTeacher.degree || 'Nenhum';
+            
+            const franchise = typeof currentTeacher.franchiseId === 'object' 
+                ? currentTeacher.franchiseId.name 
+                : 'Arena Hub';
+            document.getElementById('profile-role-mobile').textContent = `Head Coach • ${franchise}`;
+        }
+
+        function handleLogout() {
+            showConfirmModal(
+                'Sair da Conta',
+                'Deseja realmente sair?',
+                () => {
+                    localStorage.removeItem('arena_teacher');
+                    window.location.href = 'teacher-mobile-login.html';
+                }
+            );
+        }
+
+        // QR Scanner
+        function openQRScanner() {
+            showToast('Scanner QR em desenvolvimento');
+        }
+
+        // Utilities
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            
+            const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            const dateDisplay = document.getElementById('current-date-display');
+            if (dateDisplay) {
+                dateDisplay.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            
+            toastMsg.textContent = msg;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        // --- CUSTOM MODAL ---
+        function showConfirmModal(title, msg, onConfirm) {
+            const modal = document.getElementById('ui-confirm-modal');
+            const backdrop = document.getElementById('confirm-backdrop');
+            const panel = document.getElementById('confirm-panel');
+            const btnYes = document.getElementById('btn-confirm-yes');
+            
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-msg').textContent = msg;
+            
+            // Unbind previous onclick to prevent stacking
+            btnYes.onclick = () => {
+                closeConfirmModal();
+                if (onConfirm) onConfirm();
+            };
+
+            modal.classList.remove('hidden');
+            // Small delay for transition
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                if (panel) {
+                    panel.classList.remove('opacity-0', 'scale-95');
+                    panel.classList.add('opacity-100', 'scale-100');
+                }
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('ui-confirm-modal');
+            const backdrop = document.getElementById('confirm-backdrop');
+            const panel = document.getElementById('confirm-panel');
+            
+            backdrop.classList.add('opacity-0');
+            if (panel) {
+                panel.classList.add('opacity-0', 'scale-95');
+                panel.classList.remove('opacity-100', 'scale-100');
+            }
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function changeWeekOffset(offset) {
+            // Future implementation for week navigation
+            showToast('Navegação de semana em desenvolvimento');
+        }
+
+        // Apply Branding Helper
+        function applyBranding(franchise) {
+            const b = franchise.branding || {};
+            const primaryColor = b.primaryColor || '#f59e0b';
+            
+            // Update Logo
+            const logoImg = document.getElementById('header-logo-img');
+            const logoIcon = document.getElementById('header-logo-icon');
+            const logoContainer = document.getElementById('header-logo-container');
+            
+            if (logoImg && logoIcon && logoContainer) {
+                let targetUrl = b.logoUrl;
+                if (!targetUrl || targetUrl.includes('placeholder.com')) {
+                    targetUrl = 'arena-hub-logo.png';
+                }
+                
+                logoContainer.style.background = 'white';
+                
+                logoImg.onload = () => {
+                    logoImg.style.display = 'block';
+                    logoImg.classList.remove('hidden');
+                    logoIcon.classList.add('hidden');
+                };
+                logoImg.onerror = () => {
+                   if (targetUrl !== 'arena-hub-logo.png') {
+                        logoImg.src = 'arena-hub-logo.png';
+                    } else {
+                        logoImg.classList.add('hidden');
+                        logoIcon.classList.remove('hidden');
+                        logoIcon.classList.add('text-black');
+                    }
+                };
+                logoImg.src = targetUrl;
+            }
+            
+            // Apply colors manually to elements that need it
+            document.documentElement.style.setProperty('--brand-color', primaryColor);
+            
+            // Inject dynamic style for specifics
+            const existingStyle = document.getElementById('dynamic-branding');
+            if (existingStyle) existingStyle.remove();
+            
+            const style = document.createElement('style');
+            style.id = 'dynamic-branding';
+            style.innerHTML = `
+                .theme-btn-primary, 
+                button.theme-btn-primary,
+                nav .theme-btn-primary {
+                    background-color: ${primaryColor} !important;
+                }
+                .text-\\[var\\(--brand-color\\)\\] {
+                    color: ${primaryColor} !important;
+                }
+                .border-\\[var\\(--brand-color\\)\\] {
+                    border-color: ${primaryColor} !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            updateProfile();
+        });
+    </script>
+</body>
+</html>

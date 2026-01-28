@@ -127,7 +127,7 @@ branding: {
 ### Portais Afetados
 1. ✅ Portal do Aluno (`aluno.html`, `aluno-login.html`)
 2. ✅ Portal do Professor (`teacher.html`, `teacher-login.html`)
-3. ✅ Portal do Franqueado (`franqueado.html`, `franqueado-premium.html`, `franqueado-login.html`)
+3. ✅ Portal do Franqueado (`franqueado-premium.html`, `franqueado-login.html`)
 
 ---
 

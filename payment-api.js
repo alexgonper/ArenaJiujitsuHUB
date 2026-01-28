@@ -3,7 +3,7 @@
  * Handles payment-related API calls
  */
 class PaymentAPI {
-    static baseUrl = `${appConfig.apiBaseUrl}/payments`;
+    static baseUrl = `${window.API_BASE_URL}/payments`;
 
     /**
      * Create a checkout preference for a payment
